@@ -403,7 +403,7 @@ router.post(
                   workCenterName: operation.workCenter.name,
                   plannedDuration: operation.timeMinutes,
                   estimatedTimeMinutes: operation.timeMinutes,
-                  status: "TO_DO",
+                  status: "PENDING",
                 },
               });
               workOrders.push(workOrder);
@@ -664,15 +664,15 @@ router.patch(
 
         // Update related work orders based on manufacturing order status
         if (newStatus === "IN_PROGRESS") {
-          // Start all TO_DO work orders
+          // Start all PENDING work orders
           await tx.workOrder.updateMany({
             where: {
               manufacturingOrderId: id,
-              status: "TO_DO",
+              status: "PENDING",
             },
             data: {
               status: "IN_PROGRESS",
-              startedAt: new Date(),
+              startTime: new Date(),
             },
           });
         } else if (newStatus === "DONE") {
@@ -683,16 +683,16 @@ router.patch(
               status: "IN_PROGRESS",
             },
             data: {
-              status: "DONE",
+              status: "COMPLETED",
               completedAt: new Date(),
             },
           });
         } else if (newStatus === "CANCELLED") {
-          // Cancel all TO_DO and in-progress work orders
+          // Cancel all PENDING and in-progress work orders
           await tx.workOrder.updateMany({
             where: {
               manufacturingOrderId: id,
-              status: { in: ["TO_DO", "IN_PROGRESS"] },
+              status: { in: ["PENDING", "IN_PROGRESS"] },
             },
             data: {
               status: "CANCELLED",

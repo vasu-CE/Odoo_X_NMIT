@@ -3,6 +3,24 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+// Generate order number in format MO-000001, MO-000002, etc.
+const generateOrderNumber = async () => {
+  // Find the highest existing order number to ensure sequential numbering
+  const lastOrder = await prisma.manufacturingOrder.findFirst({
+    orderBy: { orderNumber: "desc" },
+    select: { orderNumber: true },
+  });
+
+  if (!lastOrder) {
+    return "MO-000001";
+  }
+
+  // Extract the number part and increment it
+  const lastNumber = parseInt(lastOrder.orderNumber.split("-")[1]);
+  const nextNumber = lastNumber + 1;
+  return `MO-${String(nextNumber).padStart(6, "0")}`;
+};
+
 async function main() {
   console.log("🌱 Starting database seeding...");
 
@@ -315,72 +333,80 @@ async function main() {
 
   console.log("✅ BOMs created");
 
-  // Create manufacturing orders
-  const manufacturingOrders = await Promise.all([
-    prisma.manufacturingOrder.create({
-      data: {
-        orderNumber: "MO-000001",
-        finishedProduct: "Widget A - Premium Model",
-        quantity: 100,
-        units: "PCS",
-        status: "IN_PROGRESS",
-        priority: "HIGH",
-        scheduleDate: new Date("2024-01-15T08:00:00Z"),
-        startedAt: new Date("2024-01-15T08:30:00Z"),
-        assigneeId: users[2].id,
-        bomId: bom1.id,
-        estimatedCost: 1500.0,
-        notes: "Priority order for customer ABC",
-      },
-    }),
-    prisma.manufacturingOrder.create({
-      data: {
-        orderNumber: "MO-000002",
-        finishedProduct: "Widget B - Standard Model",
-        quantity: 50,
-        units: "PCS",
-        status: "DRAFT",
-        priority: "MEDIUM",
-        scheduleDate: new Date("2024-01-22T08:00:00Z"),
-        assigneeId: users[2].id,
-        bomId: bom2.id,
-        estimatedCost: 800.0,
-        notes: "Standard production order",
-      },
-    }),
-    prisma.manufacturingOrder.create({
-      data: {
-        orderNumber: "MO-000003",
-        finishedProduct: "Widget A - Premium Model",
-        quantity: 200,
-        units: "PCS",
-        status: "DONE",
-        priority: "LOW",
-        scheduleDate: new Date("2024-01-10T08:00:00Z"),
-        startedAt: new Date("2024-01-10T08:00:00Z"),
-        completedAt: new Date("2024-01-12T16:30:00Z"),
-        assigneeId: users[2].id,
-        bomId: bom1.id,
-        estimatedCost: 2000.0,
-        actualCost: 1950.0,
-        notes: "Completed ahead of schedule",
-      },
-    }),
-    prisma.manufacturingOrder.create({
-      data: {
-        orderNumber: "MO-000004",
-        finishedProduct: "Custom Widget C",
-        quantity: 25,
-        units: "PCS",
-        status: "CONFIRMED",
-        priority: "URGENT",
-        scheduleDate: new Date("2024-01-25T08:00:00Z"),
-        assigneeId: users[1].id,
-        estimatedCost: 500.0,
-        notes: "Custom order for special client",
-      },
-    }),
-  ]);
+  // Create manufacturing orders sequentially to avoid order number conflicts
+  const manufacturingOrders = [];
+  
+  const order1 = await prisma.manufacturingOrder.create({
+    data: {
+      orderNumber: await generateOrderNumber(),
+      finishedProduct: "Widget A - Premium Model",
+      quantity: 100,
+      units: "PCS",
+      status: "IN_PROGRESS",
+      priority: "HIGH",
+      scheduleDate: new Date("2024-01-15T08:00:00.000Z"),
+      startedAt: new Date("2024-01-15T08:30:00.000Z"),
+      assigneeId: users[2].id,
+      bomId: bom1.id,
+      estimatedCost: 1500.0,
+      notes: "Priority order for customer ABC",
+    },
+  });
+  manufacturingOrders.push(order1);
+
+  const order2 = await prisma.manufacturingOrder.create({
+    data: {
+      orderNumber: await generateOrderNumber(),
+      finishedProduct: "Widget B - Standard Model",
+      quantity: 50,
+      units: "PCS",
+      status: "DRAFT",
+      priority: "MEDIUM",
+      scheduleDate: new Date("2024-01-22T08:00:00.000Z"),
+      assigneeId: users[2].id,
+      bomId: bom2.id,
+      estimatedCost: 800.0,
+      notes: "Standard production order",
+    },
+  });
+  manufacturingOrders.push(order2);
+
+  const order3 = await prisma.manufacturingOrder.create({
+    data: {
+      orderNumber: await generateOrderNumber(),
+      finishedProduct: "Widget A - Premium Model",
+      quantity: 200,
+      units: "PCS",
+      status: "DONE",
+      priority: "LOW",
+      scheduleDate: new Date("2024-01-10T08:00:00.000Z"),
+      startedAt: new Date("2024-01-10T08:00:00.000Z"),
+      completedAt: new Date("2024-01-12T16:30:00.000Z"),
+      assigneeId: users[2].id,
+      bomId: bom1.id,
+      estimatedCost: 2000.0,
+      actualCost: 1950.0,
+      notes: "Completed ahead of schedule",
+    },
+  });
+  manufacturingOrders.push(order3);
+
+  const order4 = await prisma.manufacturingOrder.create({
+    data: {
+      orderNumber: await generateOrderNumber(),
+      finishedProduct: "Custom Widget C",
+      quantity: 25,
+      units: "PCS",
+      status: "CONFIRMED",
+      priority: "URGENT",
+      scheduleDate: new Date("2024-01-25T10:00:00.000Z"),
+      assigneeId: users[2].id,
+      estimatedCost: 500.0,
+      notes: "Custom order for special customer",
+    },
+  });
+  manufacturingOrders.push(order4);
+
 
   console.log("✅ Manufacturing orders created");
 
@@ -478,7 +504,7 @@ async function main() {
         workCenterName: "Quality Control Station",
         plannedDuration: 10, // 10 minutes per unit
         estimatedTimeMinutes: 10,
-        status: "TO_DO",
+        status: "PENDING",
         assignedToId: users[2].id,
         comments: "Waiting for assembly completion",
       },
@@ -490,7 +516,7 @@ async function main() {
         workCenterName: "Packaging Station",
         plannedDuration: 5, // 5 minutes per unit
         estimatedTimeMinutes: 5,
-        status: "TO_DO",
+        status: "PENDING",
         assignedToId: users[2].id,
         comments: "Final packaging step",
       },
@@ -503,7 +529,7 @@ async function main() {
         workCenterName: "Assembly Line 1",
         plannedDuration: 20, // 20 minutes per unit
         estimatedTimeMinutes: 20,
-        status: "TO_DO",
+        status: "PENDING",
         assignedToId: users[2].id,
         comments: "Ready to start",
       },
@@ -515,7 +541,7 @@ async function main() {
         workCenterName: "Packaging Station",
         plannedDuration: 5, // 5 minutes per unit
         estimatedTimeMinutes: 5,
-        status: "TO_DO",
+        status: "PENDING",
         assignedToId: users[2].id,
         comments: "Final packaging step",
       },
@@ -529,7 +555,7 @@ async function main() {
         plannedDuration: 30, // 30 minutes per unit
         realDuration: 28, // 28 minutes actual
         estimatedTimeMinutes: 30,
-        status: "DONE",
+        status: "COMPLETED",
         assignedToId: users[2].id,
         startTime: new Date("2024-01-10T08:00:00Z"),
         endTime: new Date("2024-01-11T18:00:00Z"),
@@ -544,7 +570,7 @@ async function main() {
         plannedDuration: 10, // 10 minutes per unit
         realDuration: 9, // 9 minutes actual
         estimatedTimeMinutes: 10,
-        status: "DONE",
+        status: "COMPLETED",
         assignedToId: users[2].id,
         startTime: new Date("2024-01-11T18:00:00Z"),
         endTime: new Date("2024-01-12T10:00:00Z"),
@@ -559,7 +585,7 @@ async function main() {
         plannedDuration: 5, // 5 minutes per unit
         realDuration: 4, // 4 minutes actual
         estimatedTimeMinutes: 5,
-        status: "DONE",
+        status: "COMPLETED",
         assignedToId: users[2].id,
         startTime: new Date("2024-01-12T10:00:00Z"),
         completedAt: new Date("2024-01-12T16:30:00Z"),
@@ -575,7 +601,7 @@ async function main() {
         workCenterName: "Assembly Line 1",
         plannedDuration: 45, // 45 minutes per unit
         estimatedTimeMinutes: 45,
-        status: "TO_DO",
+        status: "PENDING",
         assignedToId: users[1].id,
         comments: "Custom assembly process",
       },
@@ -587,7 +613,7 @@ async function main() {
         workCenterName: "Quality Control Station",
         plannedDuration: 15, // 15 minutes per unit
         estimatedTimeMinutes: 15,
-        status: "TO_DO",
+        status: "PENDING",
         assignedToId: users[1].id,
         comments: "Special testing for custom widget",
       },

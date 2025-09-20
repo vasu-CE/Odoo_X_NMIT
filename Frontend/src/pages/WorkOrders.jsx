@@ -43,7 +43,7 @@ const statusConfig = {
     icon: CheckCircle,
     label: "Done",
   },
-  SKIPPED: {
+  CANCELLED: {
     color: "bg-red-100 text-red-800",
     icon: AlertTriangle,
     label: "Cancelled",
@@ -230,7 +230,7 @@ export default function WorkOrders() {
         // Update local state instead of refreshing all data
         setWorkOrders(prev => prev.map(wo => 
           wo.id === workOrderId 
-            ? { ...wo, status: 'SKIPPED', endTime: new Date().toISOString() }
+            ? { ...wo, status: 'CANCELLED', endTime: new Date().toISOString() }
             : wo
         ));
       }

@@ -170,7 +170,7 @@ model WorkOrder {
   workCenterName         String
   plannedDuration        Int               // in minutes
   realDuration           Int?              // in minutes
-  status                 WorkOrderStatus   @default(TO_DO)
+  status                 WorkOrderStatus   @default(PENDING)
   assignedToId           String?
   estimatedTimeMinutes   Int
   actualTimeMinutes      Int?
@@ -249,9 +249,10 @@ enum Priority {
 }
 
 enum WorkOrderStatus {
-  TO_DO
+  PENDING
   IN_PROGRESS
-  DONE
+  PAUSED
+  COMPLETED
   CANCELLED
 }
 

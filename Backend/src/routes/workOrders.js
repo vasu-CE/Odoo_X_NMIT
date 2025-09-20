@@ -11,7 +11,7 @@ const router = express.Router();
 router.get('/', authenticate, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
-  query('status').optional().isIn(['PENDING', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'SKIPPED']),
+  query('status').optional().isIn(['PENDING', 'IN_PROGRESS', 'PAUSED', 'COMPLETED', 'CANCELLED']),
   query('workCenterId').optional().isString(),
   query('assignedToId').optional().isString(),
   query('search').optional().isString()
@@ -795,7 +795,7 @@ router.patch('/:id/cancel', authenticate, authorize('SHOP_FLOOR_OPERATOR'), asyn
         status: { in: ['PENDING', 'IN_PROGRESS', 'PAUSED'] }
       },
       data: { 
-        status: 'SKIPPED',
+        status: 'CANCELLED',
         endTime: new Date()
       },
       include: {
