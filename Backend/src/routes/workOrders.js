@@ -112,7 +112,7 @@ router.get('/', authenticate, [
 // @route   GET /api/work-orders/shop-floor
 // @desc    Get work orders for shop floor operator (assigned to them)
 // @access  Private (SHOP_FLOOR_OPERATOR only)
-router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
+router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR' , 'MANUFACTURING_MANAGER'), async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
 

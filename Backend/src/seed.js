@@ -464,9 +464,10 @@ async function main() {
         workCenterName: "Assembly Line 1",
         plannedDuration: 30, // 30 minutes per unit
         realDuration: 15, // 15 minutes completed
+        estimatedTimeMinutes: 30,
         status: "IN_PROGRESS",
         assignedToId: users[2].id,
-        startedAt: new Date("2024-01-15T08:30:00Z"),
+        startTime: new Date("2024-01-15T08:30:00Z"),
         comments: "Assembly in progress - 50% complete",
       },
     }),
@@ -476,6 +477,7 @@ async function main() {
         operationName: "Quality Check",
         workCenterName: "Quality Control Station",
         plannedDuration: 10, // 10 minutes per unit
+        estimatedTimeMinutes: 10,
         status: "TO_DO",
         assignedToId: users[2].id,
         comments: "Waiting for assembly completion",
@@ -487,6 +489,7 @@ async function main() {
         operationName: "Packaging",
         workCenterName: "Packaging Station",
         plannedDuration: 5, // 5 minutes per unit
+        estimatedTimeMinutes: 5,
         status: "TO_DO",
         assignedToId: users[2].id,
         comments: "Final packaging step",
@@ -499,6 +502,7 @@ async function main() {
         operationName: "Assembly",
         workCenterName: "Assembly Line 1",
         plannedDuration: 20, // 20 minutes per unit
+        estimatedTimeMinutes: 20,
         status: "TO_DO",
         assignedToId: users[2].id,
         comments: "Ready to start",
@@ -510,6 +514,7 @@ async function main() {
         operationName: "Packaging",
         workCenterName: "Packaging Station",
         plannedDuration: 5, // 5 minutes per unit
+        estimatedTimeMinutes: 5,
         status: "TO_DO",
         assignedToId: users[2].id,
         comments: "Final packaging step",
@@ -523,10 +528,11 @@ async function main() {
         workCenterName: "Assembly Line 1",
         plannedDuration: 30, // 30 minutes per unit
         realDuration: 28, // 28 minutes actual
+        estimatedTimeMinutes: 30,
         status: "DONE",
         assignedToId: users[2].id,
-        startedAt: new Date("2024-01-10T08:00:00Z"),
-        completedAt: new Date("2024-01-11T18:00:00Z"),
+        startTime: new Date("2024-01-10T08:00:00Z"),
+        endTime: new Date("2024-01-11T18:00:00Z"),
         comments: "Assembly completed successfully",
       },
     }),
@@ -537,10 +543,11 @@ async function main() {
         workCenterName: "Quality Control Station",
         plannedDuration: 10, // 10 minutes per unit
         realDuration: 9, // 9 minutes actual
+        estimatedTimeMinutes: 10,
         status: "DONE",
         assignedToId: users[2].id,
-        startedAt: new Date("2024-01-11T18:00:00Z"),
-        completedAt: new Date("2024-01-12T10:00:00Z"),
+        startTime: new Date("2024-01-11T18:00:00Z"),
+        endTime: new Date("2024-01-12T10:00:00Z"),
         comments: "Quality check passed",
       },
     }),
@@ -551,9 +558,10 @@ async function main() {
         workCenterName: "Packaging Station",
         plannedDuration: 5, // 5 minutes per unit
         realDuration: 4, // 4 minutes actual
+        estimatedTimeMinutes: 5,
         status: "DONE",
         assignedToId: users[2].id,
-        startedAt: new Date("2024-01-12T10:00:00Z"),
+        startTime: new Date("2024-01-12T10:00:00Z"),
         completedAt: new Date("2024-01-12T16:30:00Z"),
         realDuration: 950, // Add real duration for completed work order
         comments: "Packaging completed",
@@ -566,6 +574,7 @@ async function main() {
         operationName: "Custom Assembly",
         workCenterName: "Assembly Line 1",
         plannedDuration: 45, // 45 minutes per unit
+        estimatedTimeMinutes: 45,
         status: "TO_DO",
         assignedToId: users[1].id,
         comments: "Custom assembly process",
@@ -577,6 +586,7 @@ async function main() {
         operationName: "Special Testing",
         workCenterName: "Quality Control Station",
         plannedDuration: 15, // 15 minutes per unit
+        estimatedTimeMinutes: 15,
         status: "TO_DO",
         assignedToId: users[1].id,
         comments: "Special testing for custom widget",

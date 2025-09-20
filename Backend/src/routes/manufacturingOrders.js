@@ -402,6 +402,7 @@ router.post(
                   operationName: operation.name,
                   workCenterName: operation.workCenter.name,
                   plannedDuration: operation.timeMinutes,
+                  estimatedTimeMinutes: operation.timeMinutes,
                   status: "TO_DO",
                 },
               });
@@ -1216,6 +1217,9 @@ router.post(
     body("plannedDuration")
       .isInt({ min: 1 })
       .withMessage("Planned duration must be a positive integer"),
+    body("estimatedTimeMinutes")
+      .isInt({ min: 1 })
+      .withMessage("Estimated time minutes must be a positive integer"),
     body("assignedToId").optional().isString(),
   ],
   async (req, res) => {
@@ -1230,7 +1234,7 @@ router.post(
       }
 
       const { id } = req.params;
-      const { operationName, workCenterName, plannedDuration, assignedToId } =
+      const { operationName, workCenterName, plannedDuration, estimatedTimeMinutes, assignedToId } =
         req.body;
 
       // Check if manufacturing order exists and is in draft state
@@ -1259,6 +1263,7 @@ router.post(
           operationName,
           workCenterName,
           plannedDuration,
+          estimatedTimeMinutes,
           assignedToId,
         },
       });
