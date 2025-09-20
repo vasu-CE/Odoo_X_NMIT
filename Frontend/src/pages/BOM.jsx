@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { BOM, Product } from "../entities/all";
 import {
   Card,
@@ -73,9 +74,11 @@ export default function BOMPage() {
               Manage product components and material requirements
             </p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
-            <Plus className="w-4 h-4 mr-2" />
-            New BOM
+          <Button asChild className="bg-blue-600 hover:bg-blue-700 shadow-md">
+            <Link to="/bom/new">
+              <Plus className="w-4 h-4 mr-2" />
+              New BOM
+            </Link>
           </Button>
         </div>
 
@@ -169,15 +172,24 @@ export default function BOMPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setSelectedBOM(bom)}
+                      asChild
                       className="flex-1"
                     >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
+                      <Link to={`/bom/${bom.id}`}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        View Details
+                      </Link>
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      asChild
+                      className="flex-1"
+                    >
+                      <Link to={`/bom/${bom.id}`}>
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
+                      </Link>
                     </Button>
                     <Button
                       size="sm"
@@ -205,9 +217,11 @@ export default function BOMPage() {
                 ? "Try adjusting your search"
                 : "Create your first bill of materials to get started"}
             </p>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Create BOM
+            <Button asChild className="bg-blue-600 hover:bg-blue-700">
+              <Link to="/bom/new">
+                <Plus className="w-4 h-4 mr-2" />
+                Create BOM
+              </Link>
             </Button>
           </div>
         )}

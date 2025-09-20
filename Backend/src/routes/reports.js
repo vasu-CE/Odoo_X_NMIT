@@ -576,11 +576,183 @@ router.get('/work-order-performance', authenticate, [
   }
 });
 
+// @route   GET /api/reports/work-order-analysis
+// @desc    Get work order analysis with detailed filtering
+// @access  Private
+router.get('/work-order-analysis', authenticate, [
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('operation').optional().isString(),
+  query('workCenterId').optional().isString(),
+  query('status').optional().isIn(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
+  query('assignedToId').optional().isString(),
+  query('search').optional().isString(),
+  query('limit').optional().isInt({ min: 1, max: 1000 }),
+  query('offset').optional().isInt({ min: 0 })
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const {
+      startDate,
+      endDate,
+      operation,
+      workCenterId,
+      status,
+      assignedToId,
+      search,
+      limit = 100,
+      offset = 0
+    } = req.query;
+
+    // Build where clause
+    const where = {};
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+    if (workCenterId) where.workCenterId = workCenterId;
+    if (status) where.status = status;
+    if (assignedToId) where.assignedToId = assignedToId;
+    if (operation) {
+      where.operationName = {
+        contains: operation,
+        mode: 'insensitive'
+      };
+    }
+    if (search) {
+      where.OR = [
+        { operationName: { contains: search, mode: 'insensitive' } },
+        { workCenter: { name: { contains: search, mode: 'insensitive' } } },
+        { manufacturingOrder: { product: { name: { contains: search, mode: 'insensitive' } } } }
+      ];
+    }
+
+    // Get work orders with all related data
+    const [workOrders, totalCount] = await Promise.all([
+      prisma.workOrder.findMany({
+        where,
+        include: {
+          manufacturingOrder: {
+            select: {
+              id: true,
+              orderNumber: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  type: true,
+                  unit: true
+                }
+              }
+            }
+          },
+          workCenter: {
+            select: {
+              id: true,
+              name: true,
+              code: true
+            }
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        take: parseInt(limit),
+        skip: parseInt(offset)
+      }),
+      prisma.workOrder.count({ where })
+    ]);
+
+    // Transform data for frontend
+    const analysisData = workOrders.map(wo => {
+      const expectedDuration = wo.estimatedTimeMinutes || 0;
+      const actualDuration = wo.actualTimeMinutes || 0;
+      const efficiency = expectedDuration > 0 ? (actualDuration / expectedDuration) * 100 : 0;
+      
+      // Calculate duration in hours:minutes format
+      const formatDuration = (minutes) => {
+        if (!minutes || minutes === 0) return '00:00';
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+      };
+
+      return {
+        id: wo.id,
+        operationName: wo.operationName || 'N/A',
+        workCenterName: wo.workCenter?.name || 'N/A',
+        productName: wo.manufacturingOrder?.product?.name || 'N/A',
+        quantity: wo.quantity || 0,
+        expectedDuration: formatDuration(expectedDuration),
+        realDuration: formatDuration(actualDuration),
+        status: wo.status?.toLowerCase().replace('_', ' ') || 'unknown',
+        efficiency: Math.round(efficiency * 100) / 100,
+        assignedTo: wo.assignedTo?.name || 'Unassigned',
+        startedAt: wo.startedAt,
+        completedAt: wo.completedAt,
+        createdAt: wo.createdAt,
+        manufacturingOrderNumber: wo.manufacturingOrder?.orderNumber || 'N/A'
+      };
+    });
+
+    // Get summary statistics
+    const summary = {
+      totalWorkOrders: totalCount,
+      completedWorkOrders: workOrders.filter(wo => wo.status === 'COMPLETED').length,
+      inProgressWorkOrders: workOrders.filter(wo => wo.status === 'IN_PROGRESS').length,
+      pendingWorkOrders: workOrders.filter(wo => wo.status === 'PENDING').length,
+      cancelledWorkOrders: workOrders.filter(wo => wo.status === 'CANCELLED').length,
+      avgEfficiency: workOrders.length > 0 
+        ? workOrders
+            .filter(wo => wo.estimatedTimeMinutes && wo.actualTimeMinutes)
+            .reduce((sum, wo) => {
+              const efficiency = (wo.actualTimeMinutes / wo.estimatedTimeMinutes) * 100;
+              return sum + efficiency;
+            }, 0) / workOrders.filter(wo => wo.estimatedTimeMinutes && wo.actualTimeMinutes).length || 0
+        : 0
+    };
+
+    res.json({
+      success: true,
+      data: {
+        workOrders: analysisData,
+        summary,
+        pagination: {
+          total: totalCount,
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          hasMore: (parseInt(offset) + parseInt(limit)) < totalCount
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Work order analysis report error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate work order analysis report'
+    });
+  }
+});
+
 // @route   POST /api/reports/export
 // @desc    Export report data
 // @access  Private
 router.post('/export', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
-  body('reportType').isIn(['production-summary', 'resource-utilization', 'inventory-valuation', 'work-order-performance']).withMessage('Invalid report type'),
+  body('reportType').isIn(['production-summary', 'resource-utilization', 'inventory-valuation', 'work-order-performance', 'work-order-analysis']).withMessage('Invalid report type'),
   body('format').isIn(['json', 'csv']).withMessage('Invalid export format'),
   body('filters').optional().isObject()
 ], async (req, res) => {

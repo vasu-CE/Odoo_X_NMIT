@@ -530,4 +530,135 @@ router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER'
   }
 });
 
+// @route   GET /api/products/stock-aggregation
+// @desc    Get comprehensive stock aggregation for all products
+// @access  Private
+router.get('/stock-aggregation', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
+  query('category').optional().isString(),
+  query('type').optional().isIn(['RAW_MATERIAL', 'WIP', 'FINISHED_GOOD', 'CONSUMABLE']),
+  query('lowStock').optional().isBoolean(),
+  query('period').optional().isString()
+], async (req, res) => {
+  try {
+    const { category, type, lowStock, period = '30' } = req.query;
+    const days = parseInt(period);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Build where clause for products
+    const productWhere = { isActive: true };
+    if (category) productWhere.category = category;
+    if (type) productWhere.type = type;
+    if (lowStock === 'true') {
+      productWhere.currentStock = {
+        lte: prisma.product.fields.reorderPoint
+      };
+    }
+
+    // Get all products with their stock movements
+    const products = await prisma.product.findMany({
+      where: productWhere,
+      include: {
+        stockMovements: {
+          where: {
+            createdAt: { gte: startDate }
+          },
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
+
+    // Calculate comprehensive stock aggregation
+    const stockAggregation = products.map(product => {
+      const movements = product.stockMovements;
+      
+      // Calculate incoming and outgoing quantities
+      const incoming = movements
+        .filter(m => m.movementType === 'IN')
+        .reduce((sum, m) => sum + m.quantity, 0);
+      
+      const outgoing = movements
+        .filter(m => m.movementType === 'OUT')
+        .reduce((sum, m) => sum + m.quantity, 0);
+      
+      const adjustments = movements
+        .filter(m => m.movementType === 'ADJUSTMENT')
+        .reduce((sum, m) => sum + m.quantity, 0);
+      
+      // Calculate average unit cost from movements
+      const movementsWithCost = movements.filter(m => m.unitCost && m.unitCost > 0);
+      const avgUnitCost = movementsWithCost.length > 0 
+        ? movementsWithCost.reduce((sum, m) => sum + m.unitCost, 0) / movementsWithCost.length
+        : product.purchasePrice || 0;
+      
+      // Calculate stock values
+      const onHand = product.currentStock;
+      const freeToUse = Math.max(0, onHand - (product.reorderPoint || 0));
+      const totalValue = onHand * avgUnitCost;
+      const incomingValue = incoming * avgUnitCost;
+      const outgoingValue = outgoing * avgUnitCost;
+      
+      // Calculate stock turnover (simplified)
+      const avgStock = (incoming + outgoing) / 2;
+      const turnover = avgStock > 0 ? outgoing / avgStock : 0;
+      
+      // Stock status
+      let stockStatus = 'NORMAL';
+      if (onHand === 0) stockStatus = 'OUT_OF_STOCK';
+      else if (onHand <= (product.reorderPoint || 0)) stockStatus = 'LOW_STOCK';
+      else if (onHand <= (product.reorderPoint || 0) * 1.5) stockStatus = 'REORDER_SOON';
+      
+      return {
+        productId: product.id,
+        productName: product.name,
+        category: product.category,
+        type: product.type,
+        unit: product.unit,
+        onHand,
+        freeToUse,
+        incoming,
+        outgoing,
+        adjustments,
+        reorderPoint: product.reorderPoint || 0,
+        avgUnitCost: Math.round(avgUnitCost * 100) / 100,
+        totalValue: Math.round(totalValue * 100) / 100,
+        incomingValue: Math.round(incomingValue * 100) / 100,
+        outgoingValue: Math.round(outgoingValue * 100) / 100,
+        stockStatus,
+        turnover: Math.round(turnover * 100) / 100,
+        lastMovement: movements.length > 0 ? movements[0].createdAt : null
+      };
+    });
+
+    // Calculate summary statistics
+    const summary = {
+      totalProducts: products.length,
+      totalValue: stockAggregation.reduce((sum, item) => sum + item.totalValue, 0),
+      totalOnHand: stockAggregation.reduce((sum, item) => sum + item.onHand, 0),
+      totalIncoming: stockAggregation.reduce((sum, item) => sum + item.incoming, 0),
+      totalOutgoing: stockAggregation.reduce((sum, item) => sum + item.outgoing, 0),
+      outOfStock: stockAggregation.filter(item => item.stockStatus === 'OUT_OF_STOCK').length,
+      lowStock: stockAggregation.filter(item => item.stockStatus === 'LOW_STOCK').length,
+      reorderSoon: stockAggregation.filter(item => item.stockStatus === 'REORDER_SOON').length,
+      normalStock: stockAggregation.filter(item => item.stockStatus === 'NORMAL').length
+    };
+
+    res.json({
+      success: true,
+      data: {
+        period: `${days} days`,
+        summary,
+        products: stockAggregation,
+        generatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Stock aggregation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate stock aggregation'
+    });
+  }
+});
+
 export default router;

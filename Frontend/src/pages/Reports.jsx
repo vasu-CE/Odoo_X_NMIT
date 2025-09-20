@@ -6,6 +6,7 @@ import {
   WorkCenter,
   StockMovement,
 } from "../entities/all";
+import apiService from "../services/api";
 import {
   Card,
   CardContent,
@@ -14,6 +15,7 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
 import {
   BarChart3,
   Download,
@@ -25,16 +27,24 @@ import {
   Archive,
   Clock,
   CheckCircle,
+  Search,
+  Filter,
+  Table,
 } from "lucide-react";
 
 export default function Reports() {
   const [manufacturingOrders, setManufacturingOrders] = useState([]);
   const [workOrders, setWorkOrders] = useState([]);
+  const [workOrderAnalysis, setWorkOrderAnalysis] = useState([]);
   const [products, setProducts] = useState([]);
   const [workCenters, setWorkCenters] = useState([]);
   const [stockMovements, setStockMovements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState("30");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [operationFilter, setOperationFilter] = useState("all");
+  const [workCenterFilter, setWorkCenterFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     loadData();
@@ -42,15 +52,17 @@ export default function Reports() {
 
   const loadData = async () => {
     try {
-      const [moData, woData, prodData, wcData, stockData] = await Promise.all([
+      const [moData, woData, woAnalysisData, prodData, wcData, stockData] = await Promise.all([
         ManufacturingOrder.list("-created_date", 100),
         WorkOrder.list("-created_date", 100),
+        apiService.getWorkOrderAnalysis({ limit: 100 }),
         Product.list("-created_date", 100),
         WorkCenter.list("-created_date", 50),
         StockMovement.list("-created_date", 200),
       ]);
       setManufacturingOrders(moData);
       setWorkOrders(woData);
+      setWorkOrderAnalysis(woAnalysisData.workOrders || []);
       setProducts(prodData);
       setWorkCenters(wcData);
       setStockMovements(stockData);
@@ -357,6 +369,153 @@ export default function Reports() {
                 </div>
                 <div className="text-sm text-gray-600">Completion Rate</div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Work Orders Analysis Table */}
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Table className="h-5 w-5 text-gray-600" />
+                Work Orders Analysis
+              </CardTitle>
+              
+              {/* Search and Filter Controls */}
+              <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Search operations..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full md:w-64"
+                  />
+                </div>
+                
+                <select
+                  value={operationFilter}
+                  onChange={(e) => setOperationFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                >
+                  <option value="all">All Operations</option>
+                  <option value="Assembly">Assembly</option>
+                  <option value="Quality Check">Quality Check</option>
+                  <option value="Packaging">Packaging</option>
+                  <option value="Testing">Testing</option>
+                </select>
+                
+                <select
+                  value={workCenterFilter}
+                  onChange={(e) => setWorkCenterFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                >
+                  <option value="all">All Work Centers</option>
+                  {workCenters.map((wc) => (
+                    <option key={wc.id} value={wc.name}>
+                      {wc.name}
+                    </option>
+                  ))}
+                </select>
+                
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Operation</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Work Center</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Product</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Quantity</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Expected Duration</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Real Duration</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                  </tr>
+                </thead>
+                    <tbody>
+                      {workOrderAnalysis
+                        .filter((wo) => {
+                          const matchesSearch = wo.operationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                              wo.workCenterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                              wo.productName?.toLowerCase().includes(searchTerm.toLowerCase());
+                          const matchesOperation = operationFilter === "all" || wo.operationName === operationFilter;
+                          const matchesWorkCenter = workCenterFilter === "all" || wo.workCenterName === workCenterFilter;
+                          const matchesStatus = statusFilter === "all" || wo.status === statusFilter;
+                          
+                          return matchesSearch && matchesOperation && matchesWorkCenter && matchesStatus;
+                        })
+                        .map((wo) => {
+                          return (
+                            <tr key={wo.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                              <td className="py-3 px-4 text-gray-900 font-medium">
+                                {wo.operationName || "N/A"}
+                              </td>
+                              <td className="py-3 px-4 text-gray-700">
+                                {wo.workCenterName || "N/A"}
+                              </td>
+                              <td className="py-3 px-4 text-gray-700">
+                                {wo.productName || "N/A"}
+                              </td>
+                              <td className="py-3 px-4 text-gray-700">
+                                {wo.quantity || 0}
+                              </td>
+                              <td className="py-3 px-4 text-gray-700">
+                                {wo.expectedDuration || "N/A"}
+                              </td>
+                              <td className="py-3 px-4 text-gray-700">
+                                {wo.realDuration || "00:00"}
+                              </td>
+                              <td className="py-3 px-4">
+                                <Badge 
+                                  className={`text-xs ${
+                                    wo.status === "completed" 
+                                      ? "bg-green-100 text-green-800" 
+                                      : wo.status === "in progress"
+                                      ? "bg-blue-100 text-blue-800"
+                                      : wo.status === "pending"
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : "bg-red-100 text-red-800"
+                                  }`}
+                                >
+                                  {wo.status?.replace("_", " ") || "Unknown"}
+                                </Badge>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+              </table>
+              
+              {workOrderAnalysis.filter((wo) => {
+                const matchesSearch = wo.operationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    wo.workCenterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                    wo.productName?.toLowerCase().includes(searchTerm.toLowerCase());
+                const matchesOperation = operationFilter === "all" || wo.operationName === operationFilter;
+                const matchesWorkCenter = workCenterFilter === "all" || wo.workCenterName === workCenterFilter;
+                const matchesStatus = statusFilter === "all" || wo.status === statusFilter;
+                
+                return matchesSearch && matchesOperation && matchesWorkCenter && matchesStatus;
+              }).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <Table className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No work orders found matching your criteria</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

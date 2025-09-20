@@ -24,7 +24,7 @@ import {
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    loginId: "",
+    email: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -37,16 +37,14 @@ export default function LoginPage() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.loginId) {
-      newErrors.loginId = "Login ID is required";
-    } else if (formData.loginId.length < 3) {
-      newErrors.loginId = "Login ID must be at least 3 characters";
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email is invalid";
     }
 
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -63,7 +61,10 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await login(formData.loginId, formData.password);
+      const result = await login({
+        email: formData.email,
+        password: formData.password,
+      });
 
       if (result.success) {
         toast.success("Login successful! Redirecting...", {
@@ -133,32 +134,32 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label
-                  htmlFor="loginId"
+                  htmlFor="email"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Login ID
+                  Email Address
                 </Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
-                    id="loginId"
-                    name="loginId"
-                    type="text"
-                    value={formData.loginId}
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
                     onChange={handleInputChange}
-                    placeholder="Enter your login ID"
+                    placeholder="Enter your email"
                     className={`pl-10 h-11 ${
-                      errors.loginId
+                      errors.email
                         ? "border-red-300 focus:border-red-500 focus:ring-red-200"
                         : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
                     }`}
                     disabled={isLoading}
                   />
                 </div>
-                {errors.loginId && (
+                {errors.email && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    {errors.loginId}
+                    {errors.email}
                   </p>
                 )}
               </div>

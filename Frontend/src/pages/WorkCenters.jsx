@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { WorkCenter } from "../entities/all";
 import {
   Card,
@@ -21,6 +22,7 @@ import {
   Trash2,
   MapPin,
   Users,
+  Eye,
 } from "lucide-react";
 
 const statusConfig = {
@@ -132,9 +134,11 @@ export default function WorkCenters() {
               Manage production work centers and their status
             </p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700 shadow-md">
-            <Plus className="w-4 h-4 mr-2" />
-            New Work Center
+          <Button asChild className="bg-blue-600 hover:bg-blue-700 shadow-md">
+            <Link to="/work-centers/new">
+              <Plus className="w-4 h-4 mr-2" />
+              New Work Center
+            </Link>
           </Button>
         </div>
 
@@ -282,13 +286,17 @@ export default function WorkCenters() {
 
                   {/* Management Actions */}
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Edit className="w-4 h-4 mr-1" />
-                      Edit
+                    <Button size="sm" variant="outline" asChild className="flex-1">
+                      <Link to={`/work-centers/${workCenter.id}`}>
+                        <Eye className="w-4 h-4 mr-1" />
+                        View
+                      </Link>
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Settings className="w-4 h-4 mr-1" />
-                      Settings
+                    <Button size="sm" variant="outline" asChild className="flex-1">
+                      <Link to={`/work-centers/${workCenter.id}`}>
+                        <Edit className="w-4 h-4 mr-1" />
+                        Edit
+                      </Link>
                     </Button>
                     <Button
                       size="sm"

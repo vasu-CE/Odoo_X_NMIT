@@ -260,34 +260,113 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     // Generate order number
     const orderNumber = await generateOrderNumber();
 
-    // Create manufacturing order
-    const order = await prisma.manufacturingOrder.create({
-      data: {
-        orderNumber,
-        productId,
-        quantity,
-        priority,
-        scheduledDate: new Date(scheduledDate),
-        assignedToId,
-        bomId,
-        notes
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            type: true
-          }
+    // Create manufacturing order with BOM auto-population
+    const order = await prisma.$transaction(async (tx) => {
+      // Create the manufacturing order
+      const newOrder = await tx.manufacturingOrder.create({
+        data: {
+          orderNumber,
+          productId,
+          quantity,
+          priority,
+          scheduledDate: new Date(scheduledDate),
+          assignedToId,
+          bomId,
+          notes
         },
-        assignedTo: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              type: true
+            }
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
           }
         }
+      });
+
+      // If BOM is provided, auto-populate work orders and required materials
+      if (bomId) {
+        // Get BOM with components and operations
+        const bom = await tx.bOM.findUnique({
+          where: { id: bomId },
+          include: {
+            components: {
+              include: {
+                product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    currentStock: true,
+                    unit: true
+                  }
+                }
+              }
+            },
+            operations: {
+              include: {
+                workCenter: {
+                  select: {
+                    id: true,
+                    name: true,
+                    costPerHour: true
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        if (bom) {
+          // Create work orders from BOM operations
+          const workOrders = [];
+          for (const operation of bom.operations) {
+            const workOrder = await tx.workOrder.create({
+              data: {
+                workOrderNumber: `WO-${newOrder.orderNumber}-${operation.sequence}`,
+                manufacturingOrderId: newOrder.id,
+                operationId: operation.id,
+                workCenterId: operation.workCenterId,
+                quantity: quantity,
+                estimatedDuration: operation.estimatedTime,
+                hourlyRate: operation.workCenter.costPerHour,
+                status: 'PENDING',
+                priority: priority
+              }
+            });
+            workOrders.push(workOrder);
+          }
+
+          // Create required materials tracking
+          const requiredMaterials = [];
+          for (const component of bom.components) {
+            const requiredQty = component.quantity * quantity;
+            const material = await tx.requiredMaterial.create({
+              data: {
+                manufacturingOrderId: newOrder.id,
+                productId: component.productId,
+                requiredQuantity: requiredQty,
+                consumedQuantity: 0,
+                unit: component.unit
+              }
+            });
+            requiredMaterials.push(material);
+          }
+
+          // Add work orders and required materials to the response
+          newOrder.workOrders = workOrders;
+          newOrder.requiredMaterials = requiredMaterials;
+        }
       }
+
+      return newOrder;
     });
 
     res.status(201).json({
@@ -376,6 +455,200 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     res.status(500).json({
       success: false,
       error: 'Failed to update manufacturing order'
+    });
+  }
+});
+
+// @route   PATCH /api/manufacturing-orders/:id/status
+// @desc    Update manufacturing order status with proper state transitions
+// @access  Private
+router.patch('/:id/status', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
+  body('status').isIn(['PLANNED', 'CONFIRMED', 'IN_PROGRESS', 'QUALITY_HOLD', 'COMPLETED', 'CANCELED']).withMessage('Invalid status'),
+  body('notes').optional().isString()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { id } = req.params;
+    const { status, notes } = req.body;
+
+    // Get current order
+    const existingOrder = await prisma.manufacturingOrder.findUnique({
+      where: { id },
+      include: {
+        workOrders: {
+          select: {
+            id: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        success: false,
+        error: 'Manufacturing order not found'
+      });
+    }
+
+    // Define valid state transitions
+    const validTransitions = {
+      'PLANNED': ['CONFIRMED', 'CANCELED'],
+      'CONFIRMED': ['IN_PROGRESS', 'CANCELED'],
+      'IN_PROGRESS': ['QUALITY_HOLD', 'COMPLETED', 'CANCELED'],
+      'QUALITY_HOLD': ['IN_PROGRESS', 'COMPLETED', 'CANCELED'],
+      'COMPLETED': [], // Terminal state
+      'CANCELED': [] // Terminal state
+    };
+
+    const currentStatus = existingOrder.status;
+    const newStatus = status;
+
+    // Check if transition is valid
+    if (!validTransitions[currentStatus]?.includes(newStatus)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid state transition from ${currentStatus} to ${newStatus}`,
+        validTransitions: validTransitions[currentStatus] || []
+      });
+    }
+
+    // Prepare update data
+    const updateData = { status };
+    
+    // Set timestamps based on status changes
+    if (newStatus === 'IN_PROGRESS' && currentStatus !== 'IN_PROGRESS') {
+      updateData.actualStartDate = new Date();
+    }
+    
+    if (newStatus === 'COMPLETED' && currentStatus !== 'COMPLETED') {
+      updateData.actualEndDate = new Date();
+    }
+
+    // Add notes if provided
+    if (notes) {
+      updateData.notes = notes;
+    }
+
+    // Use transaction to update order and related work orders
+    const result = await prisma.$transaction(async (tx) => {
+      // Update manufacturing order
+      const updatedOrder = await tx.manufacturingOrder.update({
+        where: { id },
+        data: updateData,
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              unit: true
+            }
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          },
+          requiredMaterials: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  unit: true
+                }
+              }
+            }
+          },
+          workOrders: {
+            include: {
+              workCenter: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              },
+              assignedTo: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Update related work orders based on manufacturing order status
+      if (newStatus === 'IN_PROGRESS') {
+        // Start all pending work orders
+        await tx.workOrder.updateMany({
+          where: {
+            manufacturingOrderId: id,
+            status: 'PENDING'
+          },
+          data: {
+            status: 'IN_PROGRESS',
+            startedAt: new Date()
+          }
+        });
+      } else if (newStatus === 'COMPLETED') {
+        // Complete all in-progress work orders
+        await tx.workOrder.updateMany({
+          where: {
+            manufacturingOrderId: id,
+            status: 'IN_PROGRESS'
+          },
+          data: {
+            status: 'COMPLETED',
+            completedAt: new Date()
+          }
+        });
+      } else if (newStatus === 'CANCELED') {
+        // Cancel all pending and in-progress work orders
+        await tx.workOrder.updateMany({
+          where: {
+            manufacturingOrderId: id,
+            status: { in: ['PENDING', 'IN_PROGRESS'] }
+          },
+          data: {
+            status: 'CANCELLED',
+            completedAt: new Date()
+          }
+        });
+      }
+
+      return updatedOrder;
+    });
+
+    res.json({
+      success: true,
+      message: `Manufacturing order status updated to ${newStatus}`,
+      data: result
+    });
+  } catch (error) {
+    console.error('Update manufacturing order status error:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({
+        success: false,
+        error: 'Manufacturing order not found'
+      });
+    }
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update manufacturing order status'
     });
   }
 });

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import apiService from "../../services/api";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -14,6 +16,7 @@ import {
   MoreVertical,
   Edit,
   Trash2,
+  Eye,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -36,19 +39,32 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
   const handleStatusChange = async (newStatus) => {
     setLoading(true);
     try {
-      const updates = {
-        status: newStatus,
-        ...(newStatus === "in_progress" &&
-          !order.actual_start && {
-            actual_start: new Date().toISOString(),
-          }),
-        ...(newStatus === "completed" && {
-          actual_end: new Date().toISOString(),
-        }),
+      // Map frontend status to backend status
+      const statusMap = {
+        'planned': 'PLANNED',
+        'confirmed': 'CONFIRMED', 
+        'in_progress': 'IN_PROGRESS',
+        'quality_hold': 'QUALITY_HOLD',
+        'completed': 'COMPLETED',
+        'cancelled': 'CANCELED'
       };
-      await onUpdate(order.id, updates);
+
+      const backendStatus = statusMap[newStatus] || newStatus.toUpperCase();
+      
+      // Use the new status update API
+      const result = await apiService.updateManufacturingOrderStatus(
+        order.id, 
+        backendStatus,
+        `Status changed to ${newStatus}`
+      );
+
+      if (result.success) {
+        // Call the parent update function to refresh the UI
+        await onUpdate(order.id, { status: newStatus });
+      }
     } catch (error) {
-      console.error("Error updating order:", error);
+      console.error("Error updating order status:", error);
+      // You might want to show a toast notification here
     } finally {
       setLoading(false);
     }
@@ -98,6 +114,15 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link 
+                    to={`/manufacturing-orders/${order.id}`}
+                    className="flex items-center gap-3 text-sm w-full"
+                  >
+                    <Eye className="w-4 h-4 text-gray-600" />
+                    View Details
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem className="flex items-center gap-3 text-sm">
                   <Edit className="w-4 h-4 text-gray-600" />
                   Edit Order
@@ -178,12 +203,23 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
+          <Button
+            size="sm"
+            variant="outline"
+            asChild
+            className="flex-1"
+          >
+            <Link to={`/manufacturing-orders/${order.id}`}>
+              <Eye className="w-4 h-4 mr-1" />
+              View Details
+            </Link>
+          </Button>
           {order.status === "planned" && (
             <Button
               size="sm"
               onClick={() => handleStatusChange("in_progress")}
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700"
             >
               <PlayCircle className="w-4 h-4 mr-1" />
               Start
@@ -194,7 +230,7 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
               size="sm"
               onClick={() => handleStatusChange("completed")}
               disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               <CheckCircle className="w-4 h-4 mr-1" />
               Complete

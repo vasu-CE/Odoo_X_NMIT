@@ -12,10 +12,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./Layout.jsx";
 import Dashboard from "./pages/dashboard";
 import ManufacturingOrders from "./pages/ManufacturingOrders";
+import ManufacturingOrderDetail from "./components/manufacturing/ManufacturingOrderDetail";
 import WorkOrders from "./pages/WorkOrders";
 import BOMPage from "./pages/BOM";
+import BOMDetail from "./components/manufacturing/BOMDetail";
 import WorkCenters from "./pages/WorkCenters";
+import WorkCenterDetail from "./components/manufacturing/WorkCenterDetail";
 import StockManagement from "./pages/StockManagement";
+import StockLedgerDetail from "./components/manufacturing/StockLedgerDetail";
 import Reports from "./pages/Reports";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
@@ -56,6 +60,16 @@ function App() {
             }
           />
           <Route
+            path="/manufacturing-orders/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ManufacturingOrderDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/work-orders"
             element={
               <ProtectedRoute>
@@ -76,6 +90,16 @@ function App() {
             }
           />
           <Route
+            path="/bom/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BOMDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/work-centers"
             element={
               <ProtectedRoute>
@@ -86,11 +110,31 @@ function App() {
             }
           />
           <Route
+            path="/work-centers/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <WorkCenterDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/stock-management"
             element={
               <ProtectedRoute>
                 <Layout>
                   <StockManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stock-management/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockLedgerDetail />
                 </Layout>
               </ProtectedRoute>
             }

@@ -1,172 +1,107 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiService from '../services/api.js';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check for existing session on mount
+  // Check for existing authentication on app load
   useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const storedUser = localStorage.getItem("manufacturing_user");
-        const storedToken = localStorage.getItem("manufacturing_token");
-
-        if (storedUser && storedToken) {
-          const userData = JSON.parse(storedUser);
-          setUser(userData);
-          setIsAuthenticated(true);
+    const checkAuth = async () => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          const response = await apiService.getCurrentUser();
+          if (response.success) {
+            setUser(response.data.user);
+            setIsAuthenticated(true);
+          } else {
+            localStorage.removeItem('authToken');
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          localStorage.removeItem('authToken');
         }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        // Clear invalid data
-        localStorage.removeItem("manufacturing_user");
-        localStorage.removeItem("manufacturing_token");
-      } finally {
-        setLoading(false);
       }
+      setIsLoading(false);
     };
 
     checkAuth();
   }, []);
 
-  const login = async (loginId, password) => {
+  const login = async (credentials) => {
     try {
-      setLoading(true);
-
-      // Simulate API call - replace with actual API endpoint
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ loginId, password }),
-      });
-
-      if (!response.ok) {
-        // For demo purposes, simulate successful login with mock data
-        if (loginId === "admin" && password === "admin123") {
-          const mockUser = {
-            id: 1,
-            loginId: "admin",
-            email: "admin@manufacturing.com",
-            name: "Production Manager",
-            role: "admin",
-            avatar: null,
-            createdAt: new Date().toISOString(),
-          };
-
-          const mockToken = "mock_jwt_token_" + Date.now();
-
-          setUser(mockUser);
-          setIsAuthenticated(true);
-          localStorage.setItem("manufacturing_user", JSON.stringify(mockUser));
-          localStorage.setItem("manufacturing_token", mockToken);
-
-          return { success: true, user: mockUser };
-        } else {
-          throw new Error("Invalid credentials");
-        }
+      const response = await apiService.login(credentials.email, credentials.password);
+      
+      if (response.success) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        return { success: true, user: response.data.user };
+      } else {
+        return { success: false, error: response.message || 'Login failed' };
       }
-
-      const data = await response.json();
-
-      setUser(data.user);
-      setIsAuthenticated(true);
-      localStorage.setItem("manufacturing_user", JSON.stringify(data.user));
-      localStorage.setItem("manufacturing_token", data.token);
-
-      return { success: true, user: data.user };
     } catch (error) {
-      console.error("Login error:", error);
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
+      console.error('Login error:', error);
+      return { success: false, error: error.message || 'Login failed' };
     }
   };
 
   const signup = async (userData) => {
     try {
-      setLoading(true);
-
-      // Simulate API call - replace with actual API endpoint
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
+      const response = await apiService.register({
+        name: userData.name,
+        email: userData.email,
+        password: userData.password,
+        role: 'SHOP_FLOOR_OPERATOR' // Default role
       });
-
-      if (!response.ok) {
-        // For demo purposes, simulate successful signup
-        const mockUser = {
-          id: Date.now(),
-          loginId: userData.loginId,
-          email: userData.email,
-          name: userData.name,
-          role: "user",
-          avatar: null,
-          createdAt: new Date().toISOString(),
-        };
-
-        const mockToken = "mock_jwt_token_" + Date.now();
-
-        setUser(mockUser);
+      
+      if (response.success) {
+        setUser(response.data.user);
         setIsAuthenticated(true);
-        localStorage.setItem("manufacturing_user", JSON.stringify(mockUser));
-        localStorage.setItem("manufacturing_token", mockToken);
-
-        return { success: true, user: mockUser };
+        return { success: true, user: response.data.user };
+      } else {
+        return { success: false, error: response.message || 'Registration failed' };
       }
-
-      const data = await response.json();
-
-      setUser(data.user);
-      setIsAuthenticated(true);
-      localStorage.setItem("manufacturing_user", JSON.stringify(data.user));
-      localStorage.setItem("manufacturing_token", data.token);
-
-      return { success: true, user: data.user };
     } catch (error) {
-      console.error("Signup error:", error);
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
+      console.error('Signup error:', error);
+      return { success: false, error: error.message || 'Registration failed' };
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("manufacturing_user");
-    localStorage.removeItem("manufacturing_token");
-  };
-
-  const updateUser = (updatedUser) => {
-    setUser(updatedUser);
-    localStorage.setItem("manufacturing_user", JSON.stringify(updatedUser));
+  const logout = async () => {
+    try {
+      await apiService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
   const value = {
     user,
     isAuthenticated,
-    loading,
+    isLoading,
     login,
     signup,
-    logout,
-    updateUser,
+    logout
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

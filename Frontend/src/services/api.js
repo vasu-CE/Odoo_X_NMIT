@@ -110,6 +110,13 @@ class ApiService {
     });
   }
 
+  async updateManufacturingOrderStatus(id, status, notes = '') {
+    return this.request(`/manufacturing-orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, notes })
+    });
+  }
+
   async deleteManufacturingOrder(id) {
     return this.request(`/manufacturing-orders/${id}`, {
       method: 'DELETE'
@@ -382,6 +389,11 @@ class ApiService {
     return this.request(`/reports/work-order-performance${queryString ? `?${queryString}` : ''}`);
   }
 
+  async getWorkOrderAnalysis(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/reports/work-order-analysis${queryString ? `?${queryString}` : ''}`);
+  }
+
   // Users
   async getUsers(params = {}) {
     const queryString = new URLSearchParams(params).toString();
@@ -428,6 +440,18 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(data)
     });
+  }
+
+  // Stock Aggregation
+  async getStockAggregation(params = {}) {
+    const queryParams = new URLSearchParams();
+    if (params.category) queryParams.append('category', params.category);
+    if (params.type) queryParams.append('type', params.type);
+    if (params.lowStock !== undefined) queryParams.append('lowStock', params.lowStock);
+    if (params.period) queryParams.append('period', params.period);
+    
+    const response = await this.request(`/products/stock-aggregation?${queryParams.toString()}`);
+    return response.data;
   }
 }
 

@@ -47,6 +47,7 @@ model Product {
   manufacturingOrders ManufacturingOrder[]
   bomComponents       BOMComponent[]
   stockMovements      StockMovement[]
+  requiredMaterials   RequiredMaterial[]
 
   @@map("products")
 }
@@ -142,8 +143,26 @@ model ManufacturingOrder {
   assignedTo   User?       @relation(fields: [assignedToId], references: [id])
   bom          BOM?        @relation(fields: [bomId], references: [id])
   workOrders   WorkOrder[]
+  requiredMaterials RequiredMaterial[]
 
   @@map("manufacturing_orders")
+}
+
+model RequiredMaterial {
+  id                  String  @id @default(cuid())
+  manufacturingOrderId String
+  productId           String
+  requiredQuantity    Float
+  consumedQuantity    Float   @default(0)
+  unit                String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  manufacturingOrder  ManufacturingOrder @relation(fields: [manufacturingOrderId], references: [id], onDelete: Cascade)
+  product             Product            @relation(fields: [productId], references: [id])
+
+  @@map("required_materials")
 }
 
 model WorkOrder {

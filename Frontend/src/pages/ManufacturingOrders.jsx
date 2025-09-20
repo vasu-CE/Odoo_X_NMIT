@@ -40,6 +40,9 @@ export default function ManufacturingOrders() {
   const [boms, setBoms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeStatusTab, setActiveStatusTab] = useState("draft");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [assigneeFilter, setAssigneeFilter] = useState("all");
   
   // Form data for creating new order
   const [formData, setFormData] = useState({
@@ -143,6 +146,20 @@ export default function ManufacturingOrders() {
   };
 
   const finishedProducts = products.filter(p => p.type === 'finished_goods');
+
+  // Filter orders based on search and filters
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = !searchTerm || 
+      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.assignee_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesPriority = priorityFilter === "all" || order.priority === priorityFilter;
+    const matchesAssignee = assigneeFilter === "all" || order.assignee_name === assigneeFilter;
+    const matchesStatus = order.status === activeStatusTab;
+    
+    return matchesSearch && matchesPriority && matchesAssignee && matchesStatus;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
