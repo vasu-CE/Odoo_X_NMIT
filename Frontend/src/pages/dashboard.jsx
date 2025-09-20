@@ -31,71 +31,87 @@ import {
 } from "lucide-react";
 
 // Status filter configuration with blue theme and interactive styling
-const statusFilters = {
-  all: [
-    {
-      id: "draft",
-      label: "Draft",
-      count: 2,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "confirmed",
-      label: "Confirmed",
-      count: 7,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "in_progress",
-      label: "In-Progress",
-      count: 1,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "to_close",
-      label: "To Close",
-      count: 5,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "not_assigned",
-      label: "Not Assigned",
-      count: 11,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "late",
-      label: "Late",
-      count: 11,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-  ],
-  my: [
-    {
-      id: "confirmed",
-      label: "Confirmed",
-      count: 7,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "in_progress",
-      label: "In-Progress",
-      count: 1,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "to_close",
-      label: "To Close",
-      count: 5,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-    {
-      id: "late",
-      label: "Late",
-      count: 8,
-      color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
-    },
-  ],
+const getStatusFilters = (filterCounts, activeFilterGroup) => {
+  const baseFilters = {
+    all: [
+      {
+        id: "all",
+        label: "All",
+        count: filterCounts.all.total || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "draft",
+        label: "Draft",
+        count: filterCounts.all.draft || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "confirmed",
+        label: "Confirmed",
+        count: filterCounts.all.confirmed || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "in_progress",
+        label: "In-Progress",
+        count: filterCounts.all.in_progress || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "to_close",
+        label: "To Close",
+        count: filterCounts.all.to_close || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "not_assigned",
+        label: "Not Assigned",
+        count: filterCounts.all.not_assigned || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "late",
+        label: "Late",
+        count: filterCounts.all.late || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+    ],
+    my: [
+      {
+        id: "all",
+        label: "All My Orders",
+        count: filterCounts.my.total || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "confirmed",
+        label: "Confirmed",
+        count: filterCounts.my.confirmed || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "in_progress",
+        label: "In-Progress",
+        count: filterCounts.my.in_progress || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "to_close",
+        label: "To Close",
+        count: filterCounts.my.to_close || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "late",
+        label: "Late",
+        count: filterCounts.my.late || 0,
+        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+    ],
+  };
+  
+  return baseFilters[activeFilterGroup] || baseFilters.all;
 };
 
 export default function Dashboard() {
@@ -103,7 +119,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilterGroup, setActiveFilterGroup] = useState("all");
-  const [activeStatusFilter, setActiveStatusFilter] = useState("draft");
+  const [activeStatusFilter, setActiveStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState("list"); // list or kanban
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -184,6 +200,11 @@ export default function Dashboard() {
     loadData();
   }, []);
 
+  // Reset status filter when switching between All/My
+  useEffect(() => {
+    setActiveStatusFilter("all");
+  }, [activeFilterGroup]);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -227,6 +248,7 @@ export default function Dashboard() {
   const calculateFilterCounts = () => {
     const counts = {
       all: {
+        total: orders.length,
         draft: orders.filter((o) => o.state === "Draft").length,
         confirmed: orders.filter((o) => o.state === "Confirmed").length,
         in_progress: orders.filter((o) => o.state === "In-Progress").length,
@@ -235,6 +257,7 @@ export default function Dashboard() {
         late: orders.filter((o) => o.isLate).length,
       },
       my: {
+        total: orders.filter((o) => o.isAssigned).length,
         confirmed: orders.filter((o) => o.state === "Confirmed" && o.isAssigned)
           .length,
         in_progress: orders.filter(
@@ -249,6 +272,7 @@ export default function Dashboard() {
   };
 
   const filterCounts = calculateFilterCounts();
+  const statusFilters = getStatusFilters(filterCounts, activeFilterGroup);
 
   // Filter orders based on search and active filters
   const filteredOrders = orders.filter((order) => {
@@ -258,11 +282,37 @@ export default function Dashboard() {
       order.finishedProduct?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.state?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus =
-      activeStatusFilter === "all" ||
-      order.state.toLowerCase().replace(" ", "_") === activeStatusFilter;
+    // Handle status filtering
+    let matchesStatus = true;
+    if (activeStatusFilter !== "all") {
+      switch (activeStatusFilter) {
+        case "draft":
+          matchesStatus = order.state === "Draft";
+          break;
+        case "confirmed":
+          matchesStatus = order.state === "Confirmed";
+          break;
+        case "in_progress":
+          matchesStatus = order.state === "In-Progress";
+          break;
+        case "to_close":
+          matchesStatus = order.state === "To Close";
+          break;
+        case "not_assigned":
+          matchesStatus = !order.isAssigned;
+          break;
+        case "late":
+          matchesStatus = order.isLate;
+          break;
+        default:
+          matchesStatus = true;
+      }
+    }
 
-    return matchesSearch && matchesStatus;
+    // Handle "my" filter group - only show assigned orders
+    const matchesFilterGroup = activeFilterGroup === "all" || order.isAssigned;
+
+    return matchesSearch && matchesStatus && matchesFilterGroup;
   });
 
   const handleSelectAll = (checked) => {
@@ -438,7 +488,7 @@ export default function Dashboard() {
 
           {/* Status Filter Buttons */}
           <div className="flex flex-wrap gap-2">
-            {statusFilters[activeFilterGroup].map((filter) => (
+            {statusFilters.map((filter) => (
               <Button
                 key={filter.id}
                 variant={
@@ -453,7 +503,7 @@ export default function Dashboard() {
                 }`}
               >
                 <span className="text-lg font-semibold">
-                  {filterCounts[activeFilterGroup][filter.id] || 0}
+                  {filter.count}
                 </span>
                 <span className="text-xs">{filter.label}</span>
               </Button>
