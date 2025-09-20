@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   loginId   String   @unique
   email     String   @unique
   name      String
@@ -28,7 +28,7 @@ model User {
 }
 
 model Product {
-  id            String      @id @default(cuid())
+  id            Int         @id @default(autoincrement())
   name          String
   description   String?
   type          ProductType
@@ -53,14 +53,14 @@ model Product {
 }
 
 model BOM {
-  id              String    @id @default(cuid())
-  productId       String?   // Made optional for new structure
+  id              Int       @id @default(autoincrement())
+  productId       Int?      // Made optional for new structure
   finished_product String   @default("") // New field for finished product name
   quantity        Float     @default(1) // New field for quantity
   reference       String?   // New field for reference
   version         String    @default("1.0")
   isActive        Boolean   @default(true)
-  createdById     String
+  createdById     Int
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -76,9 +76,9 @@ model BOM {
 }
 
 model BOMComponent {
-  id        String  @id @default(cuid())
-  bomId     String
-  productId String
+  id        Int     @id @default(autoincrement())
+  bomId     Int
+  productId Int
   quantity  Float
   unit      String  @default("PCS")
   wastage   Float   @default(0)
@@ -91,13 +91,13 @@ model BOMComponent {
 }
 
 model BOMOperation {
-  id           String @id @default(cuid())
-  bomId        String
+  id           Int    @id @default(autoincrement())
+  bomId        Int
   sequence     Int
   name         String
   description  String?
   timeMinutes  Int
-  workCenterId String
+  workCenterId Int
 
   // Relations
   bom        BOM        @relation(fields: [bomId], references: [id], onDelete: Cascade)
@@ -107,7 +107,7 @@ model BOMOperation {
 }
 
 model WorkCenter {
-  id           String            @id @default(cuid())
+  id           Int               @id @default(autoincrement())
   name         String
   description  String?
   hourlyRate   Float
@@ -124,10 +124,10 @@ model WorkCenter {
 }
 
 model ManufacturingOrder {
-  id              String               @id @default(cuid())
+  id              Int                  @id @default(autoincrement())
   orderNumber     String               @unique
   finishedProduct String               // Product name/description
-  productId       String?              // Reference to Product table
+  productId       Int?                 // Reference to Product table
   quantity        Int
   units           String               @default("PCS")
   status          ManufacturingStatus  @default(DRAFT)
@@ -135,8 +135,8 @@ model ManufacturingOrder {
   scheduleDate    DateTime
   startedAt       DateTime?
   completedAt     DateTime?
-  assigneeId      String?              // Renamed from assignedToId
-  bomId           String?
+  assigneeId      Int?                 // Renamed from assignedToId
+  bomId           Int?
   estimatedCost   Float?
   actualCost      Float?
   notes           String?
@@ -154,8 +154,8 @@ model ManufacturingOrder {
 }
 
 model Component {
-  id                  String  @id @default(cuid())
-  manufacturingOrderId String
+  id                  Int     @id @default(autoincrement())
+  manufacturingOrderId Int
   componentName       String
   availability        Float
   toConsume           Float
@@ -171,15 +171,15 @@ model Component {
 }
 
 model WorkOrder {
-  id                     String            @id @default(cuid())
-  manufacturingOrderId   String
+  id                     Int               @id @default(autoincrement())
+  manufacturingOrderId   Int
   operationName          String
   workCenterName         String
-  workCenterId           String?           // Reference to WorkCenter table
+  workCenterId           Int?              // Reference to WorkCenter table
   plannedDuration        Int               // in minutes
   realDuration           Int?              // in minutes
   status                 WorkOrderStatus   @default(PENDING)
-  assignedToId           String?
+  assignedToId           Int?
   estimatedTimeMinutes   Int
   actualTimeMinutes      Int?
   startTime              DateTime?
@@ -201,8 +201,8 @@ model WorkOrder {
 }
 
 model StockMovement {
-  id              String       @id @default(cuid())
-  productId       String
+  id              Int          @id @default(autoincrement())
+  productId       Int
   movementType    MovementType
   quantity        Int
   unitCost        Float?

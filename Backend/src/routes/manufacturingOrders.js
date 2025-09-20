@@ -188,9 +188,10 @@ router.get(
 router.get("/:id", authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const orderId = Number(id);
 
     const order = await prisma.manufacturingOrder.findUnique({
-      where: { id },
+      where: { id: orderId },
       include: {
         assignee: {
           select: {
@@ -592,6 +593,7 @@ router.put(
       }
 
       const { id } = req.params;
+      const orderId = Number(id);
       const updateData = req.body;
 
       // Remove fields that shouldn't be updated directly
@@ -606,7 +608,7 @@ router.put(
       }
 
       const order = await prisma.manufacturingOrder.update({
-        where: { id },
+        where: { id: orderId },
         data: updateData,
         include: {
           assignee: {
@@ -669,11 +671,12 @@ router.patch(
       }
 
       const { id } = req.params;
+      const orderId = Number(id);
       const { status, notes } = req.body;
 
       // Get current order
       const existingOrder = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         include: {
           workOrders: {
             select: {
@@ -734,7 +737,7 @@ router.patch(
       const result = await prisma.$transaction(async (tx) => {
         // Update manufacturing order
         const updatedOrder = await tx.manufacturingOrder.update({
-          where: { id },
+          where: { id: orderId },
           data: updateData,
           include: {
             assignee: {
@@ -773,7 +776,7 @@ router.patch(
           // Start all PENDING work orders
           await tx.workOrder.updateMany({
             where: {
-              manufacturingOrderId: id,
+              manufacturingOrderId: orderId,
               status: "PENDING",
             },
             data: {
@@ -785,7 +788,7 @@ router.patch(
           // Complete all in-progress work orders
           await tx.workOrder.updateMany({
             where: {
-              manufacturingOrderId: id,
+              manufacturingOrderId: orderId,
               status: "IN_PROGRESS",
             },
             data: {
@@ -797,7 +800,7 @@ router.patch(
           // Cancel all PENDING and in-progress work orders
           await tx.workOrder.updateMany({
             where: {
-              manufacturingOrderId: id,
+              manufacturingOrderId: orderId,
               status: { in: ["PENDING", "IN_PROGRESS"] },
             },
             data: {
@@ -838,10 +841,11 @@ router.delete(
   async (req, res) => {
     try {
       const { id } = req.params;
+      const orderId = Number(id);
 
       // Check if order can be deleted (only planned orders)
       const order = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         select: { status: true },
       });
 
@@ -860,7 +864,7 @@ router.delete(
       }
 
       await prisma.manufacturingOrder.delete({
-        where: { id },
+        where: { id: orderId },
       });
 
       res.json({
@@ -884,10 +888,11 @@ router.post(
   async (req, res) => {
     try {
       const { id } = req.params;
+      const orderId = Number(id);
 
       const order = await prisma.manufacturingOrder.update({
         where: {
-          id,
+          id: orderId,
           status: "DRAFT",
         },
         data: { status: "CONFIRMED" },
@@ -926,10 +931,11 @@ router.post(
   async (req, res) => {
     try {
       const { id } = req.params;
+      const orderId = Number(id);
 
       const order = await prisma.manufacturingOrder.update({
         where: {
-          id,
+          id: orderId,
           status: { in: ["DRAFT", "CONFIRMED"] },
         },
         data: {
@@ -971,10 +977,11 @@ router.post(
   async (req, res) => {
     try {
       const { id } = req.params;
+      const orderId = Number(id);
 
       const order = await prisma.manufacturingOrder.update({
         where: {
-          id,
+          id: orderId,
           status: "IN_PROGRESS",
         },
         data: {
@@ -1016,10 +1023,11 @@ router.post(
   async (req, res) => {
     try {
       const { id } = req.params;
+      const orderId = Number(id);
 
       const order = await prisma.manufacturingOrder.update({
         where: {
-          id,
+          id: orderId,
           status: { in: ["DRAFT", "CONFIRMED", "IN_PROGRESS"] },
         },
         data: { status: "CANCELLED" },
@@ -1054,9 +1062,10 @@ router.post(
 router.get("/:id/work-orders", authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const orderId = Number(id);
 
     const workOrders = await prisma.workOrder.findMany({
-      where: { manufacturingOrderId: id },
+      where: { manufacturingOrderId: orderId },
       include: {
         assignedTo: {
           select: {
@@ -1107,6 +1116,7 @@ router.post(
       }
 
       const { id } = req.params;
+      const orderId = Number(id);
       const {
         componentName,
         availability,
@@ -1116,7 +1126,7 @@ router.post(
 
       // Check if manufacturing order exists and is in draft state
       const order = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         select: { status: true },
       });
 
@@ -1136,7 +1146,7 @@ router.post(
 
       const component = await prisma.component.create({
         data: {
-          manufacturingOrderId: id,
+          manufacturingOrderId: orderId,
           componentName,
           availability,
           toConsume,
@@ -1182,11 +1192,13 @@ router.put(
       }
 
       const { id, componentId } = req.params;
+      const orderId = Number(id);
+      const componentIdNum = Number(componentId);
       const updateData = req.body;
 
       // Check if manufacturing order exists
       const order = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         select: { status: true },
       });
 
@@ -1199,8 +1211,8 @@ router.put(
 
       const component = await prisma.component.update({
         where: {
-          id: componentId,
-          manufacturingOrderId: id,
+          id: componentIdNum,
+          manufacturingOrderId: orderId,
         },
         data: updateData,
       });
@@ -1233,10 +1245,12 @@ router.delete(
   async (req, res) => {
     try {
       const { id, componentId } = req.params;
+      const orderId = Number(id);
+      const componentIdNum = Number(componentId);
 
       // Check if manufacturing order exists and is in draft state
       const order = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         select: { status: true },
       });
 
@@ -1256,8 +1270,8 @@ router.delete(
 
       await prisma.component.delete({
         where: {
-          id: componentId,
-          manufacturingOrderId: id,
+          id: componentIdNum,
+          manufacturingOrderId: orderId,
         },
       });
 
@@ -1310,12 +1324,13 @@ router.post(
       }
 
       const { id } = req.params;
+      const orderId = Number(id);
       const { operationName, workCenterName, plannedDuration, estimatedTimeMinutes, assignedToId } =
         req.body;
 
       // Check if manufacturing order exists and is in draft state
       const order = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         select: { status: true },
       });
 
@@ -1335,7 +1350,7 @@ router.post(
 
       const workOrder = await prisma.workOrder.create({
         data: {
-          manufacturingOrderId: id,
+          manufacturingOrderId: orderId,
           operationName,
           workCenterName,
           plannedDuration,
@@ -1385,11 +1400,13 @@ router.put(
       }
 
       const { id, workOrderId } = req.params;
+      const orderId = Number(id);
+      const workOrderIdNum = Number(workOrderId);
       const updateData = req.body;
 
       // Check if manufacturing order exists
       const order = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         select: { status: true },
       });
 
@@ -1402,8 +1419,8 @@ router.put(
 
       const workOrder = await prisma.workOrder.update({
         where: {
-          id: workOrderId,
-          manufacturingOrderId: id,
+          id: workOrderIdNum,
+          manufacturingOrderId: orderId,
         },
         data: updateData,
       });
@@ -1436,10 +1453,12 @@ router.delete(
   async (req, res) => {
     try {
       const { id, workOrderId } = req.params;
+      const orderId = Number(id);
+      const workOrderIdNum = Number(workOrderId);
 
       // Check if manufacturing order exists and is in draft state
       const order = await prisma.manufacturingOrder.findUnique({
-        where: { id },
+        where: { id: orderId },
         select: { status: true },
       });
 
@@ -1459,8 +1478,8 @@ router.delete(
 
       await prisma.workOrder.delete({
         where: {
-          id: workOrderId,
-          manufacturingOrderId: id,
+          id: workOrderIdNum,
+          manufacturingOrderId: orderId,
         },
       });
 

@@ -27,62 +27,74 @@ async function main() {
   // Create users
   const hashedPassword = await bcrypt.hash("password123", 12);
 
-  const users = await Promise.all([
-    prisma.user.upsert({
-      where: { email: "admin@manufacturing.com" },
-      update: {},
-      create: {
-        loginId: "admin",
-        email: "admin@manufacturing.com",
-        name: "Admin User",
-        password: hashedPassword,
-        role: "ADMIN",
-      },
-    }),
-    prisma.user.upsert({
-      where: { email: "manager@manufacturing.com" },
-      update: {},
-      create: {
-        loginId: "manager",
-        email: "manager@manufacturing.com",
-        name: "Manufacturing Manager",
-        password: hashedPassword,
-        role: "MANUFACTURING_MANAGER",
-      },
-    }),
-    prisma.user.upsert({
-      where: { email: "operator@manufacturing.com" },
-      update: {},
-      create: {
-        loginId: "operator",
-        email: "operator@manufacturing.com",
-        name: "Shop Floor Operator",
-        password: hashedPassword,
-        role: "SHOP_FLOOR_OPERATOR",
-      },
-    }),
-    prisma.user.upsert({
-      where: { email: "inventory@manufacturing.com" },
-      update: {},
-      create: {
-        loginId: "inventory",
-        email: "inventory@manufacturing.com",
-        name: "Inventory Manager",
-        password: hashedPassword,
-        role: "INVENTORY_MANAGER",
-      },
-    }),
-  ]);
+  // Check if users already exist to avoid duplicates
+  const existingUsers = await prisma.user.findMany({
+    where: {
+      email: {
+        in: [
+          "admin@manufacturing.com",
+          "manager@manufacturing.com", 
+          "operator@manufacturing.com",
+          "inventory@manufacturing.com"
+        ]
+      }
+    }
+  });
+
+  const users = [];
+  
+  if (existingUsers.length === 0) {
+    // Create users if none exist
+    const newUsers = await Promise.all([
+      prisma.user.create({
+        data: {
+          loginId: "admin",
+          email: "admin@manufacturing.com",
+          name: "Admin User",
+          password: hashedPassword,
+          role: "ADMIN",
+        },
+      }),
+      prisma.user.create({
+        data: {
+          loginId: "manager",
+          email: "manager@manufacturing.com",
+          name: "Manufacturing Manager",
+          password: hashedPassword,
+          role: "MANUFACTURING_MANAGER",
+        },
+      }),
+      prisma.user.create({
+        data: {
+          loginId: "operator",
+          email: "operator@manufacturing.com",
+          name: "Shop Floor Operator",
+          password: hashedPassword,
+          role: "SHOP_FLOOR_OPERATOR",
+        },
+      }),
+      prisma.user.create({
+        data: {
+          loginId: "inventory",
+          email: "inventory@manufacturing.com",
+          name: "Inventory Manager",
+          password: hashedPassword,
+          role: "INVENTORY_MANAGER",
+        },
+      }),
+    ]);
+    users.push(...newUsers);
+  } else {
+    // Use existing users
+    users.push(...existingUsers);
+  }
 
   console.log("✅ Users created");
 
   // Create work centers
   const workCenters = await Promise.all([
-    prisma.workCenter.upsert({
-      where: { id: "wc-1" },
-      update: {},
-      create: {
-        id: "wc-1",
+    prisma.workCenter.create({
+      data: {
         name: "Assembly Line 1",
         description: "Main assembly line for finished goods",
         hourlyRate: 25.0,
@@ -90,11 +102,8 @@ async function main() {
         status: "ACTIVE",
       },
     }),
-    prisma.workCenter.upsert({
-      where: { id: "wc-2" },
-      update: {},
-      create: {
-        id: "wc-2",
+    prisma.workCenter.create({
+      data: {
         name: "Quality Control Station",
         description: "Quality inspection and testing",
         hourlyRate: 30.0,
@@ -102,11 +111,8 @@ async function main() {
         status: "ACTIVE",
       },
     }),
-    prisma.workCenter.upsert({
-      where: { id: "wc-3" },
-      update: {},
-      create: {
-        id: "wc-3",
+    prisma.workCenter.create({
+      data: {
         name: "Packaging Station",
         description: "Final packaging and labeling",
         hourlyRate: 20.0,
@@ -114,11 +120,8 @@ async function main() {
         status: "ACTIVE",
       },
     }),
-    prisma.workCenter.upsert({
-      where: { id: "wc-4" },
-      update: {},
-      create: {
-        id: "wc-4",
+    prisma.workCenter.create({
+      data: {
         name: "Maintenance Bay",
         description: "Equipment maintenance and repair",
         hourlyRate: 35.0,
@@ -132,11 +135,8 @@ async function main() {
 
   // Create products
   const products = await Promise.all([
-    prisma.product.upsert({
-      where: { id: "prod-1" },
-      update: {},
-      create: {
-        id: "prod-1",
+    prisma.product.create({
+      data: {
         name: "Widget A",
         description: "High-quality widget A",
         type: "FINISHED_GOOD",
@@ -149,11 +149,8 @@ async function main() {
         category: "Widgets",
       },
     }),
-    prisma.product.upsert({
-      where: { id: "prod-2" },
-      update: {},
-      create: {
-        id: "prod-2",
+    prisma.product.create({
+      data: {
         name: "Widget B",
         description: "Standard widget B",
         type: "FINISHED_GOOD",
@@ -166,11 +163,8 @@ async function main() {
         category: "Widgets",
       },
     }),
-    prisma.product.upsert({
-      where: { id: "prod-3" },
-      update: {},
-      create: {
-        id: "prod-3",
+    prisma.product.create({
+      data: {
         name: "Raw Material 1",
         description: "Base raw material",
         type: "RAW_MATERIAL",
@@ -183,11 +177,8 @@ async function main() {
         category: "Raw Materials",
       },
     }),
-    prisma.product.upsert({
-      where: { id: "prod-4" },
-      update: {},
-      create: {
-        id: "prod-4",
+    prisma.product.create({
+      data: {
         name: "Raw Material 2",
         description: "Secondary raw material",
         type: "RAW_MATERIAL",
@@ -200,11 +191,8 @@ async function main() {
         category: "Raw Materials",
       },
     }),
-    prisma.product.upsert({
-      where: { id: "prod-5" },
-      update: {},
-      create: {
-        id: "prod-5",
+    prisma.product.create({
+      data: {
         name: "Component A",
         description: "Pre-fabricated component",
         type: "WIP",
@@ -222,24 +210,22 @@ async function main() {
   console.log("✅ Products created");
 
   // Create BOMs
-  const bom1 = await prisma.bOM.upsert({
-    where: { id: "bom-1" },
-    update: {},
-    create: {
-      id: "bom-1",
-      productId: "prod-1",
+  const bom1 = await prisma.bOM.create({
+    data: {
+      productId: products[0].id, // Widget A
+      finished_product: "Widget A",
+      quantity: 1.0,
       version: "1.0",
       isActive: true,
       createdById: users[1].id,
     },
   });
 
-  const bom2 = await prisma.bOM.upsert({
-    where: { id: "bom-2" },
-    update: {},
-    create: {
-      id: "bom-2",
-      productId: "prod-2",
+  const bom2 = await prisma.bOM.create({
+    data: {
+      productId: products[1].id, // Widget B
+      finished_product: "Widget B",
+      quantity: 1.0,
       version: "1.0",
       isActive: true,
       createdById: users[1].id,
@@ -251,7 +237,7 @@ async function main() {
     prisma.bOMComponent.create({
       data: {
         bomId: bom1.id,
-        productId: "prod-3",
+        productId: products[2].id, // Raw Material 1
         quantity: 2.0,
         unit: "KG",
         wastage: 0.1,
@@ -260,7 +246,7 @@ async function main() {
     prisma.bOMComponent.create({
       data: {
         bomId: bom1.id,
-        productId: "prod-4",
+        productId: products[3].id, // Raw Material 2
         quantity: 1.0,
         unit: "PCS",
         wastage: 0.05,
@@ -269,7 +255,7 @@ async function main() {
     prisma.bOMComponent.create({
       data: {
         bomId: bom2.id,
-        productId: "prod-3",
+        productId: products[2].id, // Raw Material 1
         quantity: 1.0,
         unit: "KG",
         wastage: 0.1,
@@ -286,7 +272,7 @@ async function main() {
         name: "Assembly",
         description: "Assemble components",
         timeMinutes: 30,
-        workCenterId: "wc-1",
+        workCenterId: workCenters[0].id, // Assembly Line 1
       },
     }),
     prisma.bOMOperation.create({
@@ -296,7 +282,7 @@ async function main() {
         name: "Quality Check",
         description: "Inspect finished product",
         timeMinutes: 10,
-        workCenterId: "wc-2",
+        workCenterId: workCenters[1].id, // Quality Control Station
       },
     }),
     prisma.bOMOperation.create({
@@ -306,7 +292,7 @@ async function main() {
         name: "Packaging",
         description: "Package for shipping",
         timeMinutes: 5,
-        workCenterId: "wc-3",
+        workCenterId: workCenters[2].id, // Packaging Station
       },
     }),
     prisma.bOMOperation.create({
@@ -316,7 +302,7 @@ async function main() {
         name: "Assembly",
         description: "Assemble components",
         timeMinutes: 20,
-        workCenterId: "wc-1",
+        workCenterId: workCenters[0].id, // Assembly Line 1
       },
     }),
     prisma.bOMOperation.create({
@@ -326,7 +312,7 @@ async function main() {
         name: "Packaging",
         description: "Package for shipping",
         timeMinutes: 5,
-        workCenterId: "wc-3",
+        workCenterId: workCenters[2].id, // Packaging Station
       },
     }),
   ]);
@@ -626,43 +612,43 @@ async function main() {
   await Promise.all([
     prisma.stockMovement.create({
       data: {
-        productId: "prod-1",
+        productId: products[0].id, // Widget A
         movementType: "IN",
         quantity: 200,
         unitCost: 15.0,
         totalValue: 3000.0,
         reference: "MO-003",
-        referenceId: manufacturingOrders[2].id,
+        referenceId: manufacturingOrders[2].id.toString(),
         notes: "Production completion",
       },
     }),
     prisma.stockMovement.create({
       data: {
-        productId: "prod-3",
+        productId: products[2].id, // Raw Material 1
         movementType: "OUT",
         quantity: 400,
         unitCost: 3.0,
         totalValue: 1200.0,
         reference: "MO-003",
-        referenceId: manufacturingOrders[2].id,
+        referenceId: manufacturingOrders[2].id.toString(),
         notes: "Material consumption for production",
       },
     }),
     prisma.stockMovement.create({
       data: {
-        productId: "prod-4",
+        productId: products[3].id, // Raw Material 2
         movementType: "OUT",
         quantity: 200,
         unitCost: 1.5,
         totalValue: 300.0,
         reference: "MO-003",
-        referenceId: manufacturingOrders[2].id,
+        referenceId: manufacturingOrders[2].id.toString(),
         notes: "Material consumption for production",
       },
     }),
     prisma.stockMovement.create({
       data: {
-        productId: "prod-3",
+        productId: products[2].id, // Raw Material 1
         movementType: "IN",
         quantity: 1000,
         unitCost: 3.0,
@@ -673,7 +659,7 @@ async function main() {
     }),
     prisma.stockMovement.create({
       data: {
-        productId: "prod-4",
+        productId: products[3].id, // Raw Material 2
         movementType: "IN",
         quantity: 500,
         unitCost: 1.5,

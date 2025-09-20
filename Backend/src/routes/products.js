@@ -98,9 +98,10 @@ router.get('/', authenticate, [
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const productId = Number(id);
 
     const product = await prisma.product.findUnique({
-      where: { id },
+      where: { id: productId },
       include: {
         stockMovements: {
           take: 20,
@@ -246,6 +247,7 @@ router.put('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
     }
 
     const { id } = req.params;
+    const productId = Number(id);
     const updateData = req.body;
 
     // Remove fields that shouldn't be updated directly
@@ -254,7 +256,7 @@ router.put('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
     delete updateData.createdAt;
 
     const product = await prisma.product.update({
-      where: { id },
+      where: { id: productId },
       data: updateData
     });
 
@@ -281,10 +283,11 @@ router.put('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
 router.delete('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
+    const productId = Number(id);
 
     // Check if product is being used by any manufacturing orders
     const manufacturingOrders = await prisma.manufacturingOrder.findMany({
-      where: { productId: id },
+      where: { productId: productId },
       select: { id: true, orderNumber: true }
     });
 
@@ -298,7 +301,7 @@ router.delete('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), asy
 
     // Soft delete by setting isActive to false
     const product = await prisma.product.update({
-      where: { id },
+      where: { id: productId },
       data: { isActive: false }
     });
 
@@ -325,13 +328,14 @@ router.delete('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), asy
 router.get('/:id/stock', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const productId = Number(id);
     const { period = '30' } = req.query;
     const days = parseInt(period);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
     const product = await prisma.product.findUnique({
-      where: { id },
+      where: { id: productId },
       select: {
         id: true,
         name: true,
@@ -351,7 +355,7 @@ router.get('/:id/stock', authenticate, async (req, res) => {
     // Get stock movements for the period
     const stockMovements = await prisma.stockMovement.findMany({
       where: {
-        productId: id,
+        productId: productId,
         createdAt: { gte: startDate }
       },
       orderBy: { createdAt: 'desc' },
@@ -425,6 +429,7 @@ router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER'
     }
 
     const { id } = req.params;
+    const productId = Number(id);
     const {
       quantity,
       movementType,
@@ -436,7 +441,7 @@ router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER'
 
     // Verify product exists
     const product = await prisma.product.findUnique({
-      where: { id }
+      where: { id: productId }
     });
 
     if (!product) {
@@ -472,7 +477,7 @@ router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER'
       // Create stock movement
       const stockMovement = await tx.stockMovement.create({
         data: {
-          productId: id,
+          productId: productId,
           movementType,
           quantity: Math.abs(quantity),
           unitCost,
@@ -485,7 +490,7 @@ router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER'
 
       // Update product stock
       const updatedProduct = await tx.product.update({
-        where: { id },
+        where: { id: productId },
         data: { currentStock: newStock }
       });
 

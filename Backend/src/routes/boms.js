@@ -120,9 +120,10 @@ router.get('/', authenticate, [
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const bomId = Number(id);
 
     const bom = await prisma.bOM.findUnique({
-      where: { id },
+      where: { id: bomId },
       include: {
         product: {
           select: {
@@ -373,11 +374,12 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     }
 
     const { id } = req.params;
+    const bomId = Number(id);
     const { version, components, operations } = req.body;
 
     // Check if BOM exists
     const existingBom = await prisma.bOM.findUnique({
-      where: { id }
+      where: { id: bomId }
     });
 
     if (!existingBom) {
@@ -395,7 +397,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     if (components) {
       // Delete existing components
       await prisma.bOMComponent.deleteMany({
-        where: { bomId: id }
+        where: { bomId: bomId }
       });
     }
 
@@ -403,12 +405,12 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     if (operations) {
       // Delete existing operations
       await prisma.bOMOperation.deleteMany({
-        where: { bomId: id }
+        where: { bomId: bomId }
       });
     }
 
     const bom = await prisma.bOM.update({
-      where: { id },
+      where: { id: bomId },
       data: {
         ...updateData,
         ...(components && {
@@ -494,10 +496,11 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
 router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
+    const bomId = Number(id);
 
     // Check if BOM is being used by any manufacturing orders
     const manufacturingOrders = await prisma.manufacturingOrder.findMany({
-      where: { bomId: id },
+      where: { bomId: bomId },
       select: { id: true, orderNumber: true }
     });
 
@@ -510,7 +513,7 @@ router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'),
     }
 
     await prisma.bOM.delete({
-      where: { id }
+      where: { id: bomId }
     });
 
     res.json({
@@ -538,10 +541,11 @@ router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'),
 router.post('/:id/activate', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
+    const bomId = Number(id);
 
     // Get the BOM to find its product
     const bom = await prisma.bOM.findUnique({
-      where: { id },
+      where: { id: bomId },
       select: { productId: true }
     });
 
@@ -560,7 +564,7 @@ router.post('/:id/activate', authenticate, authorize('MANUFACTURING_MANAGER', 'A
 
     // Activate this BOM
     const activatedBom = await prisma.bOM.update({
-      where: { id },
+      where: { id: bomId },
       data: { isActive: true },
       include: {
         product: {
@@ -593,9 +597,10 @@ router.post('/:id/activate', authenticate, authorize('MANUFACTURING_MANAGER', 'A
 router.get('/product/:productId', authenticate, async (req, res) => {
   try {
     const { productId } = req.params;
+    const productIdNum = Number(productId);
 
     const boms = await prisma.bOM.findMany({
-      where: { productId },
+      where: { productId: productIdNum },
       orderBy: [
         { isActive: 'desc' },
         { version: 'desc' }

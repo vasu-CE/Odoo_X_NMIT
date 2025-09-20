@@ -245,9 +245,10 @@ router.get('/my-assignments', authenticate, async (req, res) => {
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const workOrderId = Number(id);
 
     const workOrder = await prisma.workOrder.findUnique({
-      where: { id },
+      where: { id: workOrderId },
       include: {
         manufacturingOrder: {
           select: {
@@ -453,6 +454,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     }
 
     const { id } = req.params;
+    const workOrderId = Number(id);
     const updateData = req.body;
 
     // Remove fields that shouldn't be updated directly
@@ -465,7 +467,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     delete updateData.createdAt;
 
     const workOrder = await prisma.workOrder.update({
-      where: { id },
+      where: { id: workOrderId },
       data: updateData,
       include: {
         manufacturingOrder: {
@@ -521,10 +523,11 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
 router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
+    const workOrderId = Number(id);
 
     const workOrder = await prisma.workOrder.update({
       where: { 
-        id,
+        id: workOrderId,
         status: 'PENDING'
       },
       data: { 
@@ -567,10 +570,11 @@ router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
 router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
+    const workOrderId = Number(id);
 
     // Get current work order to calculate paused duration
     const currentWorkOrder = await prisma.workOrder.findUnique({
-      where: { id }
+      where: { id: workOrderId }
     });
 
     if (!currentWorkOrder) {
@@ -599,7 +603,7 @@ router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
 
     const workOrder = await prisma.workOrder.update({
       where: { 
-        id,
+        id: workOrderId,
         status: 'IN_PROGRESS'
       },
       data: { 
@@ -643,10 +647,11 @@ router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
 router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUFACTURING_MANAGER', 'ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
+    const workOrderId = Number(id);
 
     const workOrder = await prisma.workOrder.update({
       where: { 
-        id,
+        id: workOrderId,
         status: 'PAUSED'
       },
       data: { 
@@ -689,10 +694,11 @@ router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUF
 router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
+    const workOrderId = Number(id);
 
     // Get current work order to calculate real duration
     const currentWorkOrder = await prisma.workOrder.findUnique({
-      where: { id }
+      where: { id: workOrderId }
     });
 
     if (!currentWorkOrder) {
@@ -722,7 +728,7 @@ router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
 
     const workOrder = await prisma.workOrder.update({
       where: { 
-        id,
+        id: workOrderId,
         status: { in: ['IN_PROGRESS', 'PAUSED'] }
       },
       data: { 
@@ -767,10 +773,11 @@ router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
 router.patch('/:id/cancel', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
+    const workOrderId = Number(id);
 
     const workOrder = await prisma.workOrder.update({
       where: { 
-        id,
+        id: workOrderId,
         status: { in: ['PENDING', 'IN_PROGRESS', 'PAUSED'] }
       },
       data: { 

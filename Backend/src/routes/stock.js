@@ -214,6 +214,7 @@ router.get('/product/:productId', authenticate, [
     }
 
     const { productId } = req.params;
+    const productIdNum = Number(productId);
     const {
       page = 1,
       limit = 20,
@@ -225,7 +226,7 @@ router.get('/product/:productId', authenticate, [
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     // Build where clause
-    const where = { productId };
+    const where = { productId: productIdNum };
     if (movementType) where.movementType = movementType;
     if (startDate || endDate) {
       where.createdAt = {};

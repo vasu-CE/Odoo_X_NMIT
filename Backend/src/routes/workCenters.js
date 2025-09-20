@@ -89,9 +89,10 @@ router.get('/', authenticate, [
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const workCenterId = Number(id);
 
     const workCenter = await prisma.workCenter.findUnique({
-      where: { id },
+      where: { id: workCenterId },
       include: {
         operations: {
           include: {
@@ -261,6 +262,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     }
 
     const { id } = req.params;
+    const workCenterId = Number(id);
     const updateData = req.body;
 
     // Remove fields that shouldn't be updated directly
@@ -268,7 +270,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     delete updateData.createdAt;
 
     const workCenter = await prisma.workCenter.update({
-      where: { id },
+      where: { id: workCenterId },
       data: updateData
     });
 
@@ -298,11 +300,12 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
 router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
+    const workCenterId = Number(id);
 
     // Check if work center has active work orders
     const activeWorkOrders = await prisma.workOrder.count({
       where: {
-        workCenterId: id,
+        workCenterId: workCenterId,
         status: { in: ['PENDING', 'IN_PROGRESS', 'PAUSED'] }
       }
     });
@@ -315,7 +318,7 @@ router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'),
     }
 
     await prisma.workCenter.delete({
-      where: { id }
+      where: { id: workCenterId }
     });
 
     res.json({
@@ -343,13 +346,14 @@ router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'),
 router.get('/:id/utilization', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const workCenterId = Number(id);
     const { period = '7' } = req.query;
     const days = parseInt(period);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
     const workCenter = await prisma.workCenter.findUnique({
-      where: { id },
+      where: { id: workCenterId },
       select: { id: true, name: true, capacity: true }
     });
 
@@ -442,6 +446,7 @@ router.get('/:id/utilization', authenticate, async (req, res) => {
 router.get('/:id/schedule', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const workCenterId = Number(id);
     const { startDate, endDate } = req.query;
 
     const start = startDate ? new Date(startDate) : new Date();
@@ -449,7 +454,7 @@ router.get('/:id/schedule', authenticate, async (req, res) => {
 
     const workOrders = await prisma.workOrder.findMany({
       where: {
-        workCenterId: id,
+        workCenterId: workCenterId,
         OR: [
           {
             startedAt: {
@@ -493,7 +498,7 @@ router.get('/:id/schedule', authenticate, async (req, res) => {
     res.json({
       success: true,
       data: {
-        workCenterId: id,
+        workCenterId: workCenterId,
         period: {
           start: start.toISOString(),
           end: end.toISOString()

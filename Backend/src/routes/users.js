@@ -90,9 +90,10 @@ router.get('/', authenticate, [
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = Number(id);
 
     // Users can only view their own profile unless they're admin/manager
-    if (req.user.id !== id && !['ADMIN', 'MANUFACTURING_MANAGER'].includes(req.user.role)) {
+    if (req.user.id !== userId && !['ADMIN', 'MANUFACTURING_MANAGER'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -100,7 +101,7 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -221,10 +222,11 @@ router.put('/:id', authenticate, [
     }
 
     const { id } = req.params;
+    const userId = Number(id);
     const updateData = req.body;
 
     // Users can only update their own profile unless they're admin/manager
-    if (req.user.id !== id && !['ADMIN', 'MANUFACTURING_MANAGER'].includes(req.user.role)) {
+    if (req.user.id !== userId && !['ADMIN', 'MANUFACTURING_MANAGER'].includes(req.user.role)) {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -232,7 +234,7 @@ router.put('/:id', authenticate, [
     }
 
     // Regular users cannot change their role or active status
-    if (req.user.id === id && !['ADMIN', 'MANUFACTURING_MANAGER'].includes(req.user.role)) {
+    if (req.user.id === userId && !['ADMIN', 'MANUFACTURING_MANAGER'].includes(req.user.role)) {
       delete updateData.role;
       delete updateData.isActive;
     }
@@ -243,7 +245,7 @@ router.put('/:id', authenticate, [
     delete updateData.createdAt;
 
     const user = await prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: updateData,
       select: {
         id: true,
@@ -282,9 +284,10 @@ router.put('/:id', authenticate, [
 router.delete('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = Number(id);
 
     // Cannot delete self
-    if (req.user.id === id) {
+    if (req.user.id === userId) {
       return res.status(400).json({
         success: false,
         error: 'Cannot delete your own account'
@@ -293,7 +296,7 @@ router.delete('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
 
     // Soft delete by setting isActive to false
     const user = await prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: { isActive: false },
       select: {
         id: true,
@@ -424,10 +427,11 @@ router.post('/:id/change-password', authenticate, [
     }
 
     const { id } = req.params;
+    const userId = Number(id);
     const { currentPassword, newPassword } = req.body;
 
     // Users can only change their own password unless they're admin
-    if (req.user.id !== id && req.user.role !== 'ADMIN') {
+    if (req.user.id !== userId && req.user.role !== 'ADMIN') {
       return res.status(403).json({
         success: false,
         error: 'Access denied'
@@ -436,7 +440,7 @@ router.post('/:id/change-password', authenticate, [
 
     // Get user with password
     const user = await prisma.user.findUnique({
-      where: { id }
+      where: { id: userId }
     });
 
     if (!user) {
@@ -461,7 +465,7 @@ router.post('/:id/change-password', authenticate, [
 
     // Update password
     await prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: { password: hashedNewPassword }
     });
 
