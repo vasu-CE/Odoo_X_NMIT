@@ -11,6 +11,7 @@ import {
 } from "../components/ui/card";
 import { toast } from "sonner";
 import { Mail, Factory, ArrowLeft, CheckCircle } from "lucide-react";
+import apiService from "../services/api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -38,7 +39,8 @@ export default function ForgotPasswordPage() {
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await apiService.forgotPassword(email);
+      // await new Promise((resolve) => setTimeout(resolve, 2000));
 
       setEmailSent(true);
       toast.success("Reset instructions sent!", {
