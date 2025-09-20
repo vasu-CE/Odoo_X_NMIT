@@ -88,8 +88,8 @@ export default function FilterBar({
   };
 
   return (
-    <div className="flex items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-200/60 shadow-sm">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 p-4 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-sm">
+      <div className="flex items-center gap-3 flex-shrink-0">
         <div className="p-2 bg-blue-100 rounded-lg">
           <Filter className="w-4 h-4 text-blue-600" />
         </div>
@@ -109,149 +109,153 @@ export default function FilterBar({
         )}
       </div>
 
-      <div className="flex items-center gap-3 flex-1">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40 h-10 bg-white/80 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="py-3">
-              <div className="flex items-center gap-3">
-                {getStatusIcon("all")}
-                <span className="font-medium">All Status</span>
-                <Badge
-                  variant="outline"
-                  className="ml-auto text-xs bg-gray-50 text-gray-600"
-                >
-                  All
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="planned" className="py-3">
-              <div className="flex items-center gap-3">
-                {getStatusIcon("planned")}
-                <span className="font-medium">Planned</span>
-                <Badge
-                  variant="outline"
-                  className="ml-auto text-xs bg-blue-50 text-blue-600"
-                >
-                  Scheduled
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="in_progress" className="py-3">
-              <div className="flex items-center gap-3">
-                {getStatusIcon("in_progress")}
-                <span className="font-medium">Active</span>
-                <Badge
-                  variant="outline"
-                  className="ml-auto text-xs bg-orange-50 text-orange-600"
-                >
-                  Running
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="completed" className="py-3">
-              <div className="flex items-center gap-3">
-                {getStatusIcon("completed")}
-                <span className="font-medium">Completed</span>
-                <Badge
-                  variant="outline"
-                  className="ml-auto text-xs bg-green-50 text-green-600"
-                >
-                  Done
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="cancelled" className="py-3">
-              <div className="flex items-center gap-3">
-                {getStatusIcon("cancelled")}
-                <span className="font-medium">Cancelled</span>
-                <Badge
-                  variant="outline"
-                  className="ml-auto text-xs bg-red-50 text-red-600"
-                >
-                  Stopped
-                </Badge>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+        <div className="flex-1 sm:flex-none sm:w-40">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full h-10">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon("all")}
+                  <span className="font-medium">All Status</span>
+                  <Badge
+                    variant="outline"
+                    className="ml-auto text-xs bg-gray-50 text-gray-600"
+                  >
+                    All
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="planned">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon("planned")}
+                  <span className="font-medium">Planned</span>
+                  <Badge
+                    variant="outline"
+                    className="ml-auto text-xs bg-blue-50 text-blue-600"
+                  >
+                    Scheduled
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="in_progress">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon("in_progress")}
+                  <span className="font-medium">Active</span>
+                  <Badge
+                    variant="outline"
+                    className="ml-auto text-xs bg-orange-50 text-orange-600"
+                  >
+                    Running
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="completed">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon("completed")}
+                  <span className="font-medium">Completed</span>
+                  <Badge
+                    variant="outline"
+                    className="ml-auto text-xs bg-green-50 text-green-600"
+                  >
+                    Done
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="cancelled">
+                <div className="flex items-center gap-3">
+                  {getStatusIcon("cancelled")}
+                  <span className="font-medium">Cancelled</span>
+                  <Badge
+                    variant="outline"
+                    className="ml-auto text-xs bg-red-50 text-red-600"
+                  >
+                    Stopped
+                  </Badge>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="w-40 h-10 bg-white/80 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-            <SelectValue placeholder="Priority" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="py-3">
-              <div className="flex items-center gap-3">
-                {getPriorityIcon("all")}
-                <span className="font-medium">All Priority</span>
-                <Badge
-                  variant="outline"
-                  className="ml-auto text-xs bg-gray-50 text-gray-600"
-                >
-                  All
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="low" className="py-3">
-              <div className="flex items-center gap-3">
-                {getPriorityIcon("low")}
-                <span className="font-medium">Low</span>
-                <Badge
-                  className={`ml-auto text-xs ${getPriorityBadgeColor("low")}`}
-                >
-                  Normal
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="medium" className="py-3">
-              <div className="flex items-center gap-3">
-                {getPriorityIcon("medium")}
-                <span className="font-medium">Medium</span>
-                <Badge
-                  className={`ml-auto text-xs ${getPriorityBadgeColor(
+        <div className="flex-1 sm:flex-none sm:w-40">
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-full h-10">
+              <SelectValue placeholder="Priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <div className="flex items-center gap-3">
+                  {getPriorityIcon("all")}
+                  <span className="font-medium">All Priority</span>
+                  <Badge
+                    variant="outline"
+                    className="ml-auto text-xs bg-gray-50 text-gray-600"
+                  >
+                    All
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="low">
+                <div className="flex items-center gap-3">
+                  {getPriorityIcon("low")}
+                  <span className="font-medium">Low</span>
+                  <Badge
+                    className={`ml-auto text-xs ${getPriorityBadgeColor("low")}`}
+                  >
+                    Normal
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="medium">
+                <div className="flex items-center gap-3">
+                  {getPriorityIcon("medium")}
+                  <span className="font-medium">Medium</span>
+                  <Badge
+                    className={`ml-auto text-xs ${getPriorityBadgeColor(
                     "medium"
                   )}`}
-                >
-                  Standard
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="high" className="py-3">
-              <div className="flex items-center gap-3">
-                {getPriorityIcon("high")}
-                <span className="font-medium">High</span>
-                <Badge
-                  className={`ml-auto text-xs ${getPriorityBadgeColor("high")}`}
-                >
-                  Important
-                </Badge>
-              </div>
-            </SelectItem>
-            <SelectItem value="urgent" className="py-3">
-              <div className="flex items-center gap-3">
-                {getPriorityIcon("urgent")}
-                <span className="font-medium">Urgent</span>
-                <Badge
-                  className={`ml-auto text-xs ${getPriorityBadgeColor(
+                  >
+                    Standard
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="high">
+                <div className="flex items-center gap-3">
+                  {getPriorityIcon("high")}
+                  <span className="font-medium">High</span>
+                  <Badge
+                    className={`ml-auto text-xs ${getPriorityBadgeColor("high")}`}
+                  >
+                    Important
+                  </Badge>
+                </div>
+              </SelectItem>
+              <SelectItem value="urgent">
+                <div className="flex items-center gap-3">
+                  {getPriorityIcon("urgent")}
+                  <span className="font-medium">Urgent</span>
+                  <Badge
+                    className={`ml-auto text-xs ${getPriorityBadgeColor(
                     "urgent"
                   )}`}
-                >
-                  Critical
-                </Badge>
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+                  >
+                    Critical
+                  </Badge>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {activeFiltersCount > 0 && (
           <Button
             variant="outline"
             size="sm"
             onClick={clearAllFilters}
-            className="h-10 px-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 border-gray-200"
+            className="w-full sm:w-auto h-10 px-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 border-gray-200"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Clear All

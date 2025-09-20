@@ -75,16 +75,16 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
   return (
     <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg hover:shadow-xl transition-all duration-300 group">
       <CardHeader className="pb-4">
-        <div className="flex justify-between items-start">
-          <div>
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <StatusIcon className="w-4 h-4 text-gray-500" />
-              {order.order_number || `MO-${order.id.slice(-6)}`}
+              <StatusIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <span className="truncate">{order.order_number || `MO-${order.id.slice(-6)}`}</span>
             </h3>
-            <p className="text-sm text-gray-600 mt-1">{order.product_name}</p>
+            <p className="text-sm text-gray-600 mt-1 truncate">{order.product_name}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge className={statusConfig[order.status]?.color}>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Badge className={`${statusConfig[order.status]?.color} text-xs px-2 py-1`}>
               {statusConfig[order.status]?.label}
             </Badge>
             <DropdownMenu>
@@ -92,18 +92,18 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-8 w-8 opacity-60 group-hover:opacity-100 transition-all duration-200 hover:bg-gray-100 rounded-full"
                 >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>
-                  <Edit className="w-4 h-4 mr-2" />
+                <DropdownMenuItem className="flex items-center gap-3 text-sm">
+                  <Edit className="w-4 h-4 text-gray-600" />
                   Edit Order
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600">
-                  <Trash2 className="w-4 h-4 mr-2" />
+                <DropdownMenuItem className="flex items-center gap-3 text-sm text-red-600 hover:bg-red-50">
+                  <Trash2 className="w-4 h-4" />
                   Cancel Order
                 </DropdownMenuItem>
               </DropdownMenuContent>

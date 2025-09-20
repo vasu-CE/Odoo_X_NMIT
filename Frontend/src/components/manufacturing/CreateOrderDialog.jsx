@@ -143,14 +143,14 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-blue-50/30 to-indigo-50/30">
-        <DialogHeader className="pb-4 border-b border-gray-200/60">
-          <DialogTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Package className="w-6 h-6 text-blue-600" />
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto bg-white">
+        <DialogHeader className="pb-6 border-b border-gray-200">
+          <DialogTitle className="flex items-center gap-4 text-2xl">
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Package className="w-7 h-7 text-blue-600" />
             </div>
             <div>
-              <span className="text-gray-900">Create Manufacturing Order</span>
+              <span className="text-gray-900 font-bold">Create Manufacturing Order</span>
               <p className="text-sm font-normal text-gray-500 mt-1">
                 Set up a new production order with materials and scheduling
               </p>
@@ -158,21 +158,21 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8 p-1">
           {/* Product Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-3">
               <Label htmlFor="product" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Package className="w-4 h-4 text-blue-500" />
                 Product to Manufacture
               </Label>
               <Select value={formData.product_name} onValueChange={handleProductSelect}>
-                <SelectTrigger className="h-11 bg-white/80 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                <SelectTrigger className="h-12">
                   <SelectValue placeholder="Select product to manufacture" />
                 </SelectTrigger>
                 <SelectContent>
                   {finishedProducts.map(product => (
-                    <SelectItem key={product.id} value={product.name} className="py-3">
+                    <SelectItem key={product.id} value={product.name}>
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <span className="font-medium">{product.name}</span>
@@ -198,24 +198,24 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                 value={formData.quantity}
                 onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
                 placeholder="Enter quantity"
-                className="h-11 bg-white/80 border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100"
+                className="h-12"
               />
             </div>
           </div>
 
           {/* Priority and Scheduling */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="space-y-3">
               <Label htmlFor="priority" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-orange-500" />
                 Priority Level
               </Label>
               <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
-                <SelectTrigger className="h-11 bg-white/80 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+                <SelectTrigger className="h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low" className="py-3">
+                  <SelectItem value="low">
                     <div className="flex items-center gap-3">
                       {getPriorityIcon("low")}
                       <span className="font-medium">Low Priority</span>
@@ -224,7 +224,7 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                       </Badge>
                     </div>
                   </SelectItem>
-                  <SelectItem value="medium" className="py-3">
+                  <SelectItem value="medium">
                     <div className="flex items-center gap-3">
                       {getPriorityIcon("medium")}
                       <span className="font-medium">Medium Priority</span>
@@ -233,7 +233,7 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                       </Badge>
                     </div>
                   </SelectItem>
-                  <SelectItem value="high" className="py-3">
+                  <SelectItem value="high">
                     <div className="flex items-center gap-3">
                       {getPriorityIcon("high")}
                       <span className="font-medium">High Priority</span>
@@ -242,7 +242,7 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                       </Badge>
                     </div>
                   </SelectItem>
-                  <SelectItem value="urgent" className="py-3">
+                  <SelectItem value="urgent">
                     <div className="flex items-center gap-3">
                       {getPriorityIcon("urgent")}
                       <span className="font-medium">Urgent</span>
@@ -265,7 +265,7 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                 type="datetime-local"
                 value={formData.scheduled_start}
                 onChange={(e) => setFormData(prev => ({ ...prev, scheduled_start: e.target.value }))}
-                className="h-11 bg-white/80 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
+                className="h-12"
               />
             </div>
 
@@ -279,22 +279,22 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                 value={formData.assignee_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, assignee_name: e.target.value }))}
                 placeholder="Assign to operator"
-                className="h-11 bg-white/80 border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                className="h-12"
               />
             </div>
           </div>
 
           {/* BoM Information */}
           {hasBom ? (
-            <Card className="bg-gradient-to-r from-green-50/80 to-emerald-50/80 border-green-200 shadow-sm">
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-sm">
               <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 bg-green-100 rounded-xl">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <span className="font-semibold text-green-800 text-lg">Bill of Materials Found</span>
-                    <p className="text-sm text-green-600">Materials and operations automatically calculated</p>
+                    <span className="font-bold text-green-800 text-xl">Bill of Materials Found</span>
+                    <p className="text-sm text-green-600 mt-1">Materials and operations automatically calculated</p>
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -353,14 +353,14 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
               </CardContent>
             </Card>
           ) : formData.product_name && (
-            <Card className="bg-gradient-to-r from-yellow-50/80 to-amber-50/80 border-yellow-200 shadow-sm">
+            <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200 shadow-sm">
               <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-yellow-100 rounded-xl">
+                    <AlertTriangle className="w-6 h-6 text-yellow-600" />
                   </div>
                   <div>
-                    <span className="font-semibold text-yellow-800">No Bill of Materials Found</span>
+                    <span className="font-bold text-yellow-800 text-lg">No Bill of Materials Found</span>
                     <p className="text-sm text-yellow-600 mt-1">
                       You may need to create a BOM for this product first to automatically calculate materials and costs.
                     </p>
@@ -382,12 +382,12 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               placeholder="Add any special instructions, quality requirements, or notes for this manufacturing order..."
               rows={4}
-              className="bg-white/80 border-gray-200 focus:border-gray-400 focus:ring-2 focus:ring-gray-100 resize-none"
+              className="resize-none"
             />
           </div>
 
           {/* Submit Buttons */}
-          <div className="flex justify-between items-center pt-6 border-t border-gray-200/60">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6 border-t border-gray-200">
             <div className="text-sm text-gray-500">
               {formData.product_name && formData.quantity > 0 ? (
                 <span className="flex items-center gap-2">
@@ -401,7 +401,7 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                 </span>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 w-full sm:w-auto">
               <Button
                 type="button"
                 variant="outline"
@@ -409,14 +409,14 @@ export default function CreateOrderDialog({ open, onOpenChange, onSubmit, produc
                   resetForm();
                   onOpenChange(false);
                 }}
-                className="px-6 h-11 border-gray-300 hover:bg-gray-50"
+                className="flex-1 sm:flex-none px-6 h-12 border-gray-300 hover:bg-gray-50"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={loading || !formData.product_name || !formData.quantity}
-                className="px-8 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 sm:flex-none px-8 h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
