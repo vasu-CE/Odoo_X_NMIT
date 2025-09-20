@@ -277,6 +277,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
         finished_product,
         quantity,
         reference,
+        isActive: true, // Set to active by default
         createdById: req.user.id,
         components: {
           create: components.map(comp => ({

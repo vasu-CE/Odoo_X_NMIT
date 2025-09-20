@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BOM, Product } from "../entities/all";
+import apiService from "../services/api";
 import {
   Card,
   CardContent,
@@ -33,6 +34,7 @@ import {
 export default function BOMPage() {
   const [boms, setBoms] = useState([]);
   const [products, setProducts] = useState([]);
+  const [workCenters, setWorkCenters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBOM, setSelectedBOM] = useState(null);
@@ -42,7 +44,7 @@ export default function BOMPage() {
   const [editingBOM, setEditingBOM] = useState(null);
   const [formData, setFormData] = useState({
     finished_product: "",
-    quantity: "",
+    quantity: "1",
     reference: "",
     components: []
   });
@@ -110,9 +112,10 @@ export default function BOMPage() {
       
       // Try to load from API first
       try {
-        const [bomsData, productsData] = await Promise.all([
+        const [bomsData, productsData, workCentersData] = await Promise.all([
           BOM.list("-created_date"),
           Product.list("-created_date"),
+          apiService.getWorkCenters()
         ]);
         
         if (bomsData && bomsData.length > 0) {
@@ -128,17 +131,41 @@ export default function BOMPage() {
           // Fallback to static data if API returns empty
           setProducts(sampleProducts);
         }
+
+        if (workCentersData && workCentersData.success && workCentersData.data.workCenters) {
+          setWorkCenters(workCentersData.data.workCenters);
+        } else {
+          // Fallback to static work centers if API fails
+          setWorkCenters([
+            { id: 1, name: "Assembly", status: "ACTIVE" },
+            { id: 2, name: "Machining", status: "ACTIVE" },
+            { id: 3, name: "Packaging", status: "ACTIVE" },
+            { id: 4, name: "Quality Control", status: "ACTIVE" }
+          ]);
+        }
       } catch (apiError) {
         console.warn("API not available, using static data:", apiError);
         // Fallback to static data if API fails
         setBoms(sampleBOMs);
         setProducts(sampleProducts);
+        setWorkCenters([
+          { id: 1, name: "Assembly", status: "ACTIVE" },
+          { id: 2, name: "Machining", status: "ACTIVE" },
+          { id: 3, name: "Packaging", status: "ACTIVE" },
+          { id: 4, name: "Quality Control", status: "ACTIVE" }
+        ]);
       }
     } catch (error) {
       console.error("Error loading data:", error);
       // Final fallback to static data
       setBoms(sampleBOMs);
       setProducts(sampleProducts);
+      setWorkCenters([
+        { id: 1, name: "Assembly", status: "ACTIVE" },
+        { id: 2, name: "Machining", status: "ACTIVE" },
+        { id: 3, name: "Packaging", status: "ACTIVE" },
+        { id: 4, name: "Quality Control", status: "ACTIVE" }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -164,7 +191,7 @@ export default function BOMPage() {
   const handleNewBOM = () => {
     setFormData({
       finished_product: "",
-      quantity: "",
+      quantity: "1",
       reference: "",
       components: []
     });
@@ -187,10 +214,33 @@ export default function BOMPage() {
 
   const handleSaveBOM = async () => {
     try {
+      // Map components to use product_id instead of product_name
+      const mappedComponents = formData.components.map(comp => {
+        // Find the product by name to get its ID
+        const product = products.find(p => p.name === comp.product_name);
+        return {
+          product_id: product ? product.id : null,
+          quantity: comp.quantity,
+          unit: comp.unit || "PCS"
+        };
+      }).filter(comp => comp.product_id); // Filter out components without valid product_id
+
+      // Map work orders to use work_center_id instead of work_center
+      const mappedWorkOrders = workOrders.map(wo => {
+        const workCenter = workCenters.find(wc => wc.name === wo.work_center);
+        return {
+          operation: wo.operation,
+          work_center_id: workCenter ? workCenter.id : null,
+          expected_duration: parseFloat(wo.expected_duration) || 0
+        };
+      }).filter(wo => wo.work_center_id); // Filter out work orders without valid work_center_id
+
       const bomData = {
-        ...formData,
+        finished_product: formData.finished_product,
         quantity: parseFloat(formData.quantity),
-        status: "draft"
+        reference: formData.reference,
+        components: mappedComponents,
+        workOrders: mappedWorkOrders
       };
 
       let result;
@@ -551,20 +601,13 @@ export default function BOMPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="finished_product">Finished product</Label>
-                    <select
+                    <Input
                       id="finished_product"
                       value={formData.finished_product}
                       onChange={(e) => setFormData(prev => ({ ...prev, finished_product: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
-                    >
-                      <option value="">Select Product</option>
-                      {products.filter(p => p.category === "Furniture").map(product => (
-                        <option key={product.id} value={product.name}>
-                          {product.name}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">Many2one field, fetch from stock ledger</p>
+                      placeholder="Enter finished product name"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Text field for finished product name</p>
                   </div>
                   <div>
                     <Label htmlFor="quantity">Quantity</Label>
@@ -725,10 +768,11 @@ export default function BOMPage() {
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
                                   <option value="">Select Work Center</option>
-                                  <option value="Assembly">Assembly</option>
-                                  <option value="Machining">Machining</option>
-                                  <option value="Packaging">Packaging</option>
-                                  <option value="Quality Control">Quality Control</option>
+                                  {workCenters.filter(wc => wc.status === 'ACTIVE').map(workCenter => (
+                                    <option key={workCenter.id} value={workCenter.name}>
+                                      {workCenter.name}
+                                    </option>
+                                  ))}
                                 </select>
                               </td>
                               <td className="py-3 px-4">
@@ -803,20 +847,13 @@ export default function BOMPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="edit_finished_product">Finished product</Label>
-                    <select
+                    <Input
                       id="edit_finished_product"
                       value={formData.finished_product}
                       onChange={(e) => setFormData(prev => ({ ...prev, finished_product: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
-                    >
-                      <option value="">Select Product</option>
-                      {products.filter(p => p.category === "Furniture").map(product => (
-                        <option key={product.id} value={product.name}>
-                          {product.name}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-500 mt-1">Many Zone field, fetch from stock ledger</p>
+                      placeholder="Enter finished product name"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Text field for finished product name</p>
                   </div>
                   <div>
                     <Label htmlFor="edit_quantity">Quantity</Label>
