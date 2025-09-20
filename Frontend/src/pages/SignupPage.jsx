@@ -41,10 +41,26 @@ export default function SignupPage() {
   const navigate = useNavigate();
 
   const roleOptions = [
-    { value: "SHOP_FLOOR_OPERATOR", label: "Shop Floor Operator", description: "Operate machinery and complete production tasks" },
-    { value: "INVENTORY_MANAGER", label: "Inventory Manager", description: "Manage stock levels and inventory operations" },
-    { value: "MANUFACTURING_MANAGER", label: "Manufacturing Manager", description: "Oversee production processes and team management" },
-    { value: "BUSINESS_OWNER", label: "Business Owner", description: "Full system access and business oversight" },
+    {
+      value: "SHOP_FLOOR_OPERATOR",
+      label: "Shop Floor Operator",
+      description: "Operate machinery and complete production tasks",
+    },
+    {
+      value: "INVENTORY_MANAGER",
+      label: "Inventory Manager",
+      description: "Manage stock levels and inventory operations",
+    },
+    {
+      value: "MANUFACTURING_MANAGER",
+      label: "Manufacturing Manager",
+      description: "Oversee production processes and team management",
+    },
+    {
+      value: "BUSINESS_OWNER",
+      label: "Business Owner",
+      description: "Full system access and business oversight",
+    },
   ];
 
   const validateForm = () => {
@@ -107,7 +123,7 @@ export default function SignupPage() {
         toast.success("Account created successfully!", {
           description: "Welcome to ManufacturingOS! Redirecting...",
         });
-          navigate("/");
+        navigate("/");
       } else {
         toast.error("Signup failed", {
           description:
@@ -150,11 +166,11 @@ export default function SignupPage() {
 
       <div className="w-full max-w-md">
         {/* Back to Landing */}
-        <div className="mb-6">
+        <div className="mb-6 flex justify-start">
           <Button
             variant="ghost"
-            onClick={() => navigate("/landing")}
-            className="text-gray-600 hover:text-gray-900 p-2"
+            onClick={() => navigate("/")}
+            className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
@@ -163,8 +179,12 @@ export default function SignupPage() {
 
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-            <Factory className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="ManufacturingOS Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             ManufacturingOS
@@ -308,7 +328,10 @@ export default function SignupPage() {
                   ))}
                 </select>
                 <div className="text-xs text-gray-500">
-                  {roleOptions.find(r => r.value === formData.role)?.description}
+                  {
+                    roleOptions.find((r) => r.value === formData.role)
+                      ?.description
+                  }
                 </div>
                 {errors.role && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
@@ -409,31 +432,6 @@ export default function SignupPage() {
                 )}
               </div>
 
-              <div className="flex items-center space-x-2">
-                <input
-                  id="terms"
-                  type="checkbox"
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  required
-                />
-                <Label htmlFor="terms" className="text-sm text-gray-600">
-                  I agree to the{" "}
-                  <Link
-                    to="/terms"
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    to="/privacy"
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                </Label>
-              </div>
-
               <Button
                 type="submit"
                 className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -475,14 +473,28 @@ export default function SignupPage() {
 
         <style jsx>{`
           @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
+            0% {
+              transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+              transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+              transform: translate(-20px, 20px) scale(0.9);
+            }
+            100% {
+              transform: translate(0px, 0px) scale(1);
+            }
           }
-          .animate-blob { animation: blob 7s infinite; }
-          .animation-delay-2000 { animation-delay: 2s; }
-          .animation-delay-4000 { animation-delay: 4s; }
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
         `}</style>
       </div>
     </div>

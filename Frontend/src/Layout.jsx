@@ -115,8 +115,12 @@ export default function Layout({ children }) {
         <Sidebar className="border-r border-gray-200/60 backdrop-blur-sm bg-white/80 relative z-10">
           <SidebarHeader className="border-b border-gray-200 p-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Factory className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                <img
+                  src="/logo.png"
+                  alt="ManufacturingOS Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <h2 className="font-bold text-gray-900 text-lg">
@@ -226,7 +230,7 @@ export default function Layout({ children }) {
             </SidebarGroup>
           </SidebarContent>
 
-          <SidebarFooter className="border-t border-gray-200/60 p-4 bg-white/30 backdrop-blur-sm">
+          {/* <SidebarFooter className="border-t border-gray-200/60 p-4 bg-white/30 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
@@ -251,7 +255,7 @@ export default function Layout({ children }) {
                 </Button>
               </div>
             </div>
-          </SidebarFooter>
+          </SidebarFooter> */}
         </Sidebar>
 
         <main className="flex-1 flex flex-col relative z-10">
@@ -266,8 +270,8 @@ export default function Layout({ children }) {
               </div>
               <div className="flex items-center gap-3">
                 <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="w-5 h-5 text-gray-600" />
-                  <Badge className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-red-500" />
+                  {/* <Bell className="w-5 h-5 text-gray-600" /> */}
+                  {/* <Badge className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-red-500" /> */}
                 </Button>
                 <div className="relative" ref={profileDropdownRef}>
                   <Button

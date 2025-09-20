@@ -38,43 +38,50 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
         id: "all",
         label: "All",
         count: filterCounts.all.total || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "draft",
         label: "Draft",
         count: filterCounts.all.draft || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "confirmed",
         label: "Confirmed",
         count: filterCounts.all.confirmed || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "in_progress",
         label: "In-Progress",
         count: filterCounts.all.in_progress || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "to_close",
         label: "To Close",
         count: filterCounts.all.to_close || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "not_assigned",
         label: "Not Assigned",
         count: filterCounts.all.not_assigned || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "late",
         label: "Late",
         count: filterCounts.all.late || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
     ],
     my: [
@@ -82,35 +89,40 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
         id: "all",
         label: "All My Orders",
         count: filterCounts.my.total || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "confirmed",
         label: "Confirmed",
         count: filterCounts.my.confirmed || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "in_progress",
         label: "In-Progress",
         count: filterCounts.my.in_progress || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "to_close",
         label: "To Close",
         count: filterCounts.my.to_close || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "late",
         label: "Late",
         count: filterCounts.my.late || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
     ],
   };
-  
+
   return baseFilters[activeFilterGroup] || baseFilters.all;
 };
 
@@ -380,19 +392,14 @@ export default function Dashboard() {
           {/* Left side - Menu and Actions */}
           <div className="flex items-center gap-4 w-full lg:w-auto">
             {/* Hamburger Menu */}
-            <Button variant="ghost" size="icon" className="lg:hidden hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+            >
               <Menu className="w-5 h-5" />
             </Button>
 
-            {/* App Logo and Name */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center shadow-md">
-                <Package className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-gray-900">
-                ManufacturingOS
-              </span>
-            </div>
 
             {/* New Button */}
             <Button
@@ -426,8 +433,8 @@ export default function Dashboard() {
                 size="sm"
                 onClick={() => setViewMode("list")}
                 className={`rounded-r-none border-r transition-all duration-300 cursor-pointer ${
-                  viewMode === "list" 
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md" 
+                  viewMode === "list"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
                     : "hover:bg-blue-100 hover:text-blue-600"
                 }`}
               >
@@ -438,8 +445,8 @@ export default function Dashboard() {
                 size="sm"
                 onClick={() => setViewMode("kanban")}
                 className={`rounded-l-none transition-all duration-300 cursor-pointer ${
-                  viewMode === "kanban" 
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md" 
+                  viewMode === "kanban"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
                     : "hover:bg-blue-100 hover:text-blue-600"
                 }`}
               >
@@ -460,8 +467,8 @@ export default function Dashboard() {
               size="sm"
               onClick={() => setActiveFilterGroup("all")}
               className={`text-sm transition-all duration-300 cursor-pointer ${
-                activeFilterGroup === "all" 
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg" 
+                activeFilterGroup === "all"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg"
                   : "hover:bg-blue-50 hover:text-blue-600 border border-blue-200"
               }`}
             >
@@ -472,8 +479,8 @@ export default function Dashboard() {
               size="sm"
               onClick={() => setActiveFilterGroup("my")}
               className={`text-sm transition-all duration-300 cursor-pointer ${
-                activeFilterGroup === "my" 
-                  ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg" 
+                activeFilterGroup === "my"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg"
                   : "hover:bg-blue-50 hover:text-blue-600 border border-blue-200"
               }`}
             >
@@ -492,14 +499,12 @@ export default function Dashboard() {
                 size="sm"
                 onClick={() => setActiveStatusFilter(filter.id)}
                 className={`flex flex-col items-center py-2 px-3 h-auto transition-all duration-300 cursor-pointer transform hover:scale-105 ${
-                  activeStatusFilter === filter.id 
-                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg" 
+                  activeStatusFilter === filter.id
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg"
                     : filter.color
                 }`}
               >
-                <span className="text-lg font-semibold">
-                  {filter.count}
-                </span>
+                <span className="text-lg font-semibold">{filter.count}</span>
                 <span className="text-xs">{filter.label}</span>
               </Button>
             ))}
@@ -597,10 +602,18 @@ export default function Dashboard() {
                       {order.unit}
                     </div>
                     <div className="flex items-center justify-between">
-                      <Badge className={`text-xs ${getStatusColor(order.state)} hover:scale-105 transition-all duration-300 cursor-pointer`}>
+                      <Badge
+                        className={`text-xs ${getStatusColor(
+                          order.state
+                        )} hover:scale-105 transition-all duration-300 cursor-pointer`}
+                      >
                         {order.state}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+                      >
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </div>
@@ -657,7 +670,11 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+                    >
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </div>
@@ -692,9 +709,7 @@ export default function Dashboard() {
                     <Badge className={`text-xs ${getStatusColor(order.state)}`}>
                       {order.state}
                     </Badge>
-                    <div className="text-xs text-gray-500">
-                      {order.unit}
-                    </div>
+                    <div className="text-xs text-gray-500">{order.unit}</div>
                   </div>
                 </div>
               ))
@@ -731,7 +746,11 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+                >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </div>
@@ -765,7 +784,11 @@ export default function Dashboard() {
                 <div>
                   <span className="text-gray-500">State:</span>
                   <div>
-                    <Badge className={`text-xs ${getStatusColor(order.state)} hover:scale-105 transition-all duration-300 cursor-pointer`}>
+                    <Badge
+                      className={`text-xs ${getStatusColor(
+                        order.state
+                      )} hover:scale-105 transition-all duration-300 cursor-pointer`}
+                    >
                       {order.state}
                     </Badge>
                   </div>
