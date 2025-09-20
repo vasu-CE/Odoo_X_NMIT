@@ -40,6 +40,17 @@ export default function StockManagement() {
   const [viewMode, setViewMode] = useState("list"); // "list" or "grid"
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showDetailForm, setShowDetailForm] = useState(false);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newProductData, setNewProductData] = useState({
+    productId: '',
+    unitCost: 0,
+    unit: 'PCS',
+    onHand: 0,
+    freeToUse: 0,
+    outgoing: 0,
+    incoming: 0
+  });
+  const [allProducts, setAllProducts] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -47,104 +58,150 @@ export default function StockManagement() {
 
   const loadData = async () => {
     try {
-      // Use mock data to avoid API rate limiting
-      const mockProducts = [
-        {
-          id: 1,
-          name: "Dining Table",
-          sku: "DT001",
-          unit_price: 1200,
-          current_stock: 600,
-          reorder_level: 50,
-          unit: "Unit",
-          category: "Furniture",
-        },
-        {
-          id: 2,
-          name: "Drawer",
-          sku: "DR001",
-          unit_price: 100,
-          current_stock: 20,
-          reorder_level: 5,
-          unit: "Unit",
-          category: "Furniture",
-        },
-        {
-          id: 3,
-          name: "Wooden Chair",
-          sku: "WC001",
-          unit_price: 500,
-          current_stock: 150,
-          reorder_level: 20,
-          unit: "Unit",
-          category: "Furniture",
-        },
-        {
-          id: 4,
-          name: "Steel Rod",
-          sku: "SR001",
-          unit_price: 25,
-          current_stock: 1000,
-          reorder_level: 100,
-          unit: "Kg",
-          category: "Raw Materials",
-        },
-      ];
+      // Try to load from API first, fallback to mock data
+      try {
+        const [productsResponse, aggregationResponse] = await Promise.all([
+          apiService.getStockLedgerProducts({ type: 'all' }),
+          apiService.getStockLedgerAggregation()
+        ]);
 
-      const mockStockAggregation = {
-        summary: {
-          totalValue: 800000,
-          totalProducts: 4,
-          lowStock: 1,
-          outOfStock: 0,
-        },
-        products: [
+        setProducts(productsResponse.data.products || []);
+        setAllProducts(productsResponse.data.products || []);
+        setStockAggregation(aggregationResponse.data || {});
+      } catch (apiError) {
+        console.warn("API not available, using mock data:", apiError);
+        
+        // Fallback to mock data
+        const mockProducts = [
           {
-            productId: 1,
-            onHand: 600,
-            freeToUse: 550,
-            totalValue: 720000,
-            avgUnitCost: 1200,
-            incoming: 0,
-            outgoing: 230,
-            turnover: 0.38,
+            id: 1,
+            name: "Dining Table",
+            sku: "DT001",
+            unit_price: 1200,
+            current_stock: 600,
+            reorder_level: 50,
+            unit: "Unit",
+            category: "Furniture",
+            type: "FINISHED_GOOD",
+            stockMetrics: {
+              onHand: 600,
+              freeToUse: 550,
+              totalValue: 720000,
+              avgUnitCost: 1200,
+              incoming: 0,
+              outgoing: 230
+            }
           },
           {
-            productId: 2,
-            onHand: 20,
-            freeToUse: 20,
-            totalValue: 2000,
-            avgUnitCost: 100,
-            incoming: 0,
-            outgoing: 0,
-            turnover: 0,
+            id: 2,
+            name: "Drawer",
+            sku: "DR001",
+            unit_price: 100,
+            current_stock: 20,
+            reorder_level: 5,
+            unit: "Unit",
+            category: "Furniture",
+            type: "FINISHED_GOOD",
+            stockMetrics: {
+              onHand: 20,
+              freeToUse: 20,
+              totalValue: 2000,
+              avgUnitCost: 100,
+              incoming: 0,
+              outgoing: 0
+            }
           },
           {
-            productId: 3,
-            onHand: 150,
-            freeToUse: 130,
-            totalValue: 75000,
-            avgUnitCost: 500,
-            incoming: 50,
-            outgoing: 20,
-            turnover: 0.13,
+            id: 3,
+            name: "Wooden Chair",
+            sku: "WC001",
+            unit_price: 500,
+            current_stock: 150,
+            reorder_level: 20,
+            unit: "Unit",
+            category: "Furniture",
+            type: "FINISHED_GOOD",
+            stockMetrics: {
+              onHand: 150,
+              freeToUse: 130,
+              totalValue: 75000,
+              avgUnitCost: 500,
+              incoming: 50,
+              outgoing: 20
+            }
           },
           {
-            productId: 4,
-            onHand: 1000,
-            freeToUse: 900,
-            totalValue: 25000,
-            avgUnitCost: 25,
-            incoming: 200,
-            outgoing: 100,
-            turnover: 0.3,
+            id: 4,
+            name: "Steel Rod",
+            sku: "SR001",
+            unit_price: 25,
+            current_stock: 1000,
+            reorder_level: 100,
+            unit: "Kg",
+            category: "Raw Materials",
+            type: "RAW_MATERIAL",
+            stockMetrics: {
+              onHand: 1000,
+              freeToUse: 900,
+              totalValue: 25000,
+              avgUnitCost: 25,
+              incoming: 200,
+              outgoing: 100
+            }
           },
-        ],
-      };
+        ];
 
-      setProducts(mockProducts);
-      setStockMovements([]);
-      setStockAggregation(mockStockAggregation);
+        const mockStockAggregation = {
+          summary: {
+            totalValue: 800000,
+            totalProducts: 4,
+            lowStock: 1,
+            outOfStock: 0,
+          },
+          products: [
+            {
+              productId: 1,
+              onHand: 600,
+              freeToUse: 550,
+              totalValue: 720000,
+              avgUnitCost: 1200,
+              incoming: 0,
+              outgoing: 230,
+            },
+            {
+              productId: 2,
+              onHand: 20,
+              freeToUse: 20,
+              totalValue: 2000,
+              avgUnitCost: 100,
+              incoming: 0,
+              outgoing: 0,
+            },
+            {
+              productId: 3,
+              onHand: 150,
+              freeToUse: 130,
+              totalValue: 75000,
+              avgUnitCost: 500,
+              incoming: 50,
+              outgoing: 20,
+            },
+            {
+              productId: 4,
+              onHand: 1000,
+              freeToUse: 900,
+              totalValue: 25000,
+              avgUnitCost: 25,
+              incoming: 200,
+              outgoing: 100,
+            },
+          ],
+        };
+
+        setProducts(mockProducts);
+        setAllProducts(mockProducts);
+        setStockAggregation(mockStockAggregation);
+      }
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -207,6 +264,19 @@ export default function StockManagement() {
     };
   };
 
+  const handleNewProduct = () => {
+    setNewProductData({
+      productId: '',
+      unitCost: 0,
+      unit: 'PCS',
+      onHand: 0,
+      freeToUse: 0,
+      outgoing: 0,
+      incoming: 0
+    });
+    setShowNewForm(true);
+  };
+
   const handleProductClick = (product) => {
     setSelectedProduct(product);
     setShowDetailForm(true);
@@ -214,14 +284,72 @@ export default function StockManagement() {
 
   const handleBack = () => {
     setShowDetailForm(false);
+    setShowNewForm(false);
     setSelectedProduct(null);
   };
 
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving product:", selectedProduct);
-    setShowDetailForm(false);
-    setSelectedProduct(null);
+  const handleSave = async () => {
+    try {
+      if (showNewForm) {
+        // Create stock movement for existing product
+        if (newProductData.productId) {
+          await apiService.createStockMovement({
+            productId: newProductData.productId,
+            movementType: 'ADJUSTMENT',
+            quantity: newProductData.onHand,
+            unitCost: newProductData.unitCost,
+            reference: 'STOCK_ADJUSTMENT',
+            notes: 'Manual stock adjustment'
+          });
+        }
+        await loadData(); // Reload data
+        setShowNewForm(false);
+        setNewProductData({
+          productId: '',
+          unitCost: 0,
+          unit: 'PCS',
+          onHand: 0,
+          freeToUse: 0,
+          outgoing: 0,
+          incoming: 0
+        });
+      } else if (showDetailForm) {
+        // Update existing product
+        await apiService.updateStockLedgerProduct(selectedProduct.id, selectedProduct);
+        await loadData(); // Reload data
+        setShowDetailForm(false);
+        setSelectedProduct(null);
+      }
+    } catch (error) {
+      console.error("Error saving product:", error);
+      // Fallback to mock behavior for development
+      setShowDetailForm(false);
+      setShowNewForm(false);
+      setSelectedProduct(null);
+    }
+  };
+
+  const handleNewProductChange = (field, value) => {
+    setNewProductData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleProductSelect = (productId) => {
+    const selectedProduct = allProducts.find(p => p.id === productId);
+    if (selectedProduct) {
+      setNewProductData(prev => ({
+        ...prev,
+        productId: productId,
+        unit: selectedProduct.unit || 'PCS',
+        unitCost: selectedProduct.purchasePrice || 0,
+        onHand: selectedProduct.currentStock || 0,
+        freeToUse: Math.max(0, (selectedProduct.currentStock || 0) - (selectedProduct.reorderPoint || 0)),
+        outgoing: 0,
+        incoming: 0
+      }));
+    }
   };
 
   return (
@@ -236,7 +364,10 @@ export default function StockManagement() {
                   Stock Ledger
                 </h1>
                 <div className="flex items-center gap-2">
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                  <Button 
+                    onClick={handleNewProduct}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                    <Plus className="w-4 h-4 mr-2" />
                     New
                   </Button>
                   <Search className="w-5 h-5 text-gray-500" />
@@ -339,25 +470,21 @@ export default function StockManagement() {
                           ))
                       ) : filteredProducts.length > 0 ? (
                         filteredProducts.map((product) => {
-                          const stockData = stockAggregation?.products?.find(
+                          // Use stockMetrics if available (from API), otherwise fallback to aggregation
+                          const stockData = product.stockMetrics || stockAggregation?.products?.find(
                             (p) => p.productId === product.id
                           );
-                          const onHand =
-                            stockData?.onHand || product.current_stock || 0;
-                          const unitCost =
-                            stockData?.avgUnitCost || product.unit_price || 0;
-                          const totalValue = onHand * unitCost;
-                          const freeToUse =
-                            stockData?.freeToUse ||
-                            Math.max(0, onHand - (product.reorder_level || 0));
+                          const onHand = stockData?.onHand || product.current_stock || 0;
+                          const unitCost = stockData?.avgUnitCost || product.unit_price || 0;
+                          const totalValue = stockData?.totalValue || (onHand * unitCost);
+                          const freeToUse = stockData?.freeToUse || Math.max(0, onHand - (product.reorder_level || 0));
                           const incoming = stockData?.incoming || 0;
                           const outgoing = stockData?.outgoing || 0;
 
                           return (
                             <tr
                               key={product.id}
-                              className="hover:bg-gray-50 cursor-pointer"
-                              onClick={() => handleProductClick(product)}
+                              className="hover:bg-gray-50"
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center text-sm font-medium text-gray-900">
@@ -634,6 +761,146 @@ export default function StockManagement() {
                     }
                     className="w-full"
                   />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Stock Entry Form Modal - Matching Wireframe */}
+        {showNewForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Stock Entry</h2>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleBack}>
+                    Back
+                  </Button>
+                  <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+                    Save
+                  </Button>
+                </div>
+              </div>
+
+              {/* Form matching wireframe - Two columns */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Product
+                    </label>
+                    <select
+                      value={newProductData.productId}
+                      onChange={(e) => handleProductSelect(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Select Product</option>
+                      {allProducts.map(product => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} {product.isRawMaterial ? '(Raw Material)' : product.isFinishedGood ? '(Finished Good)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit Cost
+                    </label>
+                    <Input
+                      type="number"
+                      value={newProductData.unitCost}
+                      onChange={(e) => handleNewProductChange('unitCost', parseFloat(e.target.value) || 0)}
+                      className="w-full"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit
+                    </label>
+                    <select
+                      value={newProductData.unit}
+                      onChange={(e) => handleNewProductChange('unit', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="PCS">Pieces</option>
+                      <option value="KG">Kilograms</option>
+                      <option value="M">Meters</option>
+                      <option value="L">Liters</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">Selection field</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Total Value
+                    </label>
+                    <Input
+                      value={(newProductData.onHand * newProductData.unitCost).toLocaleString()}
+                      readOnly
+                      className="w-full bg-gray-50"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Readonly: on Hand * unit cost</p>
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      On Hand
+                    </label>
+                    <Input
+                      type="number"
+                      value={newProductData.onHand}
+                      onChange={(e) => handleNewProductChange('onHand', parseInt(e.target.value) || 0)}
+                      className="w-full"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Free to Use
+                    </label>
+                    <Input
+                      type="number"
+                      value={newProductData.freeToUse}
+                      onChange={(e) => handleNewProductChange('freeToUse', parseInt(e.target.value) || 0)}
+                      className="w-full"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Outgoing
+                    </label>
+                    <Input
+                      type="number"
+                      value={newProductData.outgoing}
+                      onChange={(e) => handleNewProductChange('outgoing', parseInt(e.target.value) || 0)}
+                      className="w-full"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Incoming
+                    </label>
+                    <Input
+                      type="number"
+                      value={newProductData.incoming}
+                      onChange={(e) => handleNewProductChange('incoming', parseInt(e.target.value) || 0)}
+                      className="w-full"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

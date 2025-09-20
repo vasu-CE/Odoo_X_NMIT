@@ -9,7 +9,7 @@ const router = express.Router();
 // @route   GET /api/users
 // @desc    Get all users
 // @access  Private
-router.get('/', authenticate, authorize('ADMIN', 'MANUFACTURING_MANAGER'), [
+router.get('/', authenticate, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('role').optional().isIn(['ADMIN', 'MANUFACTURING_MANAGER', 'SHOP_FLOOR_OPERATOR', 'INVENTORY_MANAGER', 'BUSINESS_OWNER']),

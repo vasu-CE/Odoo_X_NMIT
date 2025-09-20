@@ -60,24 +60,26 @@ function App() {
               </ProtectedRoute>
             }
           />
-              <Route
-                path="/manufacturing-orders/:id"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ManufacturingOrderDetail />
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/manufacturing-orders/new"
-                element={
-                  <ProtectedRoute>
-                    <ManufacturingOrderForm />
-                  </ProtectedRoute>
-                }
-              />
+          <Route
+            path="/manufacturing-orders/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ManufacturingOrderDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/manufacturing-orders/new"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ManufacturingOrderForm />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/work-orders"
             element={

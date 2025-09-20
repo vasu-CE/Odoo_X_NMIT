@@ -23,8 +23,14 @@ import {
   Calendar,
   Hash,
 } from "lucide-react";
-import { ManufacturingOrder, Product, BOM, WorkOrder } from "../../entities/all";
+import {
+  ManufacturingOrder,
+  Product,
+  BOM,
+  WorkOrder,
+} from "../../entities/all";
 import { toast } from "sonner";
+import apiService from "../../services/api";
 
 const statusConfig = {
   DRAFT: { color: "bg-gray-100 text-gray-800", label: "Draft" },
@@ -36,7 +42,7 @@ const statusConfig = {
 };
 
 const workOrderStatusConfig = {
-  TODO: { color: "bg-gray-100 text-gray-800", label: "To Do" },
+  TO_DO: { color: "bg-gray-100 text-gray-800", label: "To Do" },
   IN_PROGRESS: { color: "bg-yellow-100 text-yellow-800", label: "In-Progress" },
   DONE: { color: "bg-green-100 text-green-800", label: "Done" },
   CANCELLED: { color: "bg-red-100 text-red-800", label: "Cancelled" },
@@ -45,24 +51,23 @@ const workOrderStatusConfig = {
 export default function ManufacturingOrderForm() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const isNew = id === "new";
+  const isNew = !id || id === "new";
 
   const [order, setOrder] = useState({
     id: "",
-    order_number: "",
-    product_id: "",
-    product_name: "",
+    orderNumber: "",
+    finishedProduct: "",
     quantity: 1,
-    bom_id: "",
-    bom_name: "",
-    scheduled_start: "",
-    assigned_to_id: "",
-    assigned_to_name: "",
+    units: "PCS",
+    bomId: "",
+    scheduleDate: new Date().toISOString().split("T")[0], // Default to today's date
+    assigneeId: "",
+    assigneeName: "",
     status: "DRAFT",
     priority: "MEDIUM",
     notes: "",
     components: [],
-    work_orders: [],
+    workOrders: [],
   });
 
   const [products, setProducts] = useState([]);
@@ -72,6 +77,17 @@ export default function ManufacturingOrderForm() {
   const [activeTab, setActiveTab] = useState("components");
   const [timers, setTimers] = useState({});
 
+  // Define handleCancelOrder early to avoid hoisting issues
+  const handleCancelOrder = () => {
+    // Clear the temporary order number and navigate back
+    setOrder((prev) => ({
+      ...prev,
+      orderNumber: "",
+    }));
+    toast.info("Order creation cancelled");
+    navigate("/manufacturing-orders");
+  };
+
   useEffect(() => {
     if (isNew) {
       generateOrderNumber();
@@ -79,40 +95,59 @@ export default function ManufacturingOrderForm() {
       loadOrder();
     }
     loadReferenceData();
+
+    // Cleanup function for when component unmounts
+    return () => {
+      // If this was a new order with a temporary ID, we could clean it up here
+      // For now, we'll let the temporary ID expire naturally
+    };
   }, [id]);
 
-  const generateOrderNumber = () => {
-    // For new orders, we'll let the backend generate the sequential order number
-    // when the order is created. For now, show a placeholder.
-    setOrder(prev => ({
-      ...prev,
-      order_number: "MO-XXXXXX", // Placeholder until backend generates the real number
-    }));
+  const generateOrderNumber = async () => {
+    // For new orders, get the next order number from the backend
+    try {
+      const response = await apiService.get(
+        "/manufacturing-orders/next-number"
+      );
+      const orderNumber = response.data.orderNumber;
+      setOrder((prev) => ({
+        ...prev,
+        orderNumber: orderNumber,
+      }));
+    } catch (error) {
+      console.error("Error generating order number:", error);
+      // Fallback to a temporary number if API fails
+      const tempOrderNumber = `MO-${String(Date.now()).slice(-6)}`;
+      setOrder((prev) => ({
+        ...prev,
+        orderNumber: tempOrderNumber,
+      }));
+    }
   };
 
   const loadOrder = async () => {
-    if (isNew) return;
-    
+    if (isNew || !id) return;
+
     try {
       setLoading(true);
-      const orderData = await ManufacturingOrder.get(id);
+      const response = await apiService.getManufacturingOrder(id);
+      const orderData = response.data;
       // Map backend response to frontend format
       const mappedOrder = {
         id: orderData.id,
-        order_number: orderData.orderNumber,
-        product_id: orderData.productId,
-        product_name: orderData.product?.name || "",
+        orderNumber: orderData.orderNumber,
+        finishedProduct: orderData.finishedProduct,
         quantity: orderData.quantity,
-        bom_id: orderData.bomId,
-        bom_name: orderData.bom?.name || "",
-        scheduled_start: orderData.scheduledDate,
-        assigned_to_id: orderData.assignedToId,
-        assigned_to_name: orderData.assignedTo?.name || "",
+        units: orderData.units,
+        bomId: orderData.bomId,
+        scheduleDate: orderData.scheduleDate,
+        assigneeId: orderData.assigneeId,
+        assigneeName: orderData.assignee?.name || "",
         status: orderData.status,
         priority: orderData.priority,
         notes: orderData.notes,
-        components: orderData.requiredMaterials || [],
-        work_orders: orderData.workOrders || [],
+        components: orderData.components || [],
+        workOrders: orderData.workOrders || [],
       };
       setOrder(mappedOrder);
     } catch (error) {
@@ -126,25 +161,24 @@ export default function ManufacturingOrderForm() {
   const loadReferenceData = async () => {
     try {
       const [productsData, bomsData, usersData] = await Promise.all([
-        Product.list(),
-        BOM.list(),
-        // Mock users for now - replace with actual API call
-        Promise.resolve([
-          { id: "1", name: "John Doe" },
-          { id: "2", name: "Jane Smith" },
-          { id: "3", name: "Mike Johnson" },
-        ])
+        apiService.getProducts(),
+        apiService.getBOMs(),
+        apiService.getUsers(),
       ]);
-      setProducts(productsData);
-      setBoms(bomsData);
-      setUsers(usersData);
+      setProducts(productsData.data?.products || []);
+      setBoms(bomsData.data?.boms || []);
+      setUsers(usersData.data?.users || []);
     } catch (error) {
       console.error("Error loading reference data:", error);
+      // Fallback to empty arrays if API fails
+      setProducts([]);
+      setBoms([]);
+      setUsers([]);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setOrder(prev => ({
+    setOrder((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -152,34 +186,33 @@ export default function ManufacturingOrderForm() {
 
   const handleBOMChange = async (bomId) => {
     if (!bomId) {
-      setOrder(prev => ({
+      setOrder((prev) => ({
         ...prev,
-        bom_id: "",
-        bom_name: "",
+        bomId: "",
         components: [],
-        work_orders: [],
+        workOrders: [],
       }));
       return;
     }
 
     try {
-      const bom = await BOM.get(bomId);
-      setOrder(prev => ({
+      const response = await apiService.getBOM(bomId);
+      const bom = response.data;
+      setOrder((prev) => ({
         ...prev,
-        bom_id: bomId,
-        bom_name: bom.name,
+        bomId: bomId,
         components: bom.components || [],
-        work_orders: bom.operations?.map(op => ({
-          id: `wo_${Date.now()}_${Math.random()}`,
-          operation_name: op.operation_name,
-          work_center_id: op.work_center_id,
-          work_center_name: op.work_center_name,
-          expected_duration: op.expected_duration,
-          real_duration: "00:00",
-          status: "TODO",
-          start_time: null,
-          end_time: null,
-        })) || [],
+        workOrders:
+          bom.operations?.map((op) => ({
+            id: `wo_${Date.now()}_${Math.random()}`,
+            operationName: op.name,
+            workCenterName: op.workCenter?.name || "",
+            plannedDuration: op.timeMinutes,
+            realDuration: 0,
+            status: "TO_DO",
+            startTime: null,
+            endTime: null,
+          })) || [],
       }));
     } catch (error) {
       console.error("Error loading BOM:", error);
@@ -190,46 +223,27 @@ export default function ManufacturingOrderForm() {
   const handleStatusChange = async (newStatus) => {
     try {
       setLoading(true);
+
       if (isNew) {
-        // Create new order - map frontend fields to backend fields
-        const orderData = {
-          productId: order.product_id,
-          quantity: order.quantity,
-          priority: order.priority,
-          scheduledDate: order.scheduled_start,
-          assignedToId: order.assigned_to_id,
-          bomId: order.bom_id,
-          notes: order.notes,
-          status: newStatus,
-        };
-        const createdOrder = await ManufacturingOrder.create(orderData);
-        // Map backend response to frontend format
-        const mappedOrder = {
-          id: createdOrder.id,
-          order_number: createdOrder.orderNumber,
-          product_id: createdOrder.productId,
-          product_name: createdOrder.product?.name || "",
-          quantity: createdOrder.quantity,
-          bom_id: createdOrder.bomId,
-          bom_name: createdOrder.bom?.name || "",
-          scheduled_start: createdOrder.scheduledDate,
-          assigned_to_id: createdOrder.assignedToId,
-          assigned_to_name: createdOrder.assignedTo?.name || "",
-          status: createdOrder.status,
-          priority: createdOrder.priority,
-          notes: createdOrder.notes,
-          components: createdOrder.requiredMaterials || [],
-          work_orders: createdOrder.workOrders || [],
-        };
-        setOrder(mappedOrder);
-        toast.success("Manufacturing order created successfully!");
-        navigate(`/manufacturing-orders/${createdOrder.id}`);
-      } else {
-        // Update existing order
-        await ManufacturingOrder.update(order.id, { status: newStatus });
-        setOrder(prev => ({ ...prev, status: newStatus }));
-        toast.success(`Order status changed to ${statusConfig[newStatus]?.label}`);
+        // For new orders, just update the local status
+        setOrder((prev) => ({ ...prev, status: newStatus }));
+        toast.info(
+          "Order status updated locally. Click 'Save Order' to create the order."
+        );
+        return;
       }
+
+      // Update existing order
+      if (!order.id) {
+        toast.error("Order ID is missing. Cannot update status.");
+        return;
+      }
+
+      await apiService.updateManufacturingOrderStatus(order.id, newStatus);
+      setOrder((prev) => ({ ...prev, status: newStatus }));
+      toast.success(
+        `Order status changed to ${statusConfig[newStatus]?.label}`
+      );
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update order status");
@@ -238,18 +252,70 @@ export default function ManufacturingOrderForm() {
     }
   };
 
+  const handleSaveOrder = async () => {
+    if (isNew) {
+      try {
+        setLoading(true);
+        // Create new order - map frontend fields to backend fields
+        const orderData = {
+          finishedProduct: order.finishedProduct,
+          quantity: order.quantity,
+          units: order.units,
+          priority: order.priority,
+          scheduleDate: order.scheduleDate,
+          notes: order.notes,
+        };
+
+        // Only include assigneeId and bomId if they have values
+        if (order.assigneeId) {
+          orderData.assigneeId = order.assigneeId;
+        }
+        if (order.bomId) {
+          orderData.bomId = order.bomId;
+        }
+        const response = await apiService.createManufacturingOrder(orderData);
+        const createdOrder = response.data;
+        // Map backend response to frontend format
+        const mappedOrder = {
+          id: createdOrder.id,
+          orderNumber: createdOrder.orderNumber,
+          finishedProduct: createdOrder.finishedProduct,
+          quantity: createdOrder.quantity,
+          units: createdOrder.units,
+          bomId: createdOrder.bomId,
+          scheduleDate: createdOrder.scheduleDate,
+          assigneeId: createdOrder.assigneeId,
+          assigneeName: createdOrder.assignee?.name || "",
+          status: createdOrder.status,
+          priority: createdOrder.priority,
+          notes: createdOrder.notes,
+          components: createdOrder.components || [],
+          workOrders: createdOrder.workOrders || [],
+        };
+        setOrder(mappedOrder);
+        toast.success("Manufacturing order created successfully!");
+        navigate(`/manufacturing-orders/${createdOrder.id}`);
+      } catch (error) {
+        console.error("Error creating order:", error);
+        toast.error("Failed to create manufacturing order");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleWorkOrderAction = (workOrderId, action) => {
-    const workOrder = order.work_orders.find(wo => wo.id === workOrderId);
+    const workOrder = order.workOrders.find((wo) => wo.id === workOrderId);
     if (!workOrder) return;
 
     const now = new Date();
     let newStatus = workOrder.status;
-    let newRealDuration = workOrder.real_duration;
+    let newRealDuration = workOrder.realDuration;
 
     switch (action) {
       case "start":
         newStatus = "IN_PROGRESS";
-        setTimers(prev => ({
+        setTimers((prev) => ({
           ...prev,
           [workOrderId]: {
             startTime: now,
@@ -262,7 +328,7 @@ export default function ManufacturingOrderForm() {
       case "pause":
         if (timers[workOrderId]) {
           clearInterval(timers[workOrderId].interval);
-          setTimers(prev => {
+          setTimers((prev) => {
             const { [workOrderId]: removed, ...rest } = prev;
             return rest;
           });
@@ -272,7 +338,7 @@ export default function ManufacturingOrderForm() {
         newStatus = "DONE";
         if (timers[workOrderId]) {
           clearInterval(timers[workOrderId].interval);
-          setTimers(prev => {
+          setTimers((prev) => {
             const { [workOrderId]: removed, ...rest } = prev;
             return rest;
           });
@@ -280,16 +346,16 @@ export default function ManufacturingOrderForm() {
         break;
     }
 
-    setOrder(prev => ({
+    setOrder((prev) => ({
       ...prev,
-      work_orders: prev.work_orders.map(wo =>
+      workOrders: prev.workOrders.map((wo) =>
         wo.id === workOrderId
           ? {
               ...wo,
               status: newStatus,
-              real_duration: newRealDuration,
-              start_time: action === "start" ? now : wo.start_time,
-              end_time: action === "done" ? now : wo.end_time,
+              realDuration: newRealDuration,
+              startTime: action === "start" ? now : wo.startTime,
+              endTime: action === "done" ? now : wo.endTime,
             }
           : wo
       ),
@@ -302,18 +368,20 @@ export default function ManufacturingOrderForm() {
     const hours = Math.floor(elapsed / 3600);
     const minutes = Math.floor((elapsed % 3600) / 60);
     const seconds = elapsed % 60;
-    const duration = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    const duration = `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
-    setOrder(prev => ({
+    setOrder((prev) => ({
       ...prev,
-      work_orders: prev.work_orders.map(wo =>
-        wo.id === workOrderId ? { ...wo, real_duration: duration } : wo
+      workOrders: prev.workOrders.map((wo) =>
+        wo.id === workOrderId ? { ...wo, realDuration: elapsed } : wo
       ),
     }));
   };
 
   const canConfirm = () => {
-    return order?.product_id && order?.quantity > 0 && order?.scheduled_start;
+    return order?.finishedProduct && order?.quantity > 0 && order?.scheduleDate;
   };
 
   const canStart = () => {
@@ -321,7 +389,10 @@ export default function ManufacturingOrderForm() {
   };
 
   const canProduce = () => {
-    return order?.status === "TO_CLOSE" && order?.work_orders?.every(wo => wo.status === "DONE");
+    return (
+      order?.status === "TO_CLOSE" &&
+      order?.workOrders?.every((wo) => wo.status === "DONE")
+    );
   };
 
   const getStatusProgress = () => {
@@ -332,6 +403,78 @@ export default function ManufacturingOrderForm() {
   };
 
   const isReadOnly = order?.status === "CANCELLED";
+
+  const handleAddComponent = async () => {
+    if (!order.id) {
+      toast.error("Please save the order first before adding components");
+      return;
+    }
+
+    const componentName = prompt("Enter component name:");
+    if (!componentName) return;
+
+    const availability = parseFloat(prompt("Enter availability:") || "0");
+    const toConsume = parseFloat(prompt("Enter quantity to consume:") || "0");
+    const units = prompt("Enter units (default: PCS):") || "PCS";
+
+    try {
+      const response = await apiService.addComponentToManufacturingOrder(
+        order.id,
+        {
+          componentName,
+          availability,
+          toConsume,
+          units,
+        }
+      );
+
+      setOrder((prev) => ({
+        ...prev,
+        components: [...prev.components, response.data],
+      }));
+      toast.success("Component added successfully");
+    } catch (error) {
+      console.error("Error adding component:", error);
+      toast.error("Failed to add component");
+    }
+  };
+
+  const handleAddWorkOrder = async () => {
+    if (!order.id) {
+      toast.error("Please save the order first before adding work orders");
+      return;
+    }
+
+    const operationName = prompt("Enter operation name:");
+    if (!operationName) return;
+
+    const workCenterName = prompt("Enter work center name:");
+    if (!workCenterName) return;
+
+    const plannedDuration = parseInt(
+      prompt("Enter planned duration in minutes:") || "60"
+    );
+
+    try {
+      const response = await apiService.addWorkOrderToManufacturingOrder(
+        order.id,
+        {
+          operationName,
+          workCenterName,
+          plannedDuration,
+        }
+      );
+
+      setOrder((prev) => ({
+        ...prev,
+        workOrders: [...prev.workOrders, response.data],
+      }));
+      toast.success("Work order added successfully");
+    } catch (error) {
+      console.error("Error adding work order:", error);
+      toast.error("Failed to add work order");
+    }
+  };
 
   if (loading) {
     return (
@@ -376,50 +519,88 @@ export default function ManufacturingOrderForm() {
           </div>
 
           <div className="flex items-center gap-3">
-            {!isReadOnly && (
-              <div className="flex gap-2">
-                {order.status === "DRAFT" && (
+            <div className="flex gap-2">
+              {/* Save and Cancel buttons for new orders */}
+              {isNew && (
+                <>
                   <Button
-                    onClick={() => handleStatusChange("CONFIRMED")}
+                    onClick={handleSaveOrder}
                     disabled={!canConfirm()}
-                    className={`bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors duration-200 ${
-                      !canConfirm() ? 'opacity-50 cursor-not-allowed' : ''
+                    className={`bg-green-600 hover:bg-green-700 text-white cursor-pointer transition-colors duration-200 ${
+                      !canConfirm() ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Confirm
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
                   </Button>
-                )}
-                {order.status === "CONFIRMED" && (
                   <Button
-                    onClick={() => handleStatusChange("IN_PROGRESS")}
-                    className="bg-green-600 hover:bg-green-700 cursor-pointer transition-colors duration-200"
+                    onClick={handleCancelOrder}
+                    className="bg-gray-500 hover:bg-gray-600 text-white cursor-pointer transition-colors duration-200"
                   >
-                    <PlayCircle className="w-4 h-4 mr-2" />
-                    Start
-                  </Button>
-                )}
-                {order.status === "TO_CLOSE" && canProduce() && (
-                  <Button
-                    onClick={() => handleStatusChange("DONE")}
-                    className="bg-purple-600 hover:bg-purple-700 cursor-pointer transition-colors duration-200"
-                  >
-                    <Package className="w-4 h-4 mr-2" />
-                    Produce
-                  </Button>
-                )}
-                {order.status !== "DONE" && order.status !== "CANCELLED" && (
-                  <Button
-                    onClick={() => handleStatusChange("CANCELLED")}
-                    variant="outline"
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer transition-colors duration-200"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
                     Cancel
                   </Button>
-                )}
-              </div>
-            )}
+                </>
+              )}
+
+              {/* Status action buttons */}
+              {!isReadOnly && (
+                <>
+                  {order.status === "DRAFT" && !isNew && (
+                    <Button
+                      onClick={() => handleStatusChange("CONFIRMED")}
+                      disabled={!canConfirm()}
+                      className={`bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-colors duration-200 ${
+                        !canConfirm() ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Confirm
+                    </Button>
+                  )}
+
+                  {order.status === "CONFIRMED" && (
+                    <Button
+                      onClick={() => handleStatusChange("IN_PROGRESS")}
+                      className="bg-orange-600 hover:bg-orange-700 text-white cursor-pointer transition-colors duration-200"
+                    >
+                      <PlayCircle className="w-4 h-4 mr-2" />
+                      In-Progress
+                    </Button>
+                  )}
+
+                  {order.status === "IN_PROGRESS" && (
+                    <Button
+                      onClick={() => handleStatusChange("TO_CLOSE")}
+                      className="bg-yellow-600 hover:bg-yellow-700 text-white cursor-pointer transition-colors duration-200"
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      To Close
+                    </Button>
+                  )}
+
+                  {order.status === "TO_CLOSE" && canProduce() && (
+                    <Button
+                      onClick={() => handleStatusChange("DONE")}
+                      className="bg-purple-600 hover:bg-purple-700 text-white cursor-pointer transition-colors duration-200"
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      Done
+                    </Button>
+                  )}
+
+                  {order.status !== "DONE" && order.status !== "CANCELLED" && (
+                    <Button
+                      onClick={() => handleStatusChange("CANCELLED")}
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300 cursor-pointer transition-colors duration-200"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Cancelled
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -432,10 +613,10 @@ export default function ManufacturingOrderForm() {
                 variant={order.status === status ? "default" : "outline"}
                 size="sm"
                 className={`cursor-pointer transition-all duration-200 ${
-                  order.status === status 
-                    ? "bg-black text-white hover:bg-gray-800" 
+                  order.status === status
+                    ? "bg-black text-white hover:bg-gray-800"
                     : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${isReadOnly ? "opacity-50 cursor-not-allowed" : ""}`}
                 onClick={() => !isReadOnly && handleStatusChange(status)}
                 disabled={isReadOnly}
               >
@@ -459,11 +640,12 @@ export default function ManufacturingOrderForm() {
                   </Label>
                   <div className="mt-1 p-3 border-2 border-dashed border-gray-300 rounded-md bg-gray-50">
                     <span className="font-mono text-lg text-gray-600">
-                      {isNew ? "MO-XXXXXX" : order.order_number}
+                      {order.orderNumber || "Loading..."}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Always auto generate, when clicked on new and number should follow the sequence.
+                    Always auto generate, when clicked on new and number should
+                    follow the sequence.
                   </p>
                 </div>
 
@@ -471,28 +653,23 @@ export default function ManufacturingOrderForm() {
                   <Label className="text-sm font-medium text-gray-700">
                     Finished product *
                   </Label>
-                  <select
-                    value={order.product_id}
-                    onChange={(e) => {
-                      const product = products.find(p => p.id === e.target.value);
-                      handleInputChange("product_id", e.target.value);
-                      handleInputChange("product_name", product?.name || "");
-                    }}
+                  <Input
+                    type="text"
+                    value={order.finishedProduct}
+                    onChange={(e) =>
+                      handleInputChange("finishedProduct", e.target.value)
+                    }
                     disabled={isReadOnly}
-                    className={`w-full mt-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${
-                      !order.product_id ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    } ${isReadOnly ? 'cursor-not-allowed bg-gray-100' : ''}`}
+                    placeholder="Enter finished product name"
+                    className={`mt-1 cursor-text ${
+                      !order.finishedProduct
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
+                    } ${isReadOnly ? "cursor-not-allowed bg-gray-100" : ""}`}
                     required
-                  >
-                    <option value="">Select a product</option>
-                    {products.map(product => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
+                  />
                   <p className="text-xs text-gray-500 mt-1">
-                    Drop Down, many2one field, selection should be from product master.
+                    Text input field for finished product name.
                   </p>
                 </div>
 
@@ -505,38 +682,56 @@ export default function ManufacturingOrderForm() {
                       type="number"
                       min="1"
                       value={order.quantity}
-                      onChange={(e) => handleInputChange("quantity", parseInt(e.target.value) || 1)}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "quantity",
+                          parseInt(e.target.value) || 1
+                        )
+                      }
                       disabled={isReadOnly}
                       className={`flex-1 cursor-text ${
-                        order.quantity <= 0 ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      } ${isReadOnly ? 'cursor-not-allowed bg-gray-100' : ''}`}
+                        order.quantity <= 0
+                          ? "border-red-300 bg-red-50"
+                          : "border-gray-300"
+                      } ${isReadOnly ? "cursor-not-allowed bg-gray-100" : ""}`}
                       required
                     />
-                    <span className="text-sm text-gray-500">Units</span>
+                    <span className="text-sm text-gray-500">{order.units}</span>
                   </div>
                 </div>
 
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
-                    Bill of Material
+                    Bill of Material *
                   </Label>
                   <select
-                    value={order.bom_id}
+                    value={order.bomId}
                     onChange={(e) => handleBOMChange(e.target.value)}
                     disabled={isReadOnly}
                     className={`w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      isReadOnly ? 'cursor-not-allowed bg-gray-100' : 'cursor-pointer'
+                      isReadOnly
+                        ? "cursor-not-allowed bg-gray-100"
+                        : "cursor-pointer"
+                    } ${
+                      !order.bomId && order.status === "DRAFT"
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
                     }`}
                   >
                     <option value="">Select a BOM</option>
-                    {boms.map(bom => (
-                      <option key={bom.id} value={bom.id}>
-                        {bom.name}
-                      </option>
-                    ))}
+                    {Array.isArray(boms) &&
+                      boms.map((bom) => (
+                        <option key={bom.id} value={bom.id}>
+                          {bom.name}
+                        </option>
+                      ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
-                    Non Mandatory field Drop Down, many2one field, selection should be from bills of materials master, if bill of material is selected first, it should auto populate the finished product, quantity, components and work orders based on bill of material selected.
+                    Non Mandatory field Drop Down, many2one field, selection
+                    should be from bills of materials master, if bill of
+                    material is selected first, it should auto populate the
+                    finished product, quantity, components and work orders based
+                    on bill of material selected.
                   </p>
                 </div>
               </div>
@@ -549,12 +744,16 @@ export default function ManufacturingOrderForm() {
                   </Label>
                   <Input
                     type="date"
-                    value={order.scheduled_start}
-                    onChange={(e) => handleInputChange("scheduled_start", e.target.value)}
+                    value={order.scheduleDate}
+                    onChange={(e) =>
+                      handleInputChange("scheduleDate", e.target.value)
+                    }
                     disabled={isReadOnly}
                     className={`mt-1 cursor-pointer ${
-                      !order.scheduled_start ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    } ${isReadOnly ? 'cursor-not-allowed bg-gray-100' : ''}`}
+                      !order.scheduleDate
+                        ? "border-red-300 bg-red-50"
+                        : "border-gray-300"
+                    } ${isReadOnly ? "cursor-not-allowed bg-gray-100" : ""}`}
                     required
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -567,23 +766,26 @@ export default function ManufacturingOrderForm() {
                     Assignee
                   </Label>
                   <select
-                    value={order.assigned_to_id}
+                    value={order.assigneeId}
                     onChange={(e) => {
-                      const user = users.find(u => u.id === e.target.value);
-                      handleInputChange("assigned_to_id", e.target.value);
-                      handleInputChange("assigned_to_name", user?.name || "");
+                      const user = users.find((u) => u.id === e.target.value);
+                      handleInputChange("assigneeId", e.target.value);
+                      handleInputChange("assigneeName", user?.name || "");
                     }}
                     disabled={isReadOnly}
                     className={`w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      isReadOnly ? 'cursor-not-allowed bg-gray-100' : 'cursor-pointer'
+                      isReadOnly
+                        ? "cursor-not-allowed bg-gray-100"
+                        : "cursor-pointer"
                     }`}
                   >
                     <option value="">Select an assignee</option>
-                    {users.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
+                    {Array.isArray(users) &&
+                      users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
+                      ))}
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
                     Drop down of user for selection, many2one field.
@@ -598,45 +800,67 @@ export default function ManufacturingOrderForm() {
             {/* Components Section */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Components</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Components
+                </h3>
                 {!isReadOnly && (
-                  <Button size="sm" variant="outline" className="cursor-pointer hover:bg-gray-50 transition-colors duration-200">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddComponent}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add a product
                   </Button>
                 )}
               </div>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">Components</th>
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">Availability</th>
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">To Consume</th>
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">Units</th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Components
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Availability
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        To Consume
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Consumed
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Units
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {order.components.map((component, index) => (
                       <tr key={index} className="border-b">
-                        <td className="py-2 text-sm">{component.product_name}</td>
-                        <td className="py-2">
-                          <Badge
-                            variant={component.available ? "default" : "destructive"}
-                            className="text-xs"
-                          >
-                            {component.available ? "Available" : "Not Available"}
-                          </Badge>
+                        <td className="py-2 text-sm">
+                          {component.componentName}
                         </td>
-                        <td className="py-2 text-sm">{component.quantity}</td>
-                        <td className="py-2 text-sm">{component.unit}</td>
+                        <td className="py-2 text-sm">
+                          {component.availability}
+                        </td>
+                        <td className="py-2 text-sm">{component.toConsume}</td>
+                        <td className="py-2 text-sm">
+                          {component.consumed || 0}
+                        </td>
+                        <td className="py-2 text-sm">{component.units}</td>
                       </tr>
                     ))}
                     {order.components.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="text-center py-8 text-gray-500 text-sm">
-                          No components added. Select a Bill of Material or add manually.
+                        <td
+                          colSpan={5}
+                          className="text-center py-8 text-gray-500 text-sm"
+                        >
+                          No components added. Select a Bill of Material or add
+                          manually.
                         </td>
                       </tr>
                     )}
@@ -648,42 +872,77 @@ export default function ManufacturingOrderForm() {
             {/* Work Orders Section */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Work Orders</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Work Orders
+                </h3>
                 {!isReadOnly && (
-                  <Button size="sm" variant="outline" className="cursor-pointer hover:bg-gray-50 transition-colors duration-200">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddWorkOrder}
+                    className="cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add a line
                   </Button>
                 )}
               </div>
-              
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">Operations</th>
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">Work Center</th>
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">Duration</th>
-                      <th className="text-left py-2 text-sm font-medium text-gray-700">Status</th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Operations
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Work Center
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Duration
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Real Duration
+                      </th>
+                      <th className="text-left py-2 text-sm font-medium text-gray-700">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {order.work_orders.map((workOrder) => (
+                    {order.workOrders.map((workOrder) => (
                       <tr key={workOrder.id} className="border-b">
-                        <td className="py-2 text-sm">{workOrder.operation_name}</td>
-                        <td className="py-2 text-sm">{workOrder.work_center_name}</td>
-                        <td className="py-2 text-sm">{workOrder.expected_duration}</td>
+                        <td className="py-2 text-sm">
+                          {workOrder.operationName}
+                        </td>
+                        <td className="py-2 text-sm">
+                          {workOrder.workCenterName}
+                        </td>
+                        <td className="py-2 text-sm">
+                          {workOrder.plannedDuration} min
+                        </td>
+                        <td className="py-2 text-sm">
+                          {workOrder.realDuration || 0} min
+                        </td>
                         <td className="py-2">
-                          <Badge className={`text-xs ${workOrderStatusConfig[workOrder.status]?.color}`}>
+                          <Badge
+                            className={`text-xs ${
+                              workOrderStatusConfig[workOrder.status]?.color
+                            }`}
+                          >
                             {workOrderStatusConfig[workOrder.status]?.label}
                           </Badge>
                         </td>
                       </tr>
                     ))}
-                    {order.work_orders.length === 0 && (
+                    {order.workOrders.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="text-center py-8 text-gray-500 text-sm">
-                          No work orders added. Select a Bill of Material or add manually.
+                        <td
+                          colSpan={5}
+                          className="text-center py-8 text-gray-500 text-sm"
+                        >
+                          No work orders added. Select a Bill of Material or add
+                          manually.
                         </td>
                       </tr>
                     )}
