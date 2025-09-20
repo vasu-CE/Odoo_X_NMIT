@@ -91,7 +91,7 @@ export default function LandingPage() {
         className={`fixed top-0 w-full z-50 transition-all duration-300 ${
           scrollY > 50
             ? "bg-white/95 backdrop-blur-md shadow-lg"
-            : "bg-transparent"
+            : "bg-white/20 backdrop-blur-md shadow-lg"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,13 +122,13 @@ export default function LandingPage() {
                 <Button
                   variant="outline"
                   onClick={() => navigate("/login")}
-                  className="border-gray-300 hover:border-blue-500 hover:text-blue-600"
+                  className="border-gray-300 hover:border-blue-500 hover:text-blue-600 cursor-pointer"
                 >
                   Login
                 </Button>
                 <Button
                   onClick={() => navigate("/signup")}
-                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                 >
                   Get Started
                 </Button>
@@ -195,16 +195,9 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="space-y-6 md:space-y-8">
-            {/* Badge */}
-            {/* <div className="flex justify-center">
-              <Badge className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-200 px-4 py-2 text-sm font-medium">
-                <Zap className="w-4 h-4 mr-2" />
-                Next-Generation Manufacturing ERP
-              </Badge>
-            </div> */}
 
             {/* Main Headline */}
-            <div className="space-y-4">
+            <div className="space-y-4 mt-10">
               <SplitText
                 text="Transform Your Manufacturing Operations"
                 tag="h1"
@@ -277,9 +270,9 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-white">
+      <section id="features" className="pb-16 mt-[-80px] bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
+          <div className="text-center">
             <SplitText
               text="Powerful Features for Modern Manufacturing"
               tag="h2"
@@ -336,55 +329,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-600 to-cyan-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <SplitText
-            text="Ready to Transform Your Manufacturing?"
-            tag="h2"
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6"
-            delay={50}
-            duration={0.8}
-            ease="power3.out"
-            splitType="words"
-            from={{ opacity: 0, y: 50 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            rootMargin="-100px"
-            textAlign="center"
-          />
-          <SplitText
-            text="Join hundreds of manufacturing companies that have already revolutionized their operations with ManufacturingOS."
-            className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto"
-            delay={100}
-            duration={0.6}
-            ease="power3.out"
-            splitType="words"
-            from={{ opacity: 0, y: 30 }}
-            to={{ opacity: 1, y: 0 }}
-            threshold={0.1}
-            rootMargin="-100px"
-            textAlign="center"
-          />
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              onClick={() => navigate("/signup")}
-              className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-50 px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-            >
-              Start Your Free Trial
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/login")}
-              className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold transition-all duration-300"
-            >
-              Login to Dashboard
-            </Button>
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">

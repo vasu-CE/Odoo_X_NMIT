@@ -112,7 +112,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md">
         {/* Back to Landing */}
-        <div className="mb-4 md:mb-6 flex justify-start relative z-10">
+        <div className="mb-3 md:mb-4 flex justify-start relative z-10">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
@@ -125,35 +125,31 @@ export default function LoginPage() {
         </div>
 
         {/* Logo and Title */}
-        <div className="text-center mb-6 md:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl mb-3 md:mb-4 shadow-lg overflow-hidden">
+        <div className="text-center mb-4 md:mb-6">
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full mb-2 md:mb-3 overflow-hidden">
             <img
               src="/logo.png"
               alt="ManufacturingOS Logo"
-              className="w-full h-full object-contain"
+              className="w-30 h-30 object-cover"
             />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
             ManufacturingOS
           </h1>
-          <p className="text-sm md:text-base text-gray-600">Production Management System</p>
         </div>
 
         {/* Login Card */}
         <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-md relative z-10">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl font-semibold text-center text-gray-900">
-              Welcome Back
+          <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-lg font-semibold text-center text-gray-900">
+              Sign In
             </CardTitle>
-            <p className="text-center text-gray-600">
-              Sign in to your account to continue
-            </p>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             {/* Login Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div className="space-y-1">
                 <Label
                   htmlFor="loginId"
                   className="text-sm font-medium text-gray-700"
@@ -185,7 +181,7 @@ export default function LoginPage() {
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label
                   htmlFor="password"
                   className="text-sm font-medium text-gray-700"
@@ -268,7 +264,7 @@ export default function LoginPage() {
             </form>
 
             {/* Sign Up Link */}
-            <div className="text-center pt-4 border-t border-gray-200">
+            <div className="text-center pt-2 border-t border-gray-200">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
                 <Link
@@ -283,7 +279,7 @@ export default function LoginPage() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-xs text-gray-500">
+        <div className="text-center mt-4 text-xs text-gray-500">
           <p>&copy; 2024 ManufacturingOS. All rights reserved.</p>
         </div>
 

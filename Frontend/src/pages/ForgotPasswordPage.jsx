@@ -141,30 +141,15 @@ export default function ForgotPasswordPage() {
 
       <div className="w-full max-w-md">
         {/* Back to Landing */}
-        <div className="mb-6 flex justify-start">
+        <div className="mb-6 flex justify-start relative z-10">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="text-gray-600 hover:text-gray-900 p-2 cursor-pointer hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
-        </div>
-
-        {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg overflow-hidden">
-            <img
-              src="/logo.png"
-              alt="ManufacturingOS Logo"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            ManufacturingOS
-          </h1>
-          <p className="text-gray-600">Production Management System</p>
         </div>
 
         {/* Forgot Password Card */}

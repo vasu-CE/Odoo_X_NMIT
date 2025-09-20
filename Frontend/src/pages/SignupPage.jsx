@@ -57,8 +57,8 @@ export default function SignupPage() {
       description: "Oversee production processes and team management",
     },
     {
-      value: "BUSINESS_OWNER",
-      label: "Business Owner",
+      value: "ADMIN",
+      label: "Admin",
       description: "Full system access and business oversight",
     },
   ];
@@ -166,7 +166,7 @@ export default function SignupPage() {
 
       <div className="w-full max-w-md">
         {/* Back to Landing */}
-        <div className="mb-4 md:mb-6 flex justify-start relative z-10">
+        <div className="flex justify-start relative z-10">
           <Button
             variant="ghost"
             onClick={() => navigate("/landing")}
@@ -174,21 +174,20 @@ export default function SignupPage() {
             className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {/* <span className="hidden xs:inline">Back to Home</span> */}
             <span className="xs:hidden">Back</span>
           </Button>
         </div>
 
         {/* Logo and Title */}
-        <div className="text-center mb-6 md:mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl mb-3 md:mb-4 shadow-lg overflow-hidden">
+        <div className="text-center mb-4 md:mb-6">
+          <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full mb-2 md:mb-3 overflow-hidden">
             <img
               src="/logo.png"
               alt="ManufacturingOS Logo"
-              className="w-full h-full object-contain"
+              className="w-30 h-30 object-cover"
             />
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
             ManufacturingOS
           </h1>
           <p className="text-sm md:text-base text-gray-600">Production Management System</p>
@@ -196,14 +195,12 @@ export default function SignupPage() {
 
         {/* Signup Card */}
         <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-md relative z-10">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-2xl font-semibold text-center text-gray-900">
+        <CardHeader className="space-y-1 pb-4">
+            <CardTitle className="text-lg font-semibold text-center text-gray-900">
               Create Account
             </CardTitle>
-            <p className="text-center text-gray-600">
-              Sign up to get started with ManufacturingOS
-            </p>
           </CardHeader>
+
 
           <CardContent className="space-y-6">
             {/* Signup Form */}
