@@ -47,6 +47,7 @@ model Product {
   boms                BOM[]
   bomComponents       BOMComponent[]
   stockMovements      StockMovement[]
+  manufacturingOrders ManufacturingOrder[]
 
   @@map("products")
 }
@@ -114,6 +115,7 @@ model WorkCenter {
 
   // Relations
   operations BOMOperation[]
+  workOrders WorkOrder[]
 
   @@map("work_centers")
 }
@@ -122,6 +124,7 @@ model ManufacturingOrder {
   id              String               @id @default(cuid())
   orderNumber     String               @unique
   finishedProduct String               // Product name/description
+  productId       String?              // Reference to Product table
   quantity        Int
   units           String               @default("PCS")
   status          ManufacturingStatus  @default(DRAFT)
@@ -139,6 +142,7 @@ model ManufacturingOrder {
 
   // Relations
   assignee        User?                @relation("ManufacturingOrderAssignee", fields: [assigneeId], references: [id])
+  product         Product?             @relation(fields: [productId], references: [id])
   bom             BOM?                 @relation(fields: [bomId], references: [id])
   components      Component[]
   workOrders      WorkOrder[]
@@ -168,6 +172,7 @@ model WorkOrder {
   manufacturingOrderId   String
   operationName          String
   workCenterName         String
+  workCenterId           String?           // Reference to WorkCenter table
   plannedDuration        Int               // in minutes
   realDuration           Int?              // in minutes
   status                 WorkOrderStatus   @default(PENDING)
@@ -186,6 +191,7 @@ model WorkOrder {
 
   // Relations
   manufacturingOrder ManufacturingOrder @relation(fields: [manufacturingOrderId], references: [id], onDelete: Cascade)
+  workCenter         WorkCenter?        @relation(fields: [workCenterId], references: [id])
   assignedTo         User?              @relation(fields: [assignedToId], references: [id])
 
   @@map("work_orders")

@@ -112,6 +112,14 @@ class ApiService {
     });
   }
 
+  // Create manufacturing order with assigned work orders
+  async createManufacturingOrderWithWorkOrders(data) {
+    return this.request("/manufacturing-orders", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   async updateManufacturingOrder(id, data) {
     return this.request(`/manufacturing-orders/${id}`, {
       method: "PUT",
@@ -307,6 +315,13 @@ class ApiService {
     return this.request(
       `/work-orders/my-assignments${queryString ? `?${queryString}` : ""}`
     );
+  }
+
+  // Get work orders by assigned user ID
+  async getWorkOrdersByAssignedUser(assignedToId, params = {}) {
+    const queryParams = { assignedToId, ...params };
+    const queryString = new URLSearchParams(queryParams).toString();
+    return this.request(`/work-orders${queryString ? `?${queryString}` : ""}`);
   }
 
   // Products

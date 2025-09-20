@@ -45,6 +45,7 @@ router.get('/', authenticate, [
     if (search) {
       where.OR = [
         { operationName: { contains: search, mode: 'insensitive' } },
+        { workCenterName: { contains: search, mode: 'insensitive' } },
         { manufacturingOrder: { orderNumber: { contains: search, mode: 'insensitive' } } }
       ];
     }
@@ -63,6 +64,13 @@ router.get('/', authenticate, [
               finishedProduct: true,
               quantity: true,
               units: true,
+              status: true
+            }
+          },
+          workCenter: {
+            select: {
+              id: true,
+              name: true,
               status: true
             }
           },
@@ -134,6 +142,13 @@ router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR' , 'MANUF
               status: true
             }
           },
+          workCenter: {
+            select: {
+              id: true,
+              name: true,
+              status: true
+            }
+          },
         }
       }),
       prisma.workOrder.count({ where })
@@ -194,6 +209,13 @@ router.get('/my-assignments', authenticate, async (req, res) => {
               status: true
             }
           },
+          workCenter: {
+            select: {
+              id: true,
+              name: true,
+              status: true
+            }
+          },
         }
       }),
       prisma.workOrder.count({ where })
@@ -231,7 +253,13 @@ router.get('/:id', authenticate, async (req, res) => {
       where: { id },
       include: {
         manufacturingOrder: {
-          include: {
+          select: {
+            id: true,
+            orderNumber: true,
+            finishedProduct: true,
+            quantity: true,
+            units: true,
+            status: true,
             product: {
               select: {
                 id: true,
@@ -240,6 +268,13 @@ router.get('/:id', authenticate, async (req, res) => {
                 type: true
               }
             }
+          }
+        },
+        workCenter: {
+          select: {
+            id: true,
+            name: true,
+            status: true
           }
         },
         assignedTo: {
@@ -279,8 +314,8 @@ router.get('/:id', authenticate, async (req, res) => {
 router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
   body('manufacturingOrderId').notEmpty().withMessage('Manufacturing order ID is required'),
   body('operationName').notEmpty().withMessage('Operation name is required'),
-  body('sequence').isInt({ min: 1 }).withMessage('Sequence must be positive'),
-  body('workCenterId').notEmpty().withMessage('Work center ID is required'),
+  body('workCenterName').notEmpty().withMessage('Work center name is required'),
+  body('workCenterId').optional().isString(),
   body('assignedToId').optional().isString(),
   body('estimatedTimeMinutes').isInt({ min: 1 }).withMessage('Estimated time must be positive'),
   body('comments').optional().isString()
@@ -298,7 +333,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     const {
       manufacturingOrderId,
       operationName,
-      sequence,
+      workCenterName,
       workCenterId,
       assignedToId,
       estimatedTimeMinutes,
@@ -317,16 +352,18 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       });
     }
 
-    // Verify work center exists
-    const workCenter = await prisma.workCenter.findUnique({
-      where: { id: workCenterId }
-    });
-
-    if (!workCenter) {
-      return res.status(404).json({
-        success: false,
-        error: 'Work center not found'
+    // Verify work center exists if workCenterId is provided
+    if (workCenterId) {
+      const workCenter = await prisma.workCenter.findUnique({
+        where: { id: workCenterId }
       });
+
+      if (!workCenter) {
+        return res.status(404).json({
+          success: false,
+          error: 'Work center not found'
+        });
+      }
     }
 
     // Verify assigned user exists if provided
@@ -347,10 +384,11 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: {
         manufacturingOrderId,
         operationName,
-        sequence,
+        workCenterName,
         workCenterId,
         assignedToId,
         estimatedTimeMinutes,
+        plannedDuration: estimatedTimeMinutes,
         comments
       },
       include: {
@@ -358,13 +396,10 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
           select: {
             id: true,
             orderNumber: true,
-            product: {
-              select: {
-                id: true,
-                name: true,
-                type: true
-              }
-            }
+            finishedProduct: true,
+            quantity: true,
+            units: true,
+            status: true
           }
         },
         workCenter: {
@@ -403,7 +438,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
 // @access  Private
 router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
   body('operationName').optional().isString(),
-  body('sequence').optional().isInt({ min: 1 }),
+  body('workCenterName').optional().isString(),
   body('workCenterId').optional().isString(),
   body('assignedToId').optional().isString(),
   body('estimatedTimeMinutes').optional().isInt({ min: 1 }),
@@ -440,13 +475,10 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
           select: {
             id: true,
             orderNumber: true,
-            product: {
-              select: {
-                id: true,
-                name: true,
-                type: true
-              }
-            }
+            finishedProduct: true,
+            quantity: true,
+            units: true,
+            status: true
           }
         },
         workCenter: {

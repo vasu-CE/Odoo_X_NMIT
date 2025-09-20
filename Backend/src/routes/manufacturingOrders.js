@@ -92,6 +92,7 @@ router.get(
       if (search) {
         where.OR = [
           { orderNumber: { contains: search, mode: "insensitive" } },
+          { finishedProduct: { contains: search, mode: "insensitive" } },
           { product: { name: { contains: search, mode: "insensitive" } } },
         ];
       }
@@ -108,6 +109,13 @@ router.get(
                 id: true,
                 name: true,
                 email: true,
+              },
+            },
+            product: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
               },
             },
             bom: {
@@ -134,6 +142,7 @@ router.get(
                 workCenterName: true,
                 plannedDuration: true,
                 realDuration: true,
+                assignedToId: true,
               },
             },
           },
@@ -205,6 +214,16 @@ router.get("/:id", authenticate, async (req, res) => {
             role: true,
           },
         },
+        product: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            type: true,
+            currentStock: true,
+            unit: true,
+          },
+        },
         bom: {
           include: {
             components: {
@@ -250,6 +269,13 @@ router.get("/:id", authenticate, async (req, res) => {
                 id: true,
                 name: true,
                 email: true,
+              },
+            },
+            workCenter: {
+              select: {
+                id: true,
+                name: true,
+                status: true,
               },
             },
           },
@@ -298,6 +324,8 @@ router.post(
       .withMessage("Valid schedule date is required"),
     body("assigneeId").optional().isString(),
     body("bomId").optional().isString(),
+    body("productId").optional().isString(),
+    body("assignedWorkOrders").optional().isArray(),
     body("notes").optional().isString(),
   ],
   async (req, res) => {
@@ -319,6 +347,8 @@ router.post(
         scheduleDate,
         assigneeId,
         bomId,
+        productId,
+        assignedWorkOrders = [],
         notes,
       } = req.body;
 
@@ -332,6 +362,7 @@ router.post(
           data: {
             orderNumber,
             finishedProduct,
+            productId,
             quantity,
             units,
             priority,
@@ -346,6 +377,13 @@ router.post(
                 id: true,
                 name: true,
                 email: true,
+              },
+            },
+            product: {
+              select: {
+                id: true,
+                name: true,
+                type: true,
               },
             },
           },
@@ -396,16 +434,19 @@ router.post(
             // Create work orders from BOM operations
             const workOrders = [];
             for (const operation of bom.operations) {
+              console.log("Creating work order for operation:", operation.name);
               const workOrder = await tx.workOrder.create({
                 data: {
                   manufacturingOrderId: newOrder.id,
                   operationName: operation.name,
                   workCenterName: operation.workCenter.name,
+                  workCenterId: operation.workCenter.id,
                   plannedDuration: operation.timeMinutes,
                   estimatedTimeMinutes: operation.timeMinutes,
                   status: "PENDING",
                 },
               });
+              console.log("Work order created:", workOrder.id);
               workOrders.push(workOrder);
             }
 
@@ -434,13 +475,119 @@ router.post(
           }
         }
 
+        // If assignedWorkOrders is provided, create work orders from the payload
+        if (assignedWorkOrders && assignedWorkOrders.length > 0) {
+          console.log("Creating work orders from assignedWorkOrders payload:", assignedWorkOrders.length);
+          const customWorkOrders = [];
+          
+          for (const workOrderData of assignedWorkOrders) {
+            // Validate required fields
+            if (!workOrderData.operationName || !workOrderData.workCenterName || !workOrderData.estimatedTimeMinutes) {
+              throw new Error(`Invalid work order data: missing required fields`);
+            }
+
+            console.log("Creating custom work order:", workOrderData.operationName);
+            const workOrder = await tx.workOrder.create({
+              data: {
+                manufacturingOrderId: newOrder.id,
+                operationName: workOrderData.operationName,
+                workCenterName: workOrderData.workCenterName,
+                workCenterId: workOrderData.workCenterId || null,
+                plannedDuration: workOrderData.estimatedTimeMinutes,
+                estimatedTimeMinutes: workOrderData.estimatedTimeMinutes,
+                assignedToId: workOrderData.assignedToId || null,
+                status: "PENDING",
+                comments: workOrderData.comments || null,
+              },
+            });
+            console.log("Custom work order created:", workOrder.id);
+            customWorkOrders.push(workOrder);
+          }
+          
+          // Add custom work orders to the response
+          newOrder.workOrders = [...(newOrder.workOrders || []), ...customWorkOrders];
+        } else if (!bomId) {
+          // If no BOM and no assignedWorkOrders, create a default work order
+          console.log("No BOM or assignedWorkOrders provided, creating default work order");
+          const defaultWorkOrder = await tx.workOrder.create({
+            data: {
+              manufacturingOrderId: newOrder.id,
+              operationName: "General Assembly",
+              workCenterName: "General Work Center",
+              workCenterId: null,
+              plannedDuration: 60, // 1 hour default
+              estimatedTimeMinutes: 60,
+              assignedToId: null,
+              status: "PENDING",
+              comments: "Default work order created automatically",
+            },
+          });
+          console.log("Default work order created:", defaultWorkOrder.id);
+          newOrder.workOrders = [defaultWorkOrder];
+        }
+
         return newOrder;
+      });
+
+      // Fetch the complete order with work orders for the response
+      const completeOrder = await prisma.manufacturingOrder.findUnique({
+        where: { id: order.id },
+        include: {
+          assignee: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          product: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+            },
+          },
+          bom: {
+            select: {
+              id: true,
+              version: true,
+            },
+          },
+          components: {
+            select: {
+              id: true,
+              componentName: true,
+              availability: true,
+              toConsume: true,
+              consumed: true,
+              units: true,
+            },
+          },
+          workOrders: {
+            include: {
+              assignedTo: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                },
+              },
+              workCenter: {
+                select: {
+                  id: true,
+                  name: true,
+                  status: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       res.status(201).json({
         success: true,
         message: "Manufacturing order created successfully",
-        data: order,
+        data: completeOrder,
       });
     } catch (error) {
       console.error("Create manufacturing order error:", error);
