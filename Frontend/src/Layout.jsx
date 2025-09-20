@@ -85,14 +85,17 @@ export default function Layout({ children }) {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target)
+      ) {
         setShowProfileDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -183,7 +186,6 @@ export default function Layout({ children }) {
                 </h1>
               </div>
               <div className="flex items-center gap-3">
-                
                 <div className="relative" ref={profileDropdownRef}>
                   <Button
                     variant="ghost"
@@ -193,17 +195,24 @@ export default function Layout({ children }) {
                   >
                     <User className="w-4 h-4 text-white" />
                   </Button>
-                  
+
                   {/* Profile Dropdown */}
                   {showProfileDropdown && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
                       <div className="py-2">
                         <div className="px-4 py-2 border-b border-gray-100">
                           <p className="text-sm font-medium text-gray-900">
-                            {user?.loginId || user?.name || "Production Manager"}
+                            {user?.loginId ||
+                              user?.name ||
+                              "Production Manager"}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {user?.role === "admin" ? "Administrator" : "Production Manager"}
+                            {{
+                              MANUFACTURING_MANAGER: "Manufacturing Manager",
+                              SHOP_FLOOR_OPERATOR: "Shop Floor Operator",
+                              INVENTORY_MANAGER: "Inventory Manager",
+                              BUSINESS_OWNER: "Business Owner",
+                            }[user?.role] || "Unknown Role"}
                           </p>
                         </div>
                         <button

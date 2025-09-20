@@ -80,6 +80,7 @@ export default function WorkOrders() {
           scheduled_start: "2024-01-15",
           scheduled_end: "2024-01-16",
           expected_duration: "60:00",
+          actual_duration: "45:30",
         },
         {
           id: 2,
@@ -93,6 +94,7 @@ export default function WorkOrders() {
           scheduled_start: "2024-01-16",
           scheduled_end: "2024-01-17",
           expected_duration: "45:00",
+          actual_duration: null,
         },
         {
           id: 3,
@@ -106,6 +108,7 @@ export default function WorkOrders() {
           scheduled_start: "2024-01-14",
           scheduled_end: "2024-01-14",
           expected_duration: "30:00",
+          actual_duration: "28:15",
         },
       ];
 
@@ -243,6 +246,9 @@ export default function WorkOrders() {
                       Expected Duration
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Real Duration
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                   </tr>
@@ -261,6 +267,9 @@ export default function WorkOrders() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="h-4 bg-gray-200 rounded w-28"></div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 rounded w-16"></div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="h-4 bg-gray-200 rounded w-16"></div>
@@ -304,6 +313,9 @@ export default function WorkOrders() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {workOrder.expected_duration || "60:00"}
                           </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {workOrder.actual_duration || "-"}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <Badge
                               className={`${statusInfo.color} flex items-center gap-1 w-fit`}
@@ -317,7 +329,7 @@ export default function WorkOrders() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="5" className="px-6 py-12 text-center">
+                      <td colSpan="6" className="px-6 py-12 text-center">
                         <div className="text-gray-500">
                           <p className="text-lg font-medium mb-2">
                             No work orders found
@@ -381,8 +393,12 @@ export default function WorkOrders() {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Duration:</span>
+                      <span className="text-gray-600">Expected:</span>
                       <span>{workOrder.expected_duration || "60:00"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Real:</span>
+                      <span>{workOrder.actual_duration || "-"}</span>
                     </div>
                   </div>
                 </div>
