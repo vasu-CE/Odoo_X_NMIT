@@ -30,6 +30,7 @@ import {
   Factory,
   Clock,
 } from "lucide-react";
+import AsyncDropdown from "../components/AsyncDropdown";
 
 export default function BOMPage() {
   const [boms, setBoms] = useState([]);
@@ -375,7 +376,7 @@ export default function BOMPage() {
             <div className="flex items-center justify-between mb-4">
               <Button 
                 onClick={handleNewBOM}
-                className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                className="bg-blue-600 hover:bg-blue-700 text-white/90 shadow-md"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New
@@ -671,18 +672,25 @@ export default function BOMPage() {
                           <div className="flex-1 grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <Label className="text-xs font-medium text-gray-600">To consume</Label>
-                              <select
-                                value={component.product_name}
-                                onChange={(e) => handleUpdateComponent(index, 'product_name', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              >
-                                <option value="">Select Product</option>
-                                {products.filter(p => p.category !== "Furniture").map(product => (
-                                  <option key={product.id} value={product.name}>
-                                    {product.name}
-                                  </option>
-                                ))}
-                              </select>
+                              <AsyncDropdown
+                                label="products"
+                                value={component.product_name ? products.find(p => p.name === component.product_name) : null}
+                                onChange={(selected) => handleUpdateComponent(index, "product_name", selected.name)}
+                                placeholder="Select Product"
+                                defaultOptions={products.slice(0, 5)}
+                                fetchOptions={async (search) => {
+                                  console.log("Fetching products with search:", search);
+                                  
+                                  const res = await apiService.getProducts({ search, limit: 10 });
+                                  return res || [];
+                                }}
+                                getOptionLabel={(p) => p.name}
+                                getOptionValue={(p) => p.id}
+                                menuPortalTarget={document.body}  // render outside
+                                styles={{
+                                  menuPortal: base => ({ ...base, zIndex: 9999 }) // make sure it's above modal
+                                }}
+                              />
                             </div>
                             <div className="space-y-1">
                               <Label className="text-xs font-medium text-gray-600">Units</Label>
@@ -753,18 +761,19 @@ export default function BOMPage() {
                                 />
                               </td>
                               <td className="py-3 px-4">
-                                <select
-                                  value={workOrder.work_center}
-                                  onChange={(e) => handleUpdateWorkOrder(index, 'work_center', e.target.value)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                  <option value="">Select Work Center</option>
-                                  {workCenters.filter(wc => wc.status === 'ACTIVE').map(workCenter => (
-                                    <option key={workCenter.id} value={workCenter.name}>
-                                      {workCenter.name}
-                                    </option>
-                                  ))}
-                                </select>
+                                <AsyncDropdown
+                                  label="workCenters"
+                                  value={workCenters.find(wc => wc.name === workOrder.work_center) || null}
+                                  onChange={(selected) => handleUpdateWorkOrder(index, "work_center", selected.name)}
+                                  placeholder="Select Work Center"
+                                  defaultOptions={workCenters.slice(0, 5)}
+                                  fetchOptions={async (search) => {
+                                    const res = await apiService.getWorkCenters({ search, limit: 10 });
+                                    return res?.data?.workCenters || [];
+                                  }}
+                                  getOptionLabel={(wc) => wc.name}
+                                  getOptionValue={(wc) => wc.id}
+                                />
                               </td>
                               <td className="py-3 px-4">
                                 <div className="flex">

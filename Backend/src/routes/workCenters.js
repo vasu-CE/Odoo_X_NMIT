@@ -26,7 +26,7 @@ router.get('/', authenticate, [
       status,
       search
     } = req.query;
-
+    console.log('Query params:', req.query);
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const where = {};
@@ -34,7 +34,6 @@ router.get('/', authenticate, [
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
       ];
     }
 

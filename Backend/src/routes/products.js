@@ -25,12 +25,14 @@ router.get('/', authenticate, [
 
     const {
       page = 1,
-      limit = 20,
+      limit = 10,
       type,
       category,
       search,
       lowStock
     } = req.query;
+    console.log('Query params:', req.query);
+    
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -41,8 +43,6 @@ router.get('/', authenticate, [
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-        { hsnCode: { contains: search, mode: 'insensitive' } }
       ];
     }
     if (lowStock === 'true') {
