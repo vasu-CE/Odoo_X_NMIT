@@ -17,10 +17,8 @@ router.get('/overview', authenticate, async (req, res) => {
       recentOrders,
       recentMovements
     ] = await Promise.all([
-      // Total manufacturing orders
       prisma.manufacturingOrder.count(),
       
-      // Active orders (planned, confirmed, in_progress)
       prisma.manufacturingOrder.count({
         where: {
           status: {
@@ -29,19 +27,16 @@ router.get('/overview', authenticate, async (req, res) => {
         }
       }),
       
-      // Completed orders
       prisma.manufacturingOrder.count({
         where: {
           status: 'COMPLETED'
         }
       }),
       
-      // Total products
       prisma.product.count({
         where: { isActive: true }
       }),
       
-      // Low stock products
       prisma.product.count({
         where: {
           isActive: true,
@@ -51,15 +46,12 @@ router.get('/overview', authenticate, async (req, res) => {
         }
       }),
       
-      // Total work centers
       prisma.workCenter.count(),
       
-      // Active work centers
       prisma.workCenter.count({
         where: { status: 'ACTIVE' }
       }),
       
-      // Recent orders
       prisma.manufacturingOrder.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
@@ -73,7 +65,6 @@ router.get('/overview', authenticate, async (req, res) => {
         }
       }),
       
-      // Recent stock movements
       prisma.stockMovement.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
@@ -140,7 +131,6 @@ router.get('/kpis', authenticate, async (req, res) => {
         }
       }),
       
-      // Orders by priority
       prisma.manufacturingOrder.groupBy({
         by: ['priority'],
         _count: { priority: true },
@@ -148,8 +138,6 @@ router.get('/kpis', authenticate, async (req, res) => {
           createdAt: { gte: startDate }
         }
       }),
-      
-      // Production efficiency (completed vs planned)
       prisma.manufacturingOrder.aggregate({
         _avg: {
           actualCost: true,

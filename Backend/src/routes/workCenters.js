@@ -5,9 +5,6 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// @route   GET /api/work-centers
-// @desc    Get all work centers
-// @access  Private
 router.get('/', authenticate, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -32,7 +29,6 @@ router.get('/', authenticate, [
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Build where clause
     const where = {};
     if (status) where.status = status;
     if (search) {
@@ -62,7 +58,6 @@ router.get('/', authenticate, [
       prisma.workCenter.count({ where })
     ]);
 
-    // Calculate utilization for each work center (simplified without workOrders relation)
     const workCentersWithUtilization = workCenters.map(wc => {
       return {
         ...wc,
@@ -92,9 +87,6 @@ router.get('/', authenticate, [
   }
 });
 
-// @route   GET /api/work-centers/:id
-// @desc    Get single work center
-// @access  Private
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -154,7 +146,6 @@ router.get('/:id', authenticate, async (req, res) => {
       });
     }
 
-    // Calculate utilization (simplified without workOrders relation)
     const activeWorkOrders = 0; // Default since we don't have workOrders relation
     const utilization = 0; // Default utilization
 

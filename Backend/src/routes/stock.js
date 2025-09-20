@@ -5,9 +5,6 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// @route   GET /api/stock-movements
-// @desc    Get all stock movements
-// @access  Private
 router.get('/', authenticate, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -39,7 +36,6 @@ router.get('/', authenticate, [
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Build where clause
     const where = {};
     if (productId) where.productId = productId;
     if (movementType) where.movementType = movementType;
@@ -97,9 +93,7 @@ router.get('/', authenticate, [
   }
 });
 
-// @route   POST /api/stock-movements
-// @desc    Create new stock movement
-// @access  Private
+
 router.post('/', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
   body('productId').notEmpty().withMessage('Product ID is required'),
   body('movementType').isIn(['IN', 'OUT', 'TRANSFER', 'ADJUSTMENT']).withMessage('Invalid movement type'),
@@ -129,7 +123,6 @@ router.post('/', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
       notes
     } = req.body;
 
-    // Verify product exists
     const product = await prisma.product.findUnique({
       where: { id: productId }
     });
@@ -162,9 +155,8 @@ router.post('/', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
     // Calculate total value
     const totalValue = unitCost ? quantity * unitCost : null;
 
-    // Create stock movement and update product in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create stock movement
+     
       const stockMovement = await tx.stockMovement.create({
         data: {
           productId,
