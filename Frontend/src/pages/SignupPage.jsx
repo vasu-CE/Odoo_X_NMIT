@@ -20,6 +20,7 @@ import {
   Factory,
   ArrowRight,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function SignupPage() {
@@ -139,8 +140,27 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 -left-4 w-72 h-72 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-72 h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
       <div className="w-full max-w-md">
+        {/* Back to Landing */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/landing")}
+            className="text-gray-600 hover:text-gray-900 p-2"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Button>
+        </div>
+
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
@@ -153,7 +173,7 @@ export default function SignupPage() {
         </div>
 
         {/* Signup Card */}
-        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-md relative z-10">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl font-semibold text-center text-gray-900">
               Create Account
@@ -452,6 +472,18 @@ export default function SignupPage() {
         <div className="text-center mt-8 text-xs text-gray-500">
           <p>&copy; 2024 ManufacturingOS. All rights reserved.</p>
         </div>
+
+        <style jsx>{`
+          @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+          }
+          .animate-blob { animation: blob 7s infinite; }
+          .animation-delay-2000 { animation-delay: 2s; }
+          .animation-delay-4000 { animation-delay: 4s; }
+        `}</style>
       </div>
     </div>
   );
