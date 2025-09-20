@@ -1,0 +1,108 @@
+{
+  "name": "WorkOrder",
+  "type": "object",
+  "properties": {
+    "work_order_number": {
+      "type": "string",
+      "description": "Unique work order identifier"
+    },
+    "manufacturing_order_number": {
+      "type": "string",
+      "description": "Parent manufacturing order number"
+    },
+    "operation_name": {
+      "type": "string",
+      "description": "Operation to perform"
+    },
+    "sequence": {
+      "type": "number",
+      "description": "Order sequence"
+    },
+    "work_center_name": {
+      "type": "string",
+      "description": "Work center name"
+    },
+    "assignee_name": {
+      "type": "string",
+      "description": "Operator name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "on_hold",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "estimated_time": {
+      "type": "number",
+      "description": "Estimated time in minutes"
+    },
+    "actual_time": {
+      "type": "number",
+      "description": "Actual time spent in minutes"
+    },
+    "start_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Work start time"
+    },
+    "end_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Work completion time"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "description": "Labor cost per hour"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Total operation cost"
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_name": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Comments and updates"
+    },
+    "quality_check": {
+      "type": "object",
+      "properties": {
+        "passed": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "checked_by": {
+          "type": "string"
+        },
+        "check_time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "required": [
+    "operation_name",
+    "work_center_name"
+  ]
+}

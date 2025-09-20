@@ -1,0 +1,96 @@
+{
+  "name": "ManufacturingOrder",
+  "type": "object",
+  "properties": {
+    "order_number": {
+      "type": "string",
+      "description": "Unique order identifier"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantity to produce"
+    },
+    "scheduled_start": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Planned start date"
+    },
+    "scheduled_end": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Planned completion date"
+    },
+    "actual_start": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Actual start date"
+    },
+    "actual_end": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Actual completion date"
+    },
+    "assignee_name": {
+      "type": "string",
+      "description": "Assigned user name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "planned"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium"
+    },
+    "required_materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_name": {
+            "type": "string"
+          },
+          "required_qty": {
+            "type": "number"
+          },
+          "consumed_qty": {
+            "type": "number",
+            "default": 0
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Materials required for this order"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Total production cost"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    }
+  },
+  "required": [
+    "product_name",
+    "quantity"
+  ]
+}

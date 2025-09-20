@@ -1,0 +1,73 @@
+{
+  "name": "BOM",
+  "type": "object",
+  "properties": {
+    "product_name": {
+      "type": "string",
+      "description": "Finished product name"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "description": "Base quantity for this BOM"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "product_name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Raw materials required"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "work_center_name": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "number"
+          },
+          "estimated_time": {
+            "type": "number"
+          },
+          "hourly_rate": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Manufacturing operations"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Total estimated cost"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "product_name"
+  ]
+}

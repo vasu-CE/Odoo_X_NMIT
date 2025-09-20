@@ -1,0 +1,68 @@
+{
+  "name": "StockMovement",
+  "type": "object",
+  "properties": {
+    "product_name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "movement_type": {
+      "type": "string",
+      "enum": [
+        "in",
+        "out",
+        "adjustment"
+      ],
+      "description": "Type of stock movement"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Quantity moved (positive for in, negative for out)"
+    },
+    "reference_type": {
+      "type": "string",
+      "enum": [
+        "manufacturing_order",
+        "work_order",
+        "purchase",
+        "sale",
+        "adjustment"
+      ],
+      "description": "Reference document type"
+    },
+    "reference_number": {
+      "type": "string",
+      "description": "Reference document number"
+    },
+    "unit_cost": {
+      "type": "number",
+      "description": "Cost per unit"
+    },
+    "total_cost": {
+      "type": "number",
+      "description": "Total value of movement"
+    },
+    "balance_qty": {
+      "type": "number",
+      "description": "Stock balance after movement"
+    },
+    "balance_value": {
+      "type": "number",
+      "description": "Stock value after movement"
+    },
+    "remarks": {
+      "type": "string",
+      "description": "Additional remarks"
+    },
+    "movement_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Movement date and time"
+    }
+  },
+  "required": [
+    "product_name",
+    "movement_type",
+    "quantity"
+  ]
+}

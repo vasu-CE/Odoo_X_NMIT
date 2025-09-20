@@ -1,0 +1,65 @@
+{
+  "name": "WorkCenter",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Work center name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "machine",
+        "workstation",
+        "assembly_line",
+        "quality_control"
+      ],
+      "description": "Work center type"
+    },
+    "location": {
+      "type": "string",
+      "description": "Physical location"
+    },
+    "capacity": {
+      "type": "number",
+      "description": "Daily capacity in hours"
+    },
+    "hourly_rate": {
+      "type": "number",
+      "description": "Cost per hour"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "maintenance",
+        "inactive"
+      ],
+      "default": "active"
+    },
+    "efficiency": {
+      "type": "number",
+      "default": 100,
+      "description": "Efficiency percentage"
+    },
+    "utilization": {
+      "type": "number",
+      "default": 0,
+      "description": "Current utilization percentage"
+    },
+    "description": {
+      "type": "string",
+      "description": "Work center description"
+    },
+    "maintenance_schedule": {
+      "type": "string",
+      "description": "Maintenance schedule"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "hourly_rate",
+    "capacity"
+  ]
+}

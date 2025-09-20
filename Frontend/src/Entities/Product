@@ -1,0 +1,53 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "finished_goods",
+        "raw_material"
+      ],
+      "description": "Product type"
+    },
+    "sales_price": {
+      "type": "number",
+      "description": "Sales price per unit"
+    },
+    "purchase_price": {
+      "type": "number",
+      "description": "Purchase price per unit"
+    },
+    "hsn_code": {
+      "type": "string",
+      "description": "HSN classification code"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "unit": {
+      "type": "string",
+      "default": "pcs",
+      "description": "Unit of measurement"
+    },
+    "current_stock": {
+      "type": "number",
+      "default": 0,
+      "description": "Current stock quantity"
+    },
+    "reorder_level": {
+      "type": "number",
+      "default": 10,
+      "description": "Minimum stock level for alerts"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}
