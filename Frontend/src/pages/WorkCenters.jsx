@@ -1,349 +1,464 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { WorkCenter } from "../entities/all";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import {
-  Factory,
   Plus,
   Search,
-  List,
-  Grid3X3,
-  Activity,
-  AlertTriangle,
+  Factory,
   Edit,
   Trash2,
   Eye,
+  List,
+  Grid3X3,
+  Settings,
+  Users,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  Wrench,
 } from "lucide-react";
+import WorkCenterForm from "../components/manufacturing/WorkCenterForm";
+import apiService from "../services/api";
 
-const statusConfig = {
-  active: {
-    color: "bg-green-100 text-green-800",
-    icon: Activity,
-    label: "Active",
-  },
-  maintenance: {
-    color: "bg-yellow-100 text-yellow-800",
-    icon: AlertTriangle,
-    label: "Maintenance",
-  },
-  inactive: {
-    color: "bg-red-100 text-red-800",
-    icon: Factory,
-    label: "Inactive",
-  },
-};
-
-export default function WorkCenters() {
+export default function WorkCentersPage() {
   const [workCenters, setWorkCenters] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState("list"); // "list" or "grid"
+  const [showForm, setShowForm] = useState(false);
+  const [editingWorkCenter, setEditingWorkCenter] = useState(null);
+  const [selectedWorkCenter, setSelectedWorkCenter] = useState(null);
 
   useEffect(() => {
-    loadData();
+    loadWorkCenters();
   }, []);
 
-  const loadData = async () => {
+  const loadWorkCenters = async () => {
     try {
-      // Use mock data to avoid API rate limiting
-      const mockWorkCenters = [
-        {
-          id: 1,
-          name: "Work Center-1",
-          code: "WC001",
-          location: "Building A, Floor 1",
-          status: "active",
-          capacity: 100,
-          utilization: 75,
-          hourly_cost: 50,
-        },
-        {
-          id: 2,
-          name: "Work Center-2",
-          code: "WC002",
-          location: "Building A, Floor 2",
-          status: "maintenance",
-          capacity: 80,
-          utilization: 45,
-          hourly_cost: 45,
-        },
-        {
-          id: 3,
-          name: "Work Center-3",
-          code: "WC003",
-          location: "Building B, Floor 1",
-          status: "active",
-          capacity: 120,
-          utilization: 90,
-          hourly_cost: 60,
-        },
-        {
-          id: 4,
-          name: "Work Center-4",
-          code: "WC004",
-          location: "Building B, Floor 2",
-          status: "inactive",
-          capacity: 90,
-          utilization: 0,
-          hourly_cost: 40,
-        },
-      ];
-
-      setWorkCenters(mockWorkCenters);
+      setLoading(true);
+      const response = await apiService.getWorkCenters();
+      
+      if (response.success && response.data.workCenters) {
+        setWorkCenters(response.data.workCenters);
+      } else {
+        console.error("Failed to load work centers:", response.error);
+      }
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading work centers:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusChange = async (workCenterId, newStatus) => {
+  const handleCreateWorkCenter = () => {
+    setEditingWorkCenter(null);
+    setShowForm(true);
+  };
+
+  const handleEditWorkCenter = (workCenter) => {
+    setEditingWorkCenter(workCenter);
+    setShowForm(true);
+  };
+
+  const handleSaveWorkCenter = async (workCenterData) => {
     try {
-      // Mock update - in real app, this would call the API
-      setWorkCenters((prev) =>
-        prev.map((wc) =>
-          wc.id === workCenterId ? { ...wc, status: newStatus } : wc
-        )
-      );
+      console.log('Sending work center data:', workCenterData);
+      let response;
+      if (editingWorkCenter) {
+        // Update existing work center
+        response = await apiService.updateWorkCenter(editingWorkCenter.id, workCenterData);
+      } else {
+        // Create new work center
+        response = await apiService.createWorkCenter(workCenterData);
+      }
+
+      if (response.success) {
+        await loadWorkCenters(); // Reload the list
+        setShowForm(false);
+        setEditingWorkCenter(null);
+      } else {
+        console.error("Failed to save work center:", response.error);
+        alert("Failed to save work center: " + response.error);
+      }
     } catch (error) {
-      console.error("Error updating work center:", error);
+      console.error("Error saving work center:", error);
+      alert("Error saving work center: " + error.message);
     }
   };
 
   const handleDeleteWorkCenter = async (workCenterId) => {
+    if (!window.confirm("Are you sure you want to delete this work center?")) {
+      return;
+    }
+
     try {
-      // Mock delete - in real app, this would call the API
-      setWorkCenters((prev) => prev.filter((wc) => wc.id !== workCenterId));
+      const response = await apiService.deleteWorkCenter(workCenterId);
+      if (response.success) {
+        await loadWorkCenters(); // Reload the list
+      } else {
+        console.error("Failed to delete work center:", response.error);
+        alert("Failed to delete work center: " + response.error);
+      }
     } catch (error) {
       console.error("Error deleting work center:", error);
+      alert("Error deleting work center: " + error.message);
     }
   };
 
-  // Filter work centers
-  const filteredWorkCenters = workCenters.filter((wc) => {
-    const matchesSearch =
-      wc.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wc.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wc.location?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesSearch;
-  });
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "ACTIVE":
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case "MAINTENANCE":
+        return <Wrench className="w-4 h-4 text-yellow-600" />;
+      case "INACTIVE":
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <Settings className="w-4 h-4 text-gray-600" />;
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return "bg-green-100 text-green-800";
-      case "maintenance":
+      case "MAINTENANCE":
         return "bg-yellow-100 text-yellow-800";
-      case "inactive":
+      case "INACTIVE":
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "active":
-        return <Activity className="h-3 w-3" />;
-      case "maintenance":
-        return <AlertTriangle className="h-3 w-3" />;
-      default:
-        return <Factory className="h-3 w-3" />;
-    }
-  };
+  // Filter work centers
+  const filteredWorkCenters = workCenters.filter((workCenter) =>
+    workCenter.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    workCenter.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (showForm) {
+    return (
+      <div className="p-4 md:p-8 bg-transparent min-h-screen">
+        <div className="max-w-4xl mx-auto">
+          <WorkCenterForm
+            workCenter={editingWorkCenter}
+            onSave={handleSaveWorkCenter}
+            onCancel={() => {
+              setShowForm(false);
+              setEditingWorkCenter(null);
+            }}
+            isEditing={!!editingWorkCenter}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6 bg-transparent min-h-screen">
+    <div className="p-4 md:p-8 bg-transparent min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header with Actions */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-gray-900">Work Center</h1>
-            <div className="flex items-center gap-2">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                New
-              </Button>
-              <button
-                onClick={() =>
-                  setViewMode(viewMode === "list" ? "grid" : "list")
-                }
-                className="p-1 hover:bg-gray-100 rounded"
+        {/* Header */}
+        <div className="mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Work Centers
+            </h1>
+            <p className="text-gray-600">
+              Manage production work centers and their capacity
+            </p>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg overflow-hidden">
+          {/* Header with Search */}
+          <div className="p-6 border-b border-gray-200/60">
+            <div className="flex items-center justify-between mb-4">
+              <Button 
+                onClick={handleCreateWorkCenter}
+                className="bg-blue-600 hover:bg-blue-700 shadow-md"
               >
-                {viewMode === "list" ? (
-                  <Grid3X3 className="w-5 h-5 text-gray-500" />
-                ) : (
-                  <List className="w-5 h-5 text-gray-500" />
-                )}
-              </button>
-            </div>
-          </div>
-          {/* <div className="bg-orange-100 text-orange-800 px-3 py-1 rounded-lg text-sm font-medium">
-            Authorized Loris
-          </div> */}
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Allow user to search based on work center"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 bg-white border-gray-300"
-            />
-          </div>
-        </div>
-
-        {/* Table View */}
-        {viewMode === "list" ? (
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Work Center
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Cost per hour
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {loading ? (
-                    Array(5)
-                      .fill(0)
-                      .map((_, i) => (
-                        <tr key={i} className="animate-pulse">
-                          <td className="px-6 py-4">
-                            <div className="h-4 bg-gray-200 rounded w-32"></div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="h-4 bg-gray-200 rounded w-20"></div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="h-6 bg-gray-200 rounded w-20"></div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="h-8 bg-gray-200 rounded w-16"></div>
-                          </td>
-                        </tr>
-                      ))
-                  ) : filteredWorkCenters.length > 0 ? (
-                    filteredWorkCenters.map((workCenter) => {
-                      const statusInfo =
-                        statusConfig[workCenter.status] || statusConfig.active;
-                      const StatusIcon = statusInfo.icon;
-
-                      return (
-                        <tr key={workCenter.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center text-sm font-medium text-gray-900">
-                              <Factory className="w-4 h-4 mr-2 text-gray-400" />
-                              {workCenter.name || "Work Center-1"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${workCenter.hourly_cost || 50}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <Badge
-                              className={`${statusInfo.color} flex items-center gap-1 w-fit`}
-                            >
-                              <StatusIcon className="h-3 w-3" />
-                              {statusInfo.label}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" asChild>
-                                <Link to={`/work-centers/${workCenter.id}`}>
-                                  <Eye className="w-4 h-4" />
-                                </Link>
-                              </Button>
-                              <Button size="sm" variant="outline" asChild>
-                                <Link to={`/work-centers/${workCenter.id}`}>
-                                  <Edit className="w-4 h-4" />
-                                </Link>
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan="4" className="px-6 py-12 text-center">
-                        <div className="text-gray-500">
-                          <p className="text-lg font-medium mb-2">
-                            No work centers found
-                          </p>
-                          <p className="text-sm">
-                            {searchTerm
-                              ? "Try adjusting your search criteria"
-                              : "Create your first work center to get started"}
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        ) : (
-          /* Grid View (fallback) */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWorkCenters.map((workCenter) => {
-              const statusInfo =
-                statusConfig[workCenter.status] || statusConfig.active;
-              const StatusIcon = statusInfo.icon;
-
-              return (
-                <div
-                  key={workCenter.id}
-                  className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
+                <Plus className="w-4 h-4 mr-2" />
+                Add Work Center
+              </Button>
+              <h2 className="text-2xl font-bold text-gray-900">Work Centers</h2>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === "list" ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {workCenter.name}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Code: {workCenter.code}
-                      </p>
-                    </div>
-                    <Badge
-                      className={`${statusInfo.color} flex items-center gap-1`}
-                    >
-                      <StatusIcon className="h-3 w-3" />
-                      {statusInfo.label}
-                    </Badge>
-                  </div>
+                  <List className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "grid" ? "outline" : "default"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                placeholder="Search work centers by name or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-4 py-3 text-lg w-full border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+          </div>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Cost per hour:</span>
-                      <span>${workCenter.hourly_cost || 50}</span>
+          {/* Content */}
+          <div className="p-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : viewMode === "list" ? (
+              /* List View - Table */
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Capacity</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Hourly Rate</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Description</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredWorkCenters.map((workCenter) => (
+                      <tr key={workCenter.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                        <td className="py-3 px-4">
+                          <div className="font-medium text-gray-900">{workCenter.name}</div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge className={getStatusColor(workCenter.status)}>
+                            <div className="flex items-center gap-1">
+                              {getStatusIcon(workCenter.status)}
+                              {workCenter.status}
+                            </div>
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Users className="w-4 h-4" />
+                            {workCenter.capacity}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <DollarSign className="w-4 h-4" />
+                            ${workCenter.hourlyRate?.toFixed(2)}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-gray-600 max-w-xs truncate">
+                            {workCenter.description || "No description"}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setSelectedWorkCenter(workCenter)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditWorkCenter(workCenter)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDeleteWorkCenter(workCenter.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* Grid View */
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredWorkCenters.map((workCenter) => (
+                  <Card
+                    key={workCenter.id}
+                    className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <Factory className="w-5 h-5" />
+                            {workCenter.name}
+                          </CardTitle>
+                          <Badge className={`mt-2 ${getStatusColor(workCenter.status)}`}>
+                            <div className="flex items-center gap-1">
+                              {getStatusIcon(workCenter.status)}
+                              {workCenter.status}
+                            </div>
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-700">Capacity: {workCenter.capacity}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <DollarSign className="w-4 h-4 text-gray-500" />
+                          <span className="text-gray-700">Rate: ${workCenter.hourlyRate?.toFixed(2)}/hr</span>
+                        </div>
+                        {workCenter.description && (
+                          <p className="text-sm text-gray-600 line-clamp-2">
+                            {workCenter.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedWorkCenter(workCenter)}
+                          className="flex-1"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditWorkCenter(workCenter)}
+                          className="flex-1"
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteWorkCenter(workCenter.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {filteredWorkCenters.length === 0 && !loading && (
+              <div className="text-center py-12">
+                <Factory className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No work centers found</h3>
+                <p className="text-gray-500 mb-6">
+                  {searchTerm ? "Try adjusting your search" : "Create your first work center to get started"}
+                </p>
+                {!searchTerm && (
+                  <Button onClick={handleCreateWorkCenter}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Work Center
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Work Center Detail Modal */}
+        {selectedWorkCenter && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <Factory className="w-5 h-5" />
+                  {selectedWorkCenter.name} - Details
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedWorkCenter(null)}
+                >
+                  Close
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700">Status:</span>
+                    <div className="mt-1">
+                      <Badge className={getStatusColor(selectedWorkCenter.status)}>
+                        <div className="flex items-center gap-1">
+                          {getStatusIcon(selectedWorkCenter.status)}
+                          {selectedWorkCenter.status}
+                        </div>
+                      </Badge>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Location:</span>
-                      <span>{workCenter.location}</span>
-                    </div>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Capacity:</span>
+                    <p className="text-gray-600 flex items-center gap-1 mt-1">
+                      <Users className="w-4 h-4" />
+                      {selectedWorkCenter.capacity} workers
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Hourly Rate:</span>
+                    <p className="text-gray-600 flex items-center gap-1 mt-1">
+                      <DollarSign className="w-4 h-4" />
+                      ${selectedWorkCenter.hourlyRate?.toFixed(2)}/hour
+                    </p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Created:</span>
+                    <p className="text-gray-600 mt-1">
+                      {new Date(selectedWorkCenter.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
+
+                {selectedWorkCenter.description && (
+                  <div>
+                    <span className="font-medium text-gray-700">Description:</span>
+                    <p className="text-gray-600 mt-1">{selectedWorkCenter.description}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -14,7 +14,6 @@ router.get('/', authenticate, [
   query('status').optional().isIn(['ACTIVE', 'MAINTENANCE', 'INACTIVE']),
   query('search').optional().isString()
 ], async (req, res) => {
-  console.log('hy')
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -181,14 +180,31 @@ router.get('/:id', authenticate, async (req, res) => {
 // @access  Private
 router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
   body('name').notEmpty().withMessage('Name is required'),
-  body('description').optional().isString(),
-  body('hourlyRate').isFloat({ min: 0 }).withMessage('Hourly rate must be non-negative'),
-  body('capacity').isInt({ min: 1 }).withMessage('Capacity must be positive'),
+  body('description').optional().custom((value) => {
+    if (value === null || value === undefined) return true;
+    return typeof value === 'string';
+  }).withMessage('Description must be a string'),
+  body('hourlyRate').isNumeric().withMessage('Hourly rate must be numeric').custom((value) => {
+    const num = parseFloat(value);
+    if (isNaN(num) || num < 0) {
+      throw new Error('Hourly rate must be non-negative');
+    }
+    return true;
+  }),
+  body('capacity').isNumeric().withMessage('Capacity must be numeric').custom((value) => {
+    const num = parseInt(value);
+    if (isNaN(num) || num < 1) {
+      throw new Error('Capacity must be a positive integer');
+    }
+    return true;
+  }),
   body('status').optional().isIn(['ACTIVE', 'MAINTENANCE', 'INACTIVE'])
 ], async (req, res) => {
   try {
+    console.log('Work center creation request body:', req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({
         success: false,
         error: 'Validation failed',
@@ -204,10 +220,13 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       status = 'ACTIVE'
     } = req.body;
 
+    // Handle null/undefined description
+    const cleanDescription = description === null || description === undefined ? null : description;
+
     const workCenter = await prisma.workCenter.create({
       data: {
         name,
-        description,
+        description: cleanDescription,
         hourlyRate,
         capacity,
         status
@@ -233,7 +252,10 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
 // @access  Private
 router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
   body('name').optional().isString(),
-  body('description').optional().isString(),
+  body('description').optional().custom((value) => {
+    if (value === null || value === undefined) return true;
+    return typeof value === 'string';
+  }).withMessage('Description must be a string'),
   body('hourlyRate').optional().isFloat({ min: 0 }),
   body('capacity').optional().isInt({ min: 1 }),
   body('status').optional().isIn(['ACTIVE', 'MAINTENANCE', 'INACTIVE'])
