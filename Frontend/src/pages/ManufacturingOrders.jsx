@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { ManufacturingOrder, Product, BOM } from "@/entities/all";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
+import { ManufacturingOrder, Product, BOM } from "../entities/all";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Badge } from "../components/ui/badge";
+import {
   Package,
-  Plus, 
+  Plus,
   Search,
   Filter,
   Calendar,
@@ -13,7 +13,7 @@ import {
   Clock,
   CheckCircle,
   PlayCircle,
-  XCircle
+  XCircle,
 } from "lucide-react";
 
 import OrderCard from "../components/manufacturing/OrderCard";
@@ -21,10 +21,26 @@ import CreateOrderDialog from "../components/manufacturing/CreateOrderDialog";
 import FilterBar from "../components/manufacturing/FilterBar";
 
 const statusConfig = {
-  planned: { color: "bg-blue-100 text-blue-800", icon: Calendar, label: "Planned" },
-  in_progress: { color: "bg-orange-100 text-orange-800", icon: PlayCircle, label: "In Progress" },
-  completed: { color: "bg-green-100 text-green-800", icon: CheckCircle, label: "Completed" },
-  cancelled: { color: "bg-red-100 text-red-800", icon: XCircle, label: "Cancelled" }
+  planned: {
+    color: "bg-blue-100 text-blue-800",
+    icon: Calendar,
+    label: "Planned",
+  },
+  in_progress: {
+    color: "bg-orange-100 text-orange-800",
+    icon: PlayCircle,
+    label: "In Progress",
+  },
+  completed: {
+    color: "bg-green-100 text-green-800",
+    icon: CheckCircle,
+    label: "Completed",
+  },
+  cancelled: {
+    color: "bg-red-100 text-red-800",
+    icon: XCircle,
+    label: "Cancelled",
+  },
 };
 
 export default function ManufacturingOrders() {
@@ -46,7 +62,7 @@ export default function ManufacturingOrders() {
       const [ordersData, productsData, bomsData] = await Promise.all([
         ManufacturingOrder.list("-created_date"),
         Product.list("-created_date"),
-        BOM.list("-created_date")
+        BOM.list("-created_date"),
       ]);
       setOrders(ordersData);
       setProducts(productsData);
@@ -78,12 +94,15 @@ export default function ManufacturingOrders() {
   };
 
   // Filter orders
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    const matchesPriority = priorityFilter === "all" || order.priority === priorityFilter;
-    
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      order.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "all" || order.status === statusFilter;
+    const matchesPriority =
+      priorityFilter === "all" || order.priority === priorityFilter;
+
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
@@ -102,10 +121,14 @@ export default function ManufacturingOrders() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Manufacturing Orders</h1>
-            <p className="text-gray-600">Manage production orders and track progress</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Manufacturing Orders
+            </h1>
+            <p className="text-gray-600">
+              Manage production orders and track progress
+            </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setShowCreateDialog(true)}
             className="bg-blue-600 hover:bg-blue-700 shadow-md"
           >
@@ -138,18 +161,20 @@ export default function ManufacturingOrders() {
         {/* Orders Grid */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array(6).fill(0).map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-white/60 rounded-xl p-6 space-y-4">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  <div className="space-y-2">
-                    <div className="h-2 bg-gray-200 rounded"></div>
-                    <div className="h-2 bg-gray-200 rounded w-5/6"></div>
+            {Array(6)
+              .fill(0)
+              .map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-white/60 rounded-xl p-6 space-y-4">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="space-y-2">
+                      <div className="h-2 bg-gray-200 rounded"></div>
+                      <div className="h-2 bg-gray-200 rounded w-5/6"></div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         ) : (
           <div className="space-y-8">
@@ -167,7 +192,7 @@ export default function ManufacturingOrders() {
                     </h2>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {statusOrders.map(order => (
+                    {statusOrders.map((order) => (
                       <OrderCard
                         key={order.id}
                         order={order}
@@ -183,14 +208,17 @@ export default function ManufacturingOrders() {
             {filteredOrders.length === 0 && (
               <div className="text-center py-12">
                 <Package className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No orders found
+                </h3>
                 <p className="text-gray-500 mb-6">
-                  {searchTerm || statusFilter !== "all" || priorityFilter !== "all"
+                  {searchTerm ||
+                  statusFilter !== "all" ||
+                  priorityFilter !== "all"
                     ? "Try adjusting your search or filters"
-                    : "Create your first manufacturing order to get started"
-                  }
+                    : "Create your first manufacturing order to get started"}
                 </p>
-                <Button 
+                <Button
                   onClick={() => setShowCreateDialog(true)}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
