@@ -426,7 +426,6 @@ export default function BOMPage() {
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Finished Product</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Reference</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Quantity</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
                     </tr>
                   </thead>
@@ -441,14 +440,6 @@ export default function BOMPage() {
                         </td>
                         <td className="py-3 px-4">
                           <div className="text-gray-600">{bom.quantity} Units</div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge 
-                            variant={bom.status === "active" ? "default" : "secondary"}
-                            className={bom.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
-                          >
-                            {bom.status}
-                          </Badge>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
