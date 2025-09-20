@@ -14,6 +14,7 @@ async function main() {
       where: { email: 'admin@manufacturing.com' },
       update: {},
       create: {
+        loginId: 'admin001',
         email: 'admin@manufacturing.com',
         name: 'Admin User',
         password: hashedPassword,
@@ -24,6 +25,7 @@ async function main() {
       where: { email: 'manager@manufacturing.com' },
       update: {},
       create: {
+        loginId: 'manager001',
         email: 'manager@manufacturing.com',
         name: 'Manufacturing Manager',
         password: hashedPassword,
@@ -34,6 +36,7 @@ async function main() {
       where: { email: 'operator@manufacturing.com' },
       update: {},
       create: {
+        loginId: 'operator001',
         email: 'operator@manufacturing.com',
         name: 'Shop Floor Operator',
         password: hashedPassword,
@@ -44,6 +47,7 @@ async function main() {
       where: { email: 'inventory@manufacturing.com' },
       update: {},
       create: {
+        loginId: 'inventory001',
         email: 'inventory@manufacturing.com',
         name: 'Inventory Manager',
         password: hashedPassword,
@@ -313,8 +317,10 @@ async function main() {
 
   // Create manufacturing orders
   const manufacturingOrders = await Promise.all([
-    prisma.manufacturingOrder.create({
-      data: {
+    prisma.manufacturingOrder.upsert({
+      where: { orderNumber: 'MO-001' },
+      update: {},
+      create: {
         orderNumber: 'MO-001',
         productId: 'prod-1',
         quantity: 100,
@@ -328,8 +334,10 @@ async function main() {
         notes: 'Priority order for customer ABC'
       }
     }),
-    prisma.manufacturingOrder.create({
-      data: {
+    prisma.manufacturingOrder.upsert({
+      where: { orderNumber: 'MO-002' },
+      update: {},
+      create: {
         orderNumber: 'MO-002',
         productId: 'prod-2',
         quantity: 50,
@@ -342,8 +350,10 @@ async function main() {
         notes: 'Standard production order'
       }
     }),
-    prisma.manufacturingOrder.create({
-      data: {
+    prisma.manufacturingOrder.upsert({
+      where: { orderNumber: 'MO-003' },
+      update: {},
+      create: {
         orderNumber: 'MO-003',
         productId: 'prod-1',
         quantity: 200,
