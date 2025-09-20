@@ -384,10 +384,10 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
   }
 });
 
-// @route   POST /api/work-orders/:id/start
+// @route   PATCH /api/work-orders/:id/start
 // @desc    Start work order
-// @access  Private
-router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUFACTURING_MANAGER', 'ADMIN'), async (req, res) => {
+// @access  Private (SHOP_FLOOR_OPERATOR only)
+router.patch('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -398,7 +398,7 @@ router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUFA
       },
       data: { 
         status: 'IN_PROGRESS',
-        startedAt: new Date()
+        startTime: new Date()
       },
       include: {
         manufacturingOrder: {
@@ -433,12 +433,41 @@ router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUFA
   }
 });
 
-// @route   POST /api/work-orders/:id/pause
+// @route   PATCH /api/work-orders/:id/pause
 // @desc    Pause work order
-// @access  Private
-router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUFACTURING_MANAGER', 'ADMIN'), async (req, res) => {
+// @access  Private (SHOP_FLOOR_OPERATOR only)
+router.patch('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Get current work order to calculate paused duration
+    const currentWorkOrder = await prisma.workOrder.findUnique({
+      where: { id }
+    });
+
+    if (!currentWorkOrder) {
+      return res.status(404).json({
+        success: false,
+        error: 'Work order not found'
+      });
+    }
+
+    if (currentWorkOrder.status !== 'IN_PROGRESS') {
+      return res.status(400).json({
+        success: false,
+        error: 'Work order must be in progress to pause'
+      });
+    }
+
+    const now = new Date();
+    const pausedAt = currentWorkOrder.pausedAt || currentWorkOrder.startTime;
+    const currentPausedDuration = currentWorkOrder.pausedDuration || 0;
+    
+    // Calculate additional paused time if resuming from a previous pause
+    let additionalPausedTime = 0;
+    if (currentWorkOrder.pausedAt) {
+      additionalPausedTime = Math.floor((now - currentWorkOrder.pausedAt) / (1000 * 60)); // minutes
+    }
 
     const workOrder = await prisma.workOrder.update({
       where: { 
@@ -447,7 +476,8 @@ router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUFA
       },
       data: { 
         status: 'PAUSED',
-        pausedAt: new Date()
+        pausedAt: now,
+        pausedDuration: currentPausedDuration + additionalPausedTime
       },
       include: {
         manufacturingOrder: {
@@ -531,24 +561,42 @@ router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUF
   }
 });
 
-// @route   POST /api/work-orders/:id/complete
+// @route   PATCH /api/work-orders/:id/done
 // @desc    Complete work order
-// @access  Private
-router.post('/:id/complete', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUFACTURING_MANAGER', 'ADMIN'), [
-  body('actualTimeMinutes').optional().isInt({ min: 0 })
-], async (req, res) => {
+// @access  Private (SHOP_FLOOR_OPERATOR only)
+router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
+    const { id } = req.params;
+
+    // Get current work order to calculate real duration
+    const currentWorkOrder = await prisma.workOrder.findUnique({
+      where: { id }
+    });
+
+    if (!currentWorkOrder) {
+      return res.status(404).json({
         success: false,
-        error: 'Validation failed',
-        details: errors.array()
+        error: 'Work order not found'
       });
     }
 
-    const { id } = req.params;
-    const { actualTimeMinutes } = req.body;
+    if (!['IN_PROGRESS', 'PAUSED'].includes(currentWorkOrder.status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Work order must be in progress or paused to complete'
+      });
+    }
+
+    const now = new Date();
+    const startTime = currentWorkOrder.startTime;
+    const pausedDuration = currentWorkOrder.pausedDuration || 0;
+    
+    // Calculate real duration (endTime - startTime - pausedDuration)
+    let realDuration = 0;
+    if (startTime) {
+      const totalDuration = Math.floor((now - startTime) / (1000 * 60)); // minutes
+      realDuration = totalDuration - pausedDuration;
+    }
 
     const workOrder = await prisma.workOrder.update({
       where: { 
@@ -557,8 +605,9 @@ router.post('/:id/complete', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MAN
       },
       data: { 
         status: 'COMPLETED',
-        completedAt: new Date(),
-        ...(actualTimeMinutes && { actualTimeMinutes })
+        endTime: now,
+        completedAt: now,
+        realDuration: realDuration
       },
       include: {
         manufacturingOrder: {
@@ -589,6 +638,76 @@ router.post('/:id/complete', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MAN
     res.status(500).json({
       success: false,
       error: 'Failed to complete work order'
+    });
+  }
+});
+
+// @route   GET /api/work-orders/shop-floor
+// @desc    Get work orders for shop floor operator (assigned to them)
+// @access  Private (SHOP_FLOOR_OPERATOR only)
+router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const where = {
+      assignedToId: req.user.id
+    };
+
+    if (status) {
+      where.status = status;
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [workOrders, total] = await Promise.all([
+      prisma.workOrder.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          manufacturingOrder: {
+            select: {
+              id: true,
+              orderNumber: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  type: true
+                }
+              }
+            }
+          },
+          workCenter: {
+            select: {
+              id: true,
+              name: true,
+              status: true
+            }
+          }
+        }
+      }),
+      prisma.workOrder.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        workOrders,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get shop floor work orders error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch work orders'
     });
   }
 });
