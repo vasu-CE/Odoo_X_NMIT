@@ -7,7 +7,7 @@ import { findUserByCredentials } from '../utils/database';
 
 const LoginPage = ({ onNavigate, onLogin }) => {
   const [formData, setFormData] = useState({
-    loginId: '',
+    email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -20,33 +20,37 @@ const LoginPage = ({ onNavigate, onLogin }) => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsLoading(true);
 
     // Validate required fields
-    if (!formData.loginId || !formData.password) {
+    if (!formData.email || !formData.password) {
       toast.error('Please fill in all fields');
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call delay
-    setTimeout(() => {
-      const user = findUserByCredentials(formData.loginId, formData.password);
+    try {
+      const user = await findUserByCredentials(formData.email, formData.password);
       
       if (user) {
         toast.success('Login successful!', {
-          description: `Welcome back, ${user.loginId}!`,
+          description: `Welcome back, ${user.name}!`,
         });
         console.log('User logged in:', user);
         onLogin(); // Call the onLogin function to update app state
       } else {
-        toast.error('Invalid Login ID or Password', {
+        toast.error('Invalid Email or Password', {
           description: 'Please check your credentials and try again.',
         });
       }
+    } catch (error) {
+      toast.error('Login failed', {
+        description: error.message || 'Please try again later.',
+      });
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -59,10 +63,11 @@ const LoginPage = ({ onNavigate, onLogin }) => {
     <AuthForm title="Login Page">
       <div>
         <InputField
-          label="Login Id"
-          value={formData.loginId}
-          onChange={handleInputChange('loginId')}
-          placeholder="Enter your login ID"
+          label="Email"
+          type="email"
+          value={formData.email}
+          onChange={handleInputChange('email')}
+          placeholder="Enter your email"
           onKeyPress={handleKeyPress}
         />
         

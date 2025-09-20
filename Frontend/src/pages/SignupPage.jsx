@@ -5,18 +5,15 @@ import InputField from '../components/InputField';
 import Button from '../components/Button';
 import { 
   validateEmail, 
-  validatePassword, 
-  validateLoginId 
+  validatePassword 
 } from '../utils/validation';
 import { 
-  findUserByLoginId, 
-  findUserByEmail, 
   addUser 
 } from '../utils/database';
 
 const SignupPage = ({ onNavigate }) => {
   const [formData, setFormData] = useState({
-    loginId: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -42,26 +39,18 @@ const SignupPage = ({ onNavigate }) => {
   };
 
   const validateForm = () => {
-    const { loginId, email, password, confirmPassword } = formData;
+    const { name, email, password, confirmPassword } = formData;
 
     // Check required fields
-    if (!loginId || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword) {
       toast.error('Please fill in all fields');
       return false;
     }
 
-    // Validate Login ID
-    if (!validateLoginId(loginId)) {
-      toast.error('Invalid Login ID', {
-        description: 'Login ID must be between 6-12 characters',
-      });
-      return false;
-    }
-
-    // Check if Login ID is unique
-    if (findUserByLoginId(loginId)) {
-      toast.error('Login ID already exists', {
-        description: 'Please choose a different login ID',
+    // Validate Name
+    if (name.length < 2) {
+      toast.error('Invalid Name', {
+        description: 'Name must be at least 2 characters',
       });
       return false;
     }
@@ -70,14 +59,6 @@ const SignupPage = ({ onNavigate }) => {
     if (!validateEmail(email)) {
       toast.error('Invalid Email', {
         description: 'Please enter a valid email address',
-      });
-      return false;
-    }
-
-    // Check if Email is unique
-    if (findUserByEmail(email)) {
-      toast.error('Email already exists', {
-        description: 'This email is already registered',
       });
       return false;
     }
@@ -101,30 +82,48 @@ const SignupPage = ({ onNavigate }) => {
     return true;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
 
-    // Simulate API call delay
-    setTimeout(() => {
+    try {
       const newUser = {
-        loginId: formData.loginId,
+        name: formData.name,
         email: formData.email,
         password: formData.password
       };
       
-      addUser(newUser);
-      toast.success('Account created successfully!', {
-        description: 'Please login with your new credentials',
-      });
-      setIsLoading(false);
+      const user = await addUser(newUser);
       
-      // Navigate to login page after successful signup
-      setTimeout(() => {
-        onNavigate('login');
-      }, 1500);
-    }, 500);
+      if (user) {
+        toast.success('Account created successfully!', {
+          description: 'Please login with your new credentials',
+        });
+        
+        // Navigate to login page after successful signup
+        setTimeout(() => {
+          onNavigate('login');
+        }, 1500);
+      } else {
+        toast.error('Registration failed', {
+          description: 'Please try again later.',
+        });
+      }
+    } catch (error) {
+      // Handle specific error messages from the backend
+      if (error.message.includes('email') && error.message.includes('already')) {
+        toast.error('Email already exists', {
+          description: 'This email is already registered. Please use a different email.',
+        });
+      } else {
+        toast.error('Registration failed', {
+          description: error.message || 'Please try again later.',
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -137,10 +136,10 @@ const SignupPage = ({ onNavigate }) => {
     <AuthForm title="Sign up Page">
       <div>
         <InputField
-          label="Enter Login Id"
-          value={formData.loginId}
-          onChange={handleInputChange('loginId')}
-          placeholder="6-12 characters"
+          label="Enter Full Name"
+          value={formData.name}
+          onChange={handleInputChange('name')}
+          placeholder="Enter your full name"
           onKeyPress={handleKeyPress}
         />
         

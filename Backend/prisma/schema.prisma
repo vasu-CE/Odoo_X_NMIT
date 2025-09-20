@@ -1,0 +1,244 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      UserRole
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  manufacturingOrders ManufacturingOrder[]
+  workOrders         WorkOrder[]
+  createdBOMs        BOM[]
+
+  @@map("users")
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
+  type          ProductType
+  unit          String      @default("PCS")
+  salesPrice    Float?
+  purchasePrice Float?
+  currentStock  Int         @default(0)
+  reorderPoint  Int         @default(0)
+  hsnCode       String?
+  category      String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  boms                BOM[]
+  manufacturingOrders ManufacturingOrder[]
+  bomComponents       BOMComponent[]
+  stockMovements      StockMovement[]
+
+  @@map("products")
+}
+
+model BOM {
+  id          String    @id @default(cuid())
+  productId   String
+  version     String    @default("1.0")
+  isActive    Boolean   @default(true)
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  product            Product             @relation(fields: [productId], references: [id])
+  createdBy          User                @relation(fields: [createdById], references: [id])
+  components         BOMComponent[]
+  operations         BOMOperation[]
+  manufacturingOrders ManufacturingOrder[]
+
+  @@unique([productId, version])
+  @@map("boms")
+}
+
+model BOMComponent {
+  id        String  @id @default(cuid())
+  bomId     String
+  productId String
+  quantity  Float
+  unit      String  @default("PCS")
+  wastage   Float   @default(0)
+
+  // Relations
+  bom     BOM     @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("bom_components")
+}
+
+model BOMOperation {
+  id           String @id @default(cuid())
+  bomId        String
+  sequence     Int
+  name         String
+  description  String?
+  timeMinutes  Int
+  workCenterId String
+
+  // Relations
+  bom        BOM        @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  workCenter WorkCenter @relation(fields: [workCenterId], references: [id])
+
+  @@map("bom_operations")
+}
+
+model WorkCenter {
+  id           String            @id @default(cuid())
+  name         String
+  description  String?
+  hourlyRate   Float
+  capacity     Int               @default(1)
+  status       WorkCenterStatus  @default(ACTIVE)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  // Relations
+  operations BOMOperation[]
+  workOrders WorkOrder[]
+
+  @@map("work_centers")
+}
+
+model ManufacturingOrder {
+  id              String               @id @default(cuid())
+  orderNumber     String               @unique
+  productId       String
+  quantity        Int
+  status          ManufacturingStatus  @default(PLANNED)
+  priority        Priority             @default(MEDIUM)
+  scheduledDate   DateTime
+  startedAt       DateTime?
+  completedAt     DateTime?
+  assignedToId    String?
+  bomId           String?
+  estimatedCost   Float?
+  actualCost      Float?
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  // Relations
+  product      Product     @relation(fields: [productId], references: [id])
+  assignedTo   User?       @relation(fields: [assignedToId], references: [id])
+  bom          BOM?        @relation(fields: [bomId], references: [id])
+  workOrders   WorkOrder[]
+
+  @@map("manufacturing_orders")
+}
+
+model WorkOrder {
+  id                     String            @id @default(cuid())
+  manufacturingOrderId   String
+  operationName          String
+  sequence               Int
+  status                 WorkOrderStatus   @default(PENDING)
+  workCenterId           String
+  assignedToId           String?
+  estimatedTimeMinutes   Int
+  actualTimeMinutes      Int?
+  startedAt              DateTime?
+  pausedAt               DateTime?
+  completedAt            DateTime?
+  comments               String?
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+
+  // Relations
+  manufacturingOrder ManufacturingOrder @relation(fields: [manufacturingOrderId], references: [id], onDelete: Cascade)
+  workCenter         WorkCenter         @relation(fields: [workCenterId], references: [id])
+  assignedTo         User?              @relation(fields: [assignedToId], references: [id])
+
+  @@map("work_orders")
+}
+
+model StockMovement {
+  id              String       @id @default(cuid())
+  productId       String
+  movementType    MovementType
+  quantity        Int
+  unitCost        Float?
+  totalValue      Float?
+  reference       String?
+  referenceId     String?
+  notes           String?
+  transactionDate DateTime     @default(now())
+  createdAt       DateTime     @default(now())
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_movements")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANUFACTURING_MANAGER
+  SHOP_FLOOR_OPERATOR
+  INVENTORY_MANAGER
+  BUSINESS_OWNER
+}
+
+enum ProductType {
+  RAW_MATERIAL
+  WIP
+  FINISHED_GOOD
+  CONSUMABLE
+}
+
+enum WorkCenterStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
+enum ManufacturingStatus {
+  PLANNED
+  CONFIRMED
+  IN_PROGRESS
+  QUALITY_HOLD
+  COMPLETED
+  CANCELED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum WorkOrderStatus {
+  PENDING
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+  SKIPPED
+}
+
+enum MovementType {
+  IN
+  OUT
+  TRANSFER
+  ADJUSTMENT
+}

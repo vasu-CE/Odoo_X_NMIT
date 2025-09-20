@@ -1,5 +1,7 @@
 // Entity classes for data management
-// These are mock implementations for the frontend
+// These now use the real API service
+
+import apiService from '../services/api.js';
 
 class BaseEntity {
   constructor(data = {}) {
@@ -7,271 +9,389 @@ class BaseEntity {
   }
 
   static async list(orderBy = "-created_date", limit = 50) {
-    // Mock data - in a real app, this would make API calls
+    // This will be overridden by each entity
     return [];
   }
 
   static async get(id) {
-    // Mock implementation
+    // This will be overridden by each entity
     return null;
   }
 
   static async create(data) {
-    // Mock implementation
-    console.log("Creating entity:", data);
-    return { id: Date.now(), ...data };
+    // This will be overridden by each entity
+    return null;
   }
 
   static async update(id, data) {
-    // Mock implementation
-    console.log("Updating entity:", id, data);
-    return { id, ...data };
+    // This will be overridden by each entity
+    return null;
   }
 
   static async delete(id) {
-    // Mock implementation
-    console.log("Deleting entity:", id);
-    return true;
+    // This will be overridden by each entity
+    return false;
   }
 }
 
 export class ManufacturingOrder extends BaseEntity {
   static async list(orderBy = "-created_date", limit = 50) {
-    // Mock manufacturing orders data
-    return [
-      {
-        id: 1,
-        order_number: "MO-001",
-        product_name: "Widget A",
-        quantity: 100,
-        status: "in_progress",
-        priority: "high",
-        scheduled_start: "2024-01-15T08:00:00Z",
-        scheduled_end: "2024-01-20T17:00:00Z",
-        actual_start: "2024-01-15T08:30:00Z",
-        created_date: "2024-01-15T08:00:00Z",
-        assignee_name: "John Smith",
-        total_cost: 1500.0,
-        required_materials: [
-          {
-            product_name: "Raw Material 1",
-            required_qty: 50,
-            consumed_qty: 25,
-            unit: "kg",
-          },
-          {
-            product_name: "Raw Material 2",
-            required_qty: 20,
-            consumed_qty: 10,
-            unit: "pieces",
-          },
-        ],
-      },
-      {
-        id: 2,
-        order_number: "MO-002",
-        product_name: "Widget B",
-        quantity: 50,
-        status: "planned",
-        priority: "medium",
-        scheduled_start: "2024-01-22T08:00:00Z",
-        scheduled_end: "2024-01-25T17:00:00Z",
-        created_date: "2024-01-20T10:00:00Z",
-        assignee_name: "Jane Doe",
-        total_cost: 800.0,
-        required_materials: [
-          {
-            product_name: "Raw Material 1",
-            required_qty: 25,
-            consumed_qty: 0,
-            unit: "kg",
-          },
-        ],
-      },
-      {
-        id: 3,
-        order_number: "MO-003",
-        product_name: "Widget C",
-        quantity: 200,
-        status: "completed",
-        priority: "low",
-        scheduled_start: "2024-01-10T08:00:00Z",
-        scheduled_end: "2024-01-12T17:00:00Z",
-        actual_start: "2024-01-10T08:00:00Z",
-        actual_end: "2024-01-12T16:30:00Z",
-        created_date: "2024-01-08T09:00:00Z",
-        assignee_name: "Bob Johnson",
-        total_cost: 2000.0,
-        required_materials: [
-          {
-            product_name: "Raw Material 1",
-            required_qty: 100,
-            consumed_qty: 100,
-            unit: "kg",
-          },
-          {
-            product_name: "Raw Material 3",
-            required_qty: 40,
-            consumed_qty: 40,
-            unit: "pieces",
-          },
-        ],
-      },
-    ];
+    try {
+      const response = await apiService.getManufacturingOrders({ limit });
+      return response.success ? response.data.orders : [];
+    } catch (error) {
+      console.error('Error fetching manufacturing orders:', error);
+      return [];
+    }
+  }
+
+  static async get(id) {
+    try {
+      const response = await apiService.getManufacturingOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error fetching manufacturing order:', error);
+      return null;
+    }
+  }
+
+  static async create(data) {
+    try {
+      const response = await apiService.createManufacturingOrder(data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error creating manufacturing order:', error);
+      throw error;
+    }
+  }
+
+  static async update(id, data) {
+    try {
+      const response = await apiService.updateManufacturingOrder(id, data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error updating manufacturing order:', error);
+      throw error;
+    }
+  }
+
+  static async delete(id) {
+    try {
+      const response = await apiService.deleteManufacturingOrder(id);
+      return response.success;
+    } catch (error) {
+      console.error('Error deleting manufacturing order:', error);
+      return false;
+    }
+  }
+
+  static async confirm(id) {
+    try {
+      const response = await apiService.confirmManufacturingOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error confirming manufacturing order:', error);
+      throw error;
+    }
+  }
+
+  static async start(id) {
+    try {
+      const response = await apiService.startManufacturingOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error starting manufacturing order:', error);
+      throw error;
+    }
+  }
+
+  static async complete(id) {
+    try {
+      const response = await apiService.completeManufacturingOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error completing manufacturing order:', error);
+      throw error;
+    }
+  }
+
+  static async cancel(id) {
+    try {
+      const response = await apiService.cancelManufacturingOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error canceling manufacturing order:', error);
+      throw error;
+    }
   }
 }
 
 export class WorkOrder extends BaseEntity {
   static async list(orderBy = "-created_date", limit = 50) {
-    return [
-      {
-        id: 1,
-        work_order_number: "WO-001",
-        manufacturing_order_id: 1,
-        work_center_id: 1,
-        operation_name: "Assembly",
-        status: "in_progress",
-        priority: "high",
-        scheduled_start: "2024-01-15T08:00:00Z",
-        scheduled_end: "2024-01-16T17:00:00Z",
-        created_date: "2024-01-15T08:00:00Z",
-        assignee_name: "John Smith",
-      },
-      {
-        id: 2,
-        work_order_number: "WO-002",
-        manufacturing_order_id: 1,
-        work_center_id: 2,
-        operation_name: "Quality Check",
-        status: "pending",
-        priority: "medium",
-        scheduled_start: "2024-01-17T08:00:00Z",
-        scheduled_end: "2024-01-17T12:00:00Z",
-        created_date: "2024-01-15T08:00:00Z",
-        assignee_name: "Jane Doe",
-      },
-    ];
+    try {
+      const response = await apiService.getWorkOrders({ limit });
+      return response.success ? response.data.workOrders : [];
+    } catch (error) {
+      console.error('Error fetching work orders:', error);
+      return [];
+    }
+  }
+
+  static async get(id) {
+    try {
+      const response = await apiService.getWorkOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error fetching work order:', error);
+      return null;
+    }
+  }
+
+  static async create(data) {
+    try {
+      const response = await apiService.createWorkOrder(data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error creating work order:', error);
+      throw error;
+    }
+  }
+
+  static async update(id, data) {
+    try {
+      const response = await apiService.updateWorkOrder(id, data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error updating work order:', error);
+      throw error;
+    }
+  }
+
+  static async start(id) {
+    try {
+      const response = await apiService.startWorkOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error starting work order:', error);
+      throw error;
+    }
+  }
+
+  static async pause(id) {
+    try {
+      const response = await apiService.pauseWorkOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error pausing work order:', error);
+      throw error;
+    }
+  }
+
+  static async resume(id) {
+    try {
+      const response = await apiService.resumeWorkOrder(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error resuming work order:', error);
+      throw error;
+    }
+  }
+
+  static async complete(id, data = {}) {
+    try {
+      const response = await apiService.completeWorkOrder(id, data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error completing work order:', error);
+      throw error;
+    }
   }
 }
 
 export class Product extends BaseEntity {
   static async list(orderBy = "-created_date", limit = 50) {
-    return [
-      {
-        id: 1,
-        name: "Widget A",
-        sku: "WID-A-001",
-        description: "High-quality widget A",
-        current_stock: 150,
-        reorder_level: 50,
-        unit_price: 25.0,
-        category: "Widgets",
-      },
-      {
-        id: 2,
-        name: "Widget B",
-        sku: "WID-B-001",
-        description: "Standard widget B",
-        current_stock: 25,
-        reorder_level: 30,
-        unit_price: 15.0,
-        category: "Widgets",
-      },
-      {
-        id: 3,
-        name: "Raw Material 1",
-        sku: "RM-001",
-        description: "Base raw material",
-        current_stock: 500,
-        reorder_level: 100,
-        unit_price: 5.0,
-        category: "Raw Materials",
-      },
-    ];
+    try {
+      const response = await apiService.getProducts({ limit });
+      return response.success ? response.data.products : [];
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      return [];
+    }
+  }
+
+  static async get(id) {
+    try {
+      const response = await apiService.getProduct(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      return null;
+    }
+  }
+
+  static async create(data) {
+    try {
+      const response = await apiService.createProduct(data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error creating product:', error);
+      throw error;
+    }
+  }
+
+  static async update(id, data) {
+    try {
+      const response = await apiService.updateProduct(id, data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  }
+
+  static async delete(id) {
+    try {
+      const response = await apiService.deleteProduct(id);
+      return response.success;
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      return false;
+    }
   }
 }
 
 export class WorkCenter extends BaseEntity {
   static async list(orderBy = "-created_date", limit = 50) {
-    return [
-      {
-        id: 1,
-        name: "Assembly Line 1",
-        code: "AL-001",
-        status: "active",
-        capacity: 100,
-        utilization: 85,
-        location: "Building A, Floor 1",
-      },
-      {
-        id: 2,
-        name: "Quality Control Station",
-        code: "QC-001",
-        status: "active",
-        capacity: 50,
-        utilization: 60,
-        location: "Building A, Floor 2",
-      },
-      {
-        id: 3,
-        name: "Packaging Station",
-        code: "PK-001",
-        status: "maintenance",
-        capacity: 200,
-        utilization: 0,
-        location: "Building B, Floor 1",
-      },
-    ];
+    try {
+      const response = await apiService.getWorkCenters({ limit });
+      return response.success ? response.data.workCenters : [];
+    } catch (error) {
+      console.error('Error fetching work centers:', error);
+      return [];
+    }
+  }
+
+  static async get(id) {
+    try {
+      const response = await apiService.getWorkCenter(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error fetching work center:', error);
+      return null;
+    }
+  }
+
+  static async create(data) {
+    try {
+      const response = await apiService.createWorkCenter(data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error creating work center:', error);
+      throw error;
+    }
+  }
+
+  static async update(id, data) {
+    try {
+      const response = await apiService.updateWorkCenter(id, data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error updating work center:', error);
+      throw error;
+    }
+  }
+
+  static async delete(id) {
+    try {
+      const response = await apiService.deleteWorkCenter(id);
+      return response.success;
+    } catch (error) {
+      console.error('Error deleting work center:', error);
+      return false;
+    }
   }
 }
 
 export class StockMovement extends BaseEntity {
   static async list(orderBy = "-created_date", limit = 50) {
-    return [
-      {
-        id: 1,
-        product_id: 1,
-        product_name: "Widget A",
-        movement_type: "in",
-        quantity: 100,
-        reference: "MO-001",
-        date: "2024-01-15T10:00:00Z",
-      },
-      {
-        id: 2,
-        product_id: 3,
-        product_name: "Raw Material 1",
-        movement_type: "out",
-        quantity: 50,
-        reference: "MO-001",
-        date: "2024-01-15T09:00:00Z",
-      },
-    ];
+    try {
+      const response = await apiService.getStockMovements({ limit });
+      return response.success ? response.data.stockMovements : [];
+    } catch (error) {
+      console.error('Error fetching stock movements:', error);
+      return [];
+    }
+  }
+
+  static async create(data) {
+    try {
+      const response = await apiService.createStockMovement(data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error creating stock movement:', error);
+      throw error;
+    }
   }
 }
 
 export class BOM extends BaseEntity {
   static async list(orderBy = "-created_date", limit = 50) {
-    return [
-      {
-        id: 1,
-        product_name: "Widget A",
-        product_id: 1,
-        components: [
-          { product_name: "Raw Material 1", quantity: 2, unit: "kg" },
-          { product_name: "Raw Material 2", quantity: 1, unit: "pieces" },
-        ],
-        version: "1.0",
-      },
-      {
-        id: 2,
-        product_name: "Widget B",
-        product_id: 2,
-        components: [
-          { product_name: "Raw Material 1", quantity: 1, unit: "kg" },
-        ],
-        version: "1.0",
-      },
-    ];
+    try {
+      const response = await apiService.getBOMs({ limit });
+      return response.success ? response.data.boms : [];
+    } catch (error) {
+      console.error('Error fetching BOMs:', error);
+      return [];
+    }
+  }
+
+  static async get(id) {
+    try {
+      const response = await apiService.getBOM(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error fetching BOM:', error);
+      return null;
+    }
+  }
+
+  static async create(data) {
+    try {
+      const response = await apiService.createBOM(data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error creating BOM:', error);
+      throw error;
+    }
+  }
+
+  static async update(id, data) {
+    try {
+      const response = await apiService.updateBOM(id, data);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error updating BOM:', error);
+      throw error;
+    }
+  }
+
+  static async delete(id) {
+    try {
+      const response = await apiService.deleteBOM(id);
+      return response.success;
+    } catch (error) {
+      console.error('Error deleting BOM:', error);
+      return false;
+    }
+  }
+
+  static async activate(id) {
+    try {
+      const response = await apiService.activateBOM(id);
+      return response.success ? response.data : null;
+    } catch (error) {
+      console.error('Error activating BOM:', error);
+      throw error;
+    }
   }
 }
