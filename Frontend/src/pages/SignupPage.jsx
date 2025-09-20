@@ -24,7 +24,6 @@ import {
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
-    name: "",
     loginId: "",
     email: "",
     password: "",
@@ -40,12 +39,6 @@ export default function SignupPage() {
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
-    }
 
     if (!formData.loginId) {
       newErrors.loginId = "Login ID is required";
@@ -89,7 +82,6 @@ export default function SignupPage() {
 
     try {
       const result = await signup({
-        name: formData.name.trim(),
         loginId: formData.loginId,
         email: formData.email,
         password: formData.password,
@@ -99,9 +91,7 @@ export default function SignupPage() {
         toast.success("Account created successfully!", {
           description: "Welcome to ManufacturingOS! Redirecting...",
         });
-        setTimeout(() => {
           navigate("/");
-        }, 1500);
       } else {
         toast.error("Signup failed", {
           description:
@@ -161,38 +151,6 @@ export default function SignupPage() {
           <CardContent className="space-y-6">
             {/* Signup Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="name"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Full Name
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter your full name"
-                    className={`pl-10 h-11 ${
-                      errors.name
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
-                    }`}
-                    disabled={isLoading}
-                  />
-                </div>
-                {errors.name && (
-                  <p className="text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.name}
-                  </p>
-                )}
-              </div>
-
               <div className="space-y-2">
                 <Label
                   htmlFor="loginId"

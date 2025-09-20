@@ -92,7 +92,7 @@ export default function Layout({ children }) {
   const { user, logout } = useAuth();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         {/* Animated Background Pattern */}
         <div className="fixed inset-0 z-0 opacity-30">
@@ -253,8 +253,8 @@ export default function Layout({ children }) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col relative z-10">
-          {/* Mobile Header */}
-          <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-6 py-4 md:hidden sticky top-0 z-20">
+          {/* Header */}
+          <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-6 py-4 sticky top-0 z-20">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-gray-100/80 p-2 rounded-lg transition-colors duration-200" />

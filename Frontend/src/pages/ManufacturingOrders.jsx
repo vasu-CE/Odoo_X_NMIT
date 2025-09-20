@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { ManufacturingOrder, Product, BOM } from "../entities/all";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
-import { Label } from "../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { Checkbox } from "../components/ui/checkbox";
 import {
   Package,
   Plus,
@@ -20,407 +20,608 @@ import {
   Check,
   AlertCircle,
   Hash,
+  Menu,
+  List,
+  Grid3X3,
+  ChevronDown,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Eye,
 } from "lucide-react";
 
-import OrderCard from "../components/manufacturing/OrderCard";
-import CreateOrderDialog from "../components/manufacturing/CreateOrderDialog";
-import FilterBar from "../components/manufacturing/FilterBar";
-
-const statusTabs = [
-  { id: "draft", label: "Draft", color: "bg-gray-900 text-white" },
-  { id: "confirmed", label: "Confirmed", color: "bg-gray-100 text-gray-800" },
-  { id: "in_progress", label: "In-Progress", color: "bg-gray-100 text-gray-800" },
-  { id: "to_close", label: "To Close", color: "bg-gray-100 text-gray-800" },
-  { id: "done", label: "Done", color: "bg-gray-100 text-gray-800" },
-];
+// Status filter configuration matching the mockup
+const statusFilters = {
+  all: [
+    { id: "draft", label: "Draft", count: 2, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "confirmed", label: "Confirmed", count: 7, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "in_progress", label: "In-Progress", count: 1, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "to_close", label: "To Close", count: 5, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "not_assigned", label: "Not Assigned", count: 11, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "late", label: "Late", count: 11, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+  ],
+  my: [
+    { id: "confirmed", label: "Confirmed", count: 7, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "in_progress", label: "In-Progress", count: 1, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "to_close", label: "To Close", count: 5, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    { id: "late", label: "Late", count: 8, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+  ]
+};
 
 export default function ManufacturingOrders() {
   const [orders, setOrders] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [boms, setBoms] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeStatusTab, setActiveStatusTab] = useState("draft");
   const [searchTerm, setSearchTerm] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("all");
-  const [assigneeFilter, setAssigneeFilter] = useState("all");
-  
-  // Form data for creating new order
-  const [formData, setFormData] = useState({
-    order_number: "",
-    finished_product: "",
+  const [activeFilterGroup, setActiveFilterGroup] = useState("all");
+  const [activeStatusFilter, setActiveStatusFilter] = useState("draft");
+  const [viewMode, setViewMode] = useState("list"); // list or kanban
+  const [selectedOrders, setSelectedOrders] = useState([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createFormData, setCreateFormData] = useState({
+    product_id: "",
     quantity: 1,
-    bom: "",
-    schedule_date: "",
-    assignee: "",
-    components: [],
-    work_orders: []
+    scheduled_start: "",
+    assigned_to_id: "",
+    priority: "MEDIUM",
+    notes: ""
   });
+
+  // Mock data for demonstration - matching the mockup
+  const mockOrders = [
+    {
+      id: "1",
+      reference: "MO-000001",
+      startDate: "Tomorrow",
+      finishedProduct: "Dinning Table",
+      componentStatus: "Not Available",
+      quantity: 5.00,
+      unit: "Units",
+      state: "Confirmed",
+      isLate: false,
+      isAssigned: true,
+    },
+    {
+      id: "2", 
+      reference: "MO-000002",
+      startDate: "Yesterday",
+      finishedProduct: "Drawer",
+      componentStatus: "Available",
+      quantity: 2.00,
+      unit: "Units",
+      state: "In-Progress",
+      isLate: true,
+      isAssigned: true,
+    },
+    {
+      id: "3",
+      reference: "MO-000003", 
+      startDate: "Today",
+      finishedProduct: "Chair",
+      componentStatus: "Available",
+      quantity: 10.00,
+      unit: "Units",
+      state: "Draft",
+      isLate: false,
+      isAssigned: false,
+    },
+    {
+      id: "4",
+      reference: "MO-000004",
+      startDate: "Last Week",
+      finishedProduct: "Cabinet",
+      componentStatus: "Not Available", 
+      quantity: 3.00,
+      unit: "Units",
+      state: "Confirmed",
+      isLate: true,
+      isAssigned: false,
+    },
+    {
+      id: "5",
+      reference: "MO-000005",
+      startDate: "Next Week",
+      finishedProduct: "Shelf",
+      componentStatus: "Available",
+      quantity: 8.00,
+      unit: "Units", 
+      state: "To Close",
+      isLate: false,
+      isAssigned: true,
+    }
+  ];
 
   useEffect(() => {
     loadData();
-    generateOrderNumber();
   }, []);
 
   const loadData = async () => {
     try {
-      const [ordersData, productsData, bomsData] = await Promise.all([
-        ManufacturingOrder.list("-created_date"),
-        Product.list("-created_date"),
-        BOM.list("-created_date"),
-      ]);
-      setOrders(ordersData);
-      setProducts(productsData);
-      setBoms(bomsData);
+      // Load real data from API
+      const ordersData = await ManufacturingOrder.list("-created_date");
+      
+      // Transform API data to match our UI structure
+      const transformedOrders = ordersData.map(order => ({
+        id: order.id,
+        reference: order.order_number || `MO-${order.id.slice(-6)}`,
+        startDate: order.scheduled_start ? 
+          new Date(order.scheduled_start).toLocaleDateString() : 
+          "Not scheduled",
+        finishedProduct: order.product_name || "Unknown Product",
+        componentStatus: order.component_status || "Unknown",
+        quantity: order.quantity || 0,
+        unit: order.unit || "Units",
+        state: order.status?.replace("_", " ") || "Unknown",
+        isLate: order.scheduled_start ? 
+          new Date(order.scheduled_start) < new Date() && order.status === "CONFIRMED" : 
+          false,
+        isAssigned: !!order.assigned_to_id,
+        actualStartDate: order.actual_start,
+        actualEndDate: order.actual_end,
+        priority: order.priority,
+        notes: order.notes
+      }));
+      
+      setOrders(transformedOrders);
     } catch (error) {
       console.error("Error loading data:", error);
+      // Fallback to mock data if API fails
+      setOrders(mockOrders);
     } finally {
       setLoading(false);
     }
   };
 
-  const generateOrderNumber = () => {
-    const orderCount = orders.length + 1;
-    const paddedNumber = orderCount.toString().padStart(6, '0');
-    setFormData(prev => ({ ...prev, order_number: `MO-${paddedNumber}` }));
+  // Calculate counts for filters
+  const calculateFilterCounts = () => {
+    const counts = {
+      all: {
+        draft: orders.filter(o => o.state === "Draft").length,
+        confirmed: orders.filter(o => o.state === "Confirmed").length,
+        in_progress: orders.filter(o => o.state === "In-Progress").length,
+        to_close: orders.filter(o => o.state === "To Close").length,
+        not_assigned: orders.filter(o => !o.isAssigned).length,
+        late: orders.filter(o => o.isLate).length,
+      },
+      my: {
+        confirmed: orders.filter(o => o.state === "Confirmed" && o.isAssigned).length,
+        in_progress: orders.filter(o => o.state === "In-Progress" && o.isAssigned).length,
+        to_close: orders.filter(o => o.state === "To Close" && o.isAssigned).length,
+        late: orders.filter(o => o.isLate && o.isAssigned).length,
+      }
+    };
+    return counts;
   };
 
-  const handleBomSelect = (bomId) => {
-    const selectedBom = boms.find(bom => bom.id === bomId);
-    if (selectedBom) {
-      setFormData(prev => ({
-        ...prev,
-        bom: bomId,
-        finished_product: selectedBom.product_name,
-        quantity: selectedBom.quantity || 1,
-        components: selectedBom.components || [],
-        work_orders: selectedBom.operations || []
-      }));
+  const filterCounts = calculateFilterCounts();
+
+  // Filter orders based on search and active filters
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = !searchTerm || 
+      order.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.finishedProduct?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.state?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = activeStatusFilter === "all" || order.state.toLowerCase().replace(" ", "_") === activeStatusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedOrders(filteredOrders.map(order => order.id));
+    } else {
+      setSelectedOrders([]);
+    }
+  };
+
+  const handleSelectOrder = (orderId, checked) => {
+    if (checked) {
+      setSelectedOrders(prev => [...prev, orderId]);
+    } else {
+      setSelectedOrders(prev => prev.filter(id => id !== orderId));
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Draft":
+        return "bg-gray-100 text-gray-800";
+      case "Confirmed":
+        return "bg-blue-100 text-blue-800";
+      case "In-Progress":
+        return "bg-yellow-100 text-yellow-800";
+      case "To Close":
+        return "bg-purple-100 text-purple-800";
+      case "Done":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const handleCreateOrder = async () => {
-    // Basic validation
-    if (!formData.finished_product) {
-      alert("Please select a finished product");
-      return;
-    }
-    if (!formData.quantity || formData.quantity < 1) {
-      alert("Please enter a valid quantity");
-      return;
-    }
-    if (!formData.schedule_date) {
-      alert("Please select a schedule date");
-      return;
-    }
-
     try {
       const orderData = {
-        ...formData,
-        status: "planned",
-        created_date: new Date().toISOString()
+        ...createFormData,
+        status: "PLANNED"
       };
       
       await ManufacturingOrder.create(orderData);
-      loadData();
-      generateOrderNumber();
-      resetForm();
-      alert("Manufacturing order created successfully!");
+      await loadData(); // Reload data
+      setShowCreateDialog(false);
+      setCreateFormData({
+        product_id: "",
+        quantity: 1,
+        scheduled_start: "",
+        assigned_to_id: "",
+        priority: "MEDIUM",
+        notes: ""
+      });
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Error creating order. Please try again.");
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      order_number: "",
-      finished_product: "",
-      quantity: 1,
-      bom: "",
-      schedule_date: "",
-      assignee: "",
-      components: [],
-      work_orders: []
-    });
-    generateOrderNumber();
-  };
-
-  const finishedProducts = products.filter(p => p.type === 'finished_goods');
-
-  // Filter orders based on search and filters
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = !searchTerm || 
-      order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.assignee_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesPriority = priorityFilter === "all" || order.priority === priorityFilter;
-    const matchesAssignee = assigneeFilter === "all" || order.assignee_name === assigneeFilter;
-    const matchesStatus = order.status === activeStatusTab;
-    
-    return matchesSearch && matchesPriority && matchesAssignee && matchesStatus;
-  });
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => window.history.back()}
+      {/* Header Section - Title and Menu Bar */}
+      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          {/* Left side - Menu and Actions */}
+          <div className="flex items-center gap-4 w-full lg:w-auto">
+            {/* Hamburger Menu */}
+            <Button variant="ghost" size="icon" className="lg:hidden">
+              <Menu className="w-5 h-5" />
+            </Button>
+            
+            {/* App Logo and Name */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-lg font-semibold text-gray-900">ManufacturingOS</span>
+            </div>
+
+            {/* New Button */}
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => window.location.href = '/manufacturing-orders/new'}
             >
-              <ArrowLeft className="w-4 h-4" />
-              Back
+              <Plus className="w-4 h-4 mr-2" />
+              New Manufacturing Order
+            </Button>
+          </div>
+
+          {/* Right side - Search and View Controls */}
+          <div className="flex items-center gap-3 w-full lg:w-auto">
+            {/* Search Bar */}
+            <div className="relative flex-1 lg:flex-none lg:w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search Manufacturing Orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4"
+              />
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center border border-gray-300 rounded-md">
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="rounded-r-none border-r"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === "kanban" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("kanban")}
+                className="rounded-l-none"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* User Profile */}
+            <Button variant="ghost" size="icon">
+              <User className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Section - Dashboard */}
+      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+        <div className="space-y-4">
+          {/* Filter Group Toggle */}
+          <div className="flex gap-1">
+            <Button
+              variant={activeFilterGroup === "all" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setActiveFilterGroup("all")}
+              className="text-sm"
+            >
+              All
             </Button>
             <Button
-              variant="outline"
+              variant={activeFilterGroup === "my" ? "default" : "ghost"}
               size="sm"
-              className="flex items-center gap-2"
-              onClick={() => {
-                generateOrderNumber();
-                resetForm();
-              }}
+              onClick={() => setActiveFilterGroup("my")}
+              className="text-sm"
             >
-              <Plus className="w-4 h-4" />
-              New
-            </Button>
-            <Button
-              onClick={handleCreateOrder}
-              className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Confirm
+              My
             </Button>
           </div>
           
-          {/* Status Tabs */}
-          <div className="flex gap-1">
-            {statusTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveStatusTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                  activeStatusTab === tab.id
-                    ? tab.color
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+          {/* Status Filter Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {statusFilters[activeFilterGroup].map((filter) => (
+              <Button
+                key={filter.id}
+                variant={activeStatusFilter === filter.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveStatusFilter(filter.id)}
+                className="flex flex-col items-center py-2 px-3 h-auto"
               >
-                {tab.label}
-              </button>
+                <span className="text-lg font-semibold">{filterCounts[activeFilterGroup][filter.id] || 0}</span>
+                <span className="text-xs">{filter.label}</span>
+              </Button>
             ))}
           </div>
+
+          {/* Filter Descriptions */}
+          <div className="text-xs text-gray-500 space-y-1">
+            <p>• Filter Manufacturing orders when user clicks on any of the state button, highlight the clicked button and add filter on search according to the button click</p>
+            <p>• Late Filter show manufacturing order whose start date has already passed and are still in confirmed state.</p>
+            <p>• Not Assigned filter shows manufacturing order which don't have any assignee.</p>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
-          {/* Input Fields Section */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-6">
-                {/* MO Number */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    MO-000001
-                  </Label>
-                  <div className="p-4 border-2 border-dashed border-red-300 rounded-md bg-red-50">
-                    <span className="text-xl font-mono text-red-600 font-bold">
-                      {formData.order_number}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Always auto generate, when clicked on new and number should follow the sequence
-                  </p>
-                </div>
+      {/* Main Content - Manufacturing Orders Table */}
+      <div className="px-4 lg:px-6 py-6">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+          {/* Table Header */}
+          <div className="bg-gray-50 border-b border-gray-200">
+            <div className="grid grid-cols-8 gap-4 px-4 py-3 text-sm font-medium text-gray-700">
+              <div className="flex items-center">
+                <Checkbox
+                  checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+              </div>
+              <div className="hidden sm:block">Reference</div>
+              <div className="hidden md:block">Start Date</div>
+              <div className="hidden lg:block">Finished Product</div>
+              <div className="hidden lg:block">Component Status</div>
+              <div className="hidden md:block">Quantity</div>
+              <div className="hidden sm:block">Unit</div>
+              <div>State</div>
+            </div>
+          </div>
 
-                {/* Finished Product */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Finished product *
-                  </Label>
-                  <Select 
-                    value={formData.finished_product} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, finished_product: value }))}
-                  >
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Select product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {finishedProducts.map(product => (
-                        <SelectItem key={product.id} value={product.name}>
-                          {product.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Drop Down, many2one field, selection should be from product master
-                  </p>
+          {/* Table Body */}
+          <div className="divide-y divide-gray-200">
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="grid grid-cols-8 gap-4 px-4 py-4 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
                 </div>
-
-                {/* Quantity */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Quantity *
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="1"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-                      className="h-10"
+              ))
+            ) : filteredOrders.length > 0 ? (
+              filteredOrders.map((order) => (
+                <div key={order.id} className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-gray-50">
+                  <div className="flex items-center">
+                    <Checkbox
+                      checked={selectedOrders.includes(order.id)}
+                      onCheckedChange={(checked) => handleSelectOrder(order.id, checked)}
                     />
-                    <span className="text-sm text-gray-500">Units</span>
+                  </div>
+                  <div className="font-mono text-sm text-gray-900 hidden sm:block">{order.reference}</div>
+                  <div className="text-sm text-gray-700 hidden md:block">{order.startDate}</div>
+                  <div className="text-sm text-gray-700 hidden lg:block">{order.finishedProduct}</div>
+                  <div className="text-sm hidden lg:block">
+                    <Badge 
+                      variant={order.componentStatus === "Available" ? "default" : "destructive"}
+                      className="text-xs"
+                    >
+                      {order.componentStatus}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-gray-700 hidden md:block">{order.quantity}</div>
+                  <div className="text-sm text-gray-700 hidden sm:block">{order.unit}</div>
+                  <div className="flex items-center justify-between">
+                    <Badge className={`text-xs ${getStatusColor(order.state)}`}>
+                      {order.state}
+                    </Badge>
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
-
-                {/* Bill of Material */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Bill of Material
-                  </Label>
-                  <Select 
-                    value={formData.bom} 
-                    onValueChange={handleBomSelect}
-                  >
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Select BOM" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {boms.map(bom => (
-                        <SelectItem key={bom.id} value={bom.id}>
-                          {bom.name || `BOM-${bom.id}`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Non Mandatory field Drop Down, many2one field, selection should be from bills of materials master, 
-                    if bill of material is selected first, it should auto populate the finished product, quantity, 
-                    components and work orders based on bill of material selected
-                  </p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <Package className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500">No manufacturing orders found</p>
               </div>
+            )}
+          </div>
+        </div>
 
-              {/* Right Column */}
-              <div className="space-y-6">
-                {/* Schedule Date */}
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Schedule Date *
-                  </Label>
-                  <Input
-                    type="date"
-                    value={formData.schedule_date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, schedule_date: e.target.value }))}
-                    className="h-10"
+        {/* Mobile Card View */}
+        <div className="lg:hidden mt-4 space-y-3">
+          {filteredOrders.map((order) => (
+            <div key={`mobile-${order.id}`} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={selectedOrders.includes(order.id)}
+                    onCheckedChange={(checked) => handleSelectOrder(order.id, checked)}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Open calendar to allow user to select date
-                  </p>
+                <div>
+                    <div className="font-mono text-sm font-semibold text-gray-900">{order.reference}</div>
+                    <div className="text-xs text-gray-500">{order.finishedProduct}</div>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6">
+                  <MoreVertical className="w-4 h-4" />
+                </Button>
                 </div>
 
-                {/* Assignee */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                    Assignee
-                  </Label>
-                  <Select 
-                    value={formData.assignee} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, assignee: value }))}
-                  >
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Select assignee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user1">John Doe</SelectItem>
-                      <SelectItem value="user2">Jane Smith</SelectItem>
-                      <SelectItem value="user3">Mike Johnson</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Drop down of user for selection, many2one field
-                  </p>
+                  <span className="text-gray-500">Start Date:</span>
+                  <div className="font-medium">{order.startDate}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">Quantity:</span>
+                  <div className="font-medium">{order.quantity} {order.unit}</div>
+                </div>
+                <div>
+                  <span className="text-gray-500">Component Status:</span>
+                  <div>
+                    <Badge 
+                      variant={order.componentStatus === "Available" ? "default" : "destructive"}
+                      className="text-xs"
+                    >
+                      {order.componentStatus}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-gray-500">State:</span>
+                  <div>
+                    <Badge className={`text-xs ${getStatusColor(order.state)}`}>
+                      {order.state}
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Create Order Dialog */}
+      {showCreateDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Create Manufacturing Order</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowCreateDialog(false)}
+                >
+                  <XCircle className="w-4 h-4" />
+                </Button>
+                </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Product
+                  </label>
+                  <select
+                    value={createFormData.product_id}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, product_id: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a product</option>
+                    {/* You would populate this with actual products from API */}
+                    <option value="1">Dinning Table</option>
+                    <option value="2">Drawer</option>
+                    <option value="3">Chair</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={createFormData.quantity}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+              </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Scheduled Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={createFormData.scheduled_start}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, scheduled_start: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Priority
+                  </label>
+                  <select
+                    value={createFormData.priority}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, priority: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
           </div>
 
-          {/* Separator Line */}
-          <div className="border-t-2 border-red-200"></div>
-          
-          {/* Tabular Sections */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Components Section */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-                  Components
-                </h3>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-gray-50 grid grid-cols-4 gap-4 p-3 text-sm font-medium text-gray-700 border-b">
-                    <div>Components</div>
-                    <div>Availability</div>
-                    <div>To Consume</div>
-                    <div>Units</div>
-                  </div>
-                  <div className="divide-y divide-gray-200">
-                    {formData.components.length > 0 ? (
-                      formData.components.map((component, index) => (
-                        <div key={index} className="grid grid-cols-4 gap-4 p-3 text-sm">
-                          <div className="text-gray-900">{component.product_name}</div>
-                          <div className="text-gray-600">{component.available_qty || 0}</div>
-                          <div className="text-gray-600">{component.required_qty || 0}</div>
-                          <div className="text-gray-600">{component.unit || 'pcs'}</div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center text-gray-500 text-sm">
-                        Add a product
-                      </div>
-                    )}
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={createFormData.notes}
+                    onChange={(e) => setCreateFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Optional notes..."
+                  />
                 </div>
               </div>
 
-              {/* Work Orders Section */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-                  Work Orders
-                </h3>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-gray-50 p-3 text-sm font-medium text-gray-700 border-b">
-                    Operations
-                  </div>
-                  <div className="divide-y divide-gray-200">
-                    {formData.work_orders.length > 0 ? (
-                      formData.work_orders.map((workOrder, index) => (
-                        <div key={index} className="p-3 text-sm">
-                          <div className="text-gray-900">{workOrder.name}</div>
-                          <div className="text-gray-500 text-xs mt-1">
-                            Estimated time: {workOrder.estimated_time}min
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center text-gray-500 text-sm">
-                        No work orders
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowCreateDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateOrder}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Create Order
+                </Button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -42,7 +42,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await apiService.login(credentials.email, credentials.password);
+      // Determine if the input is an email or loginId
+      const isEmail = /\S+@\S+\.\S+/.test(credentials.loginId);
+      const response = await apiService.login(
+        credentials.loginId, 
+        credentials.password,
+        isEmail ? 'email' : 'loginId'
+      );
       
       if (response.success) {
         setUser(response.data.user);
@@ -60,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   const signup = async (userData) => {
     try {
       const response = await apiService.register({
-        name: userData.name,
+        loginId: userData.loginId,
         email: userData.email,
         password: userData.password,
         role: 'SHOP_FLOOR_OPERATOR' // Default role

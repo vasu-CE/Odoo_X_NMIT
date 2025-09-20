@@ -24,7 +24,7 @@ import {
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    email: "",
+    loginId: "",
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -37,10 +37,8 @@ export default function LoginPage() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
+    if (!formData.loginId) {
+      newErrors.loginId = "Login ID or Email is required";
     }
 
     if (!formData.password) {
@@ -62,7 +60,7 @@ export default function LoginPage() {
 
     try {
       const result = await login({
-        email: formData.email,
+        loginId: formData.loginId,
         password: formData.password,
       });
 
@@ -70,9 +68,7 @@ export default function LoginPage() {
         toast.success("Login successful! Redirecting...", {
           description: "Welcome back to ManufacturingOS",
         });
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
+          navigate("/");  
       } else {
         toast.error("Login failed", {
           description:
@@ -132,37 +128,37 @@ export default function LoginPage() {
           <CardContent className="space-y-6">
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="email"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Email Address
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Enter your email"
-                    className={`pl-10 h-11 ${
-                      errors.email
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
-                    }`}
-                    disabled={isLoading}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {errors.email}
-                  </p>
-                )}
-              </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="loginId"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Login ID or Email
+                    </Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        id="loginId"
+                        name="loginId"
+                        type="text"
+                        value={formData.loginId}
+                        onChange={handleInputChange}
+                        placeholder="Enter your login ID or email"
+                        className={`pl-10 h-11 ${
+                          errors.loginId
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                            : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                        }`}
+                        disabled={isLoading}
+                      />
+                    </div>
+                    {errors.loginId && (
+                      <p className="text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {errors.loginId}
+                      </p>
+                    )}
+                  </div>
 
               <div className="space-y-2">
                 <Label

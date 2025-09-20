@@ -18,7 +18,7 @@ const generateToken = (userId) => {
 // @desc    Register a new user
 // @access  Public
 router.post('/register', [
-  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('loginId').trim().notEmpty().withMessage('Login ID is required'),
   body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('role').optional().isIn(['ADMIN', 'MANUFACTURING_MANAGER', 'SHOP_FLOOR_OPERATOR', 'INVENTORY_MANAGER', 'BUSINESS_OWNER'])
@@ -34,7 +34,7 @@ router.post('/register', [
       });
     }
 
-    const { name, email, password, role = 'SHOP_FLOOR_OPERATOR' } = req.body;
+    const { loginId, email, password, role = 'SHOP_FLOOR_OPERATOR' } = req.body;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -55,13 +55,15 @@ router.post('/register', [
     // Create user
     const user = await prisma.user.create({
       data: {
-        name,
+        loginId,
+        name: loginId, // Use loginId as the name
         email,
         password: hashedPassword,
         role
       },
       select: {
         id: true,
+        loginId: true,
         name: true,
         email: true,
         role: true,
@@ -94,7 +96,7 @@ router.post('/register', [
 // @desc    Login user
 // @access  Public
 router.post('/login', [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('identifier').notEmpty().withMessage('Login ID or email is required'),
   body('password').notEmpty().withMessage('Password is required')
 ], async (req, res) => {
   try {
@@ -107,11 +109,14 @@ router.post('/login', [
       });
     }
 
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    // Find user
+    // Determine if identifier is email or loginId
+    const isEmail = /\S+@\S+\.\S+/.test(identifier);
+    
+    // Find user by email or loginId
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: isEmail ? { email: identifier } : { loginId: identifier }
     });
 
     if (!user || !user.isActive) {

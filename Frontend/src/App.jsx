@@ -13,6 +13,7 @@ import Layout from "./Layout.jsx";
 import Dashboard from "./pages/dashboard";
 import ManufacturingOrders from "./pages/ManufacturingOrders";
 import ManufacturingOrderDetail from "./components/manufacturing/ManufacturingOrderDetail";
+import ManufacturingOrderForm from "./components/manufacturing/ManufacturingOrderForm";
 import WorkOrders from "./pages/WorkOrders";
 import BOMPage from "./pages/BOM";
 import BOMDetail from "./components/manufacturing/BOMDetail";
@@ -59,16 +60,24 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/manufacturing-orders/:id"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <ManufacturingOrderDetail />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+              <Route
+                path="/manufacturing-orders/:id"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ManufacturingOrderDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/manufacturing-orders/new"
+                element={
+                  <ProtectedRoute>
+                    <ManufacturingOrderForm />
+                  </ProtectedRoute>
+                }
+              />
           <Route
             path="/work-orders"
             element={
