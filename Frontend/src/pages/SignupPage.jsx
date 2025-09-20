@@ -26,8 +26,10 @@ export default function SignupPage() {
   const [formData, setFormData] = useState({
     loginId: "",
     email: "",
+    name: "",
     password: "",
     confirmPassword: "",
+    role: "SHOP_FLOOR_OPERATOR",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -37,6 +39,13 @@ export default function SignupPage() {
   const { signup } = useAuth();
   const navigate = useNavigate();
 
+  const roleOptions = [
+    { value: "SHOP_FLOOR_OPERATOR", label: "Shop Floor Operator", description: "Operate machinery and complete production tasks" },
+    { value: "INVENTORY_MANAGER", label: "Inventory Manager", description: "Manage stock levels and inventory operations" },
+    { value: "MANUFACTURING_MANAGER", label: "Manufacturing Manager", description: "Oversee production processes and team management" },
+    { value: "BUSINESS_OWNER", label: "Business Owner", description: "Full system access and business oversight" },
+  ];
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -44,6 +53,12 @@ export default function SignupPage() {
       newErrors.loginId = "Login ID is required";
     } else if (formData.loginId.length < 3) {
       newErrors.loginId = "Login ID must be at least 3 characters";
+    }
+
+    if (!formData.name) {
+      newErrors.name = "Full name is required";
+    } else if (formData.name.length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
     }
 
     if (!formData.email) {
@@ -185,6 +200,38 @@ export default function SignupPage() {
 
               <div className="space-y-2">
                 <Label
+                  htmlFor="name"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Full Name
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter your full name"
+                    className={`pl-10 h-11 ${
+                      errors.name
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.name && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
                   htmlFor="email"
                   className="text-sm font-medium text-gray-700"
                 >
@@ -211,6 +258,42 @@ export default function SignupPage() {
                   <p className="text-sm text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
                     {errors.email}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="role"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Role
+                </Label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleInputChange}
+                  className={`w-full h-11 px-3 py-2 border rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 ${
+                    errors.role
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                      : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                  }`}
+                  disabled={isLoading}
+                >
+                  {roleOptions.map((role) => (
+                    <option key={role.value} value={role.value}>
+                      {role.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs text-gray-500">
+                  {roleOptions.find(r => r.value === formData.role)?.description}
+                </div>
+                {errors.role && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.role}
                   </p>
                 )}
               </div>

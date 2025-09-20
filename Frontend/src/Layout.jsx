@@ -208,6 +208,22 @@ export default function Layout({ children }) {
                             }[user?.role] || "Unknown Role"}
                           </p>
                         </div>
+                        <Link
+                          to="/profile"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <User className="w-4 h-4" />
+                          Profile Settings
+                        </Link>
+                        <Link
+                          to="/reports"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          My Reports
+                        </Link>
                         <button
                           onClick={() => {
                             logout();

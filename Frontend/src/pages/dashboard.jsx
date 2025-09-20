@@ -511,7 +511,7 @@ export default function Dashboard() {
           </div>
 
           {/* Filter Descriptions */}
-          <div className="text-xs text-gray-500 space-y-1">
+          {/* <div className="text-xs text-gray-500 space-y-1">
             <p>
               • Filter Manufacturing orders when user clicks on any of the state
               button, highlight the clicked button and add filter on search
@@ -525,115 +525,209 @@ export default function Dashboard() {
               • Not Assigned filter shows manufacturing order which don't have
               any assignee.
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
 
-      {/* Main Content - Manufacturing Orders Table */}
+      {/* Main Content - Manufacturing Orders */}
       <div className="px-4 lg:px-6 py-6">
-        <div className="bg-white rounded-lg border border-blue-200 shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
-          {/* Table Header */}
-          <div className="bg-blue-50 border-b border-blue-200">
-            <div className="grid grid-cols-8 gap-4 px-4 py-3 text-sm font-medium text-blue-700">
-              <div className="flex items-center">
-                <Checkbox
-                  checked={
-                    selectedOrders.length === filteredOrders.length &&
-                    filteredOrders.length > 0
-                  }
-                  onCheckedChange={handleSelectAll}
-                  className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
-                />
+        {viewMode === "list" ? (
+          /* List View - Table */
+          <div className="bg-white rounded-lg border border-blue-200 shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
+            {/* Table Header */}
+            <div className="bg-blue-50 border-b border-blue-200">
+              <div className="grid grid-cols-8 gap-4 px-4 py-3 text-sm font-medium text-blue-700">
+                <div className="flex items-center">
+                  <Checkbox
+                    checked={
+                      selectedOrders.length === filteredOrders.length &&
+                      filteredOrders.length > 0
+                    }
+                    onCheckedChange={handleSelectAll}
+                    className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
+                  />
+                </div>
+                <div className="hidden sm:block">Reference</div>
+                <div className="hidden md:block">Start Date</div>
+                <div className="hidden lg:block">Finished Product</div>
+                <div className="hidden lg:block">Component Status</div>
+                <div className="hidden md:block">Quantity</div>
+                <div className="hidden sm:block">Unit</div>
+                <div>State</div>
               </div>
-              <div className="hidden sm:block">Reference</div>
-              <div className="hidden md:block">Start Date</div>
-              <div className="hidden lg:block">Finished Product</div>
-              <div className="hidden lg:block">Component Status</div>
-              <div className="hidden md:block">Quantity</div>
-              <div className="hidden sm:block">Unit</div>
-              <div>State</div>
+            </div>
+
+            {/* Table Body */}
+            <div className="divide-y divide-gray-200">
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-8 gap-4 px-4 py-4 animate-pulse"
+                  >
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                  </div>
+                ))
+              ) : filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-blue-50 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-blue-300"
+                  >
+                    <div className="flex items-center">
+                      <Checkbox
+                        checked={selectedOrders.includes(order.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectOrder(order.id, checked)
+                        }
+                        className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
+                      />
+                    </div>
+                    <div className="font-mono text-sm text-gray-900 hidden sm:block">
+                      {order.reference}
+                    </div>
+                    <div className="text-sm text-gray-700 hidden md:block">
+                      {order.startDate}
+                    </div>
+                    <div className="text-sm text-gray-700 hidden lg:block">
+                      {order.finishedProduct}
+                    </div>
+                    <div className="text-sm hidden lg:block">
+                      <Badge
+                        variant={
+                          order.componentStatus === "Available"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className="text-xs hover:scale-105 transition-all duration-200 cursor-pointer"
+                      >
+                        {order.componentStatus}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-700 hidden md:block">
+                      {order.quantity}
+                    </div>
+                    <div className="text-sm text-gray-700 hidden sm:block">
+                      {order.unit}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Badge className={`text-xs ${getStatusColor(order.state)} hover:scale-105 transition-all duration-200 cursor-pointer`}>
+                        {order.state}
+                      </Badge>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <Package className="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500">No manufacturing orders found</p>
+                </div>
+              )}
             </div>
           </div>
-
-          {/* Table Body */}
-          <div className="divide-y divide-gray-200">
+        ) : (
+          /* Grid/Kanban View */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading ? (
-              // Loading skeleton
-              Array.from({ length: 5 }).map((_, index) => (
+              // Loading skeleton for grid
+              Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-8 gap-4 px-4 py-4 animate-pulse"
+                  className="bg-white rounded-lg border border-blue-200 p-6 animate-pulse"
                 >
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                  <div className="flex justify-between items-center">
+                    <div className="h-6 bg-gray-200 rounded w-16"></div>
+                    <div className="h-6 bg-gray-200 rounded w-6"></div>
+                  </div>
                 </div>
               ))
             ) : filteredOrders.length > 0 ? (
               filteredOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-blue-50 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-blue-300"
+                  className="bg-white rounded-lg border border-blue-200 p-6 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer"
                 >
-                  <div className="flex items-center">
-                    <Checkbox
-                      checked={selectedOrders.includes(order.id)}
-                      onCheckedChange={(checked) =>
-                        handleSelectOrder(order.id, checked)
-                      }
-                      className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
-                    />
-                  </div>
-                  <div className="font-mono text-sm text-gray-900 hidden sm:block">
-                    {order.reference}
-                  </div>
-                  <div className="text-sm text-gray-700 hidden md:block">
-                    {order.startDate}
-                  </div>
-                  <div className="text-sm text-gray-700 hidden lg:block">
-                    {order.finishedProduct}
-                  </div>
-                  <div className="text-sm hidden lg:block">
-                    <Badge
-                      variant={
-                        order.componentStatus === "Available"
-                          ? "default"
-                          : "destructive"
-                      }
-                      className="text-xs hover:scale-105 transition-all duration-200 cursor-pointer"
-                    >
-                      {order.componentStatus}
-                    </Badge>
-                  </div>
-                  <div className="text-sm text-gray-700 hidden md:block">
-                    {order.quantity}
-                  </div>
-                  <div className="text-sm text-gray-700 hidden sm:block">
-                    {order.unit}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Badge className={`text-xs ${getStatusColor(order.state)} hover:scale-105 transition-all duration-200 cursor-pointer`}>
-                      {order.state}
-                    </Badge>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={selectedOrders.includes(order.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectOrder(order.id, checked)
+                        }
+                        className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
+                      />
+                      <div>
+                        <div className="font-mono text-sm font-semibold text-gray-900">
+                          {order.reference}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {order.finishedProduct}
+                        </div>
+                      </div>
+                    </div>
                     <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </div>
+
+                  <div className="space-y-3 mb-4">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500">Start Date:</span>
+                      <span className="font-medium">{order.startDate}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500">Quantity:</span>
+                      <span className="font-medium">
+                        {order.quantity} {order.unit}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-500">Component Status:</span>
+                      <Badge
+                        variant={
+                          order.componentStatus === "Available"
+                            ? "default"
+                            : "destructive"
+                        }
+                        className="text-xs"
+                      >
+                        {order.componentStatus}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <Badge className={`text-xs ${getStatusColor(order.state)}`}>
+                      {order.state}
+                    </Badge>
+                    <div className="text-xs text-gray-500">
+                      {order.unit}
+                    </div>
+                  </div>
                 </div>
               ))
             ) : (
-              <div className="text-center py-12">
+              <div className="col-span-full text-center py-12">
                 <Package className="w-12 h-12 mx-auto text-gray-300 mb-4" />
                 <p className="text-gray-500">No manufacturing orders found</p>
               </div>
             )}
           </div>
-        </div>
+        )}
 
         {/* Mobile Card View */}
         <div className="lg:hidden mt-4 space-y-3">
