@@ -230,8 +230,8 @@ export default function WorkCentersPage() {
               </div>
             ) : viewMode === "list" ? (
               /* List View - Table */
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full min-w-[640px]">
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
@@ -279,6 +279,7 @@ export default function WorkCentersPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => setSelectedWorkCenter(workCenter)}
+                              className="h-9 w-9 p-0"
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -286,6 +287,7 @@ export default function WorkCentersPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleEditWorkCenter(workCenter)}
+                              className="h-9 w-9 p-0"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -293,7 +295,7 @@ export default function WorkCentersPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleDeleteWorkCenter(workCenter.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="h-9 w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

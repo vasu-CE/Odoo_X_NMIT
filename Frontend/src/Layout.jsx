@@ -82,7 +82,20 @@ export default function Layout({ children }) {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   const profileDropdownRef = useRef(null);
+
+  // Handle responsive layout
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -111,29 +124,32 @@ export default function Layout({ children }) {
           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
         </div>
 
-        {/* Sidebar */}
-        <Sidebar className="border-r border-gray-200/60 backdrop-blur-sm bg-white/80 relative z-10">
-          <SidebarHeader className="border-b border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
-                <img
-                  src="/logo.png"
-                  alt="ManufacturingOS Logo"
-                  className="w-full h-full object-contain"
-                />
+        {/* Responsive Sidebar */}
+        <Sidebar className="border-r border-gray-200/60 backdrop-blur-sm bg-white/80 relative z-30 md:static fixed top-0 left-0 h-auto md:h-full w-full md:w-auto shadow-lg md:shadow-none">
+          <SidebarHeader className="border-b border-gray-200 p-3 md:p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 md:w-10 md:h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                  <img
+                    src="/logo.png"
+                    alt="ManufacturingOS Logo"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div>
+                  <h2 className="font-bold text-gray-900 text-sm md:text-lg">
+                    ManufacturingOS
+                  </h2>
+                  <p className="text-xs text-gray-500 hidden md:block">Production Management</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-gray-900 text-lg">
-                  ManufacturingOS
-                </h2>
-                <p className="text-xs text-gray-500">Production Management</p>
-              </div>
+              <SidebarTrigger className="md:hidden hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200" />
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="p-3">
-            {/* Quick Search */}
-            <div className="mb-6 px-3">
+          <SidebarContent className="p-1 md:p-3">
+            {/* Quick Search - Hidden on mobile */}
+            <div className="mb-2 md:mb-6 px-2 md:px-3 hidden md:block">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
@@ -144,16 +160,16 @@ export default function Layout({ children }) {
             </div>
 
             <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
+              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2 py-1 md:px-3 md:py-2">
                 Manufacturing
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible py-1 md:py-0">
                   {navigationItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem key={item.title} className="flex-shrink-0 md:flex-shrink">
                       <SidebarMenuButton
                         asChild
-                        className={`group hover:shadow-lg transition-all duration-300 rounded-xl mb-1 transform hover:scale-105 ${
+                        className={`group hover:shadow-lg transition-all duration-200 rounded-xl mb-0 md:mb-1 transform hover:scale-105 ${
                           location.pathname === item.url
                             ? `${item.bgColor} ${item.color} shadow-lg scale-105`
                             : "hover:bg-white/60 text-gray-700"
@@ -161,10 +177,10 @@ export default function Layout({ children }) {
                       >
                         <Link
                           to={item.url}
-                          className="flex items-center gap-3 px-3 py-3"
+                          className="flex flex-col md:flex-row items-center md:gap-3 px-3 py-2"
                         >
                           <div
-                            className={`p-2 rounded-lg transition-all duration-300 ${
+                            className={`p-1.5 md:p-2 rounded-lg transition-all duration-300 ${
                               location.pathname === item.url
                                 ? item.bgColor
                                 : "bg-gray-100/80 group-hover:bg-white/80"
@@ -178,13 +194,13 @@ export default function Layout({ children }) {
                               }`}
                             />
                           </div>
-                          <span className="font-medium text-sm">
+                          <span className="font-medium text-xs md:text-sm mt-1 md:mt-0">
                             {item.title}
                           </span>
                           {item.title === "Work Orders" && (
                             <Badge
                               variant="secondary"
-                              className="ml-auto bg-orange-100 text-orange-700 text-xs"
+                              className="ml-0 md:ml-auto mt-1 md:mt-0 bg-orange-100 text-orange-700 text-xs"
                             >
                               3
                             </Badge>
@@ -197,7 +213,7 @@ export default function Layout({ children }) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            <SidebarGroup className="mt-8">
+            <SidebarGroup className="mt-2 md:mt-8 hidden md:block">
               <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
                 Quick Stats
               </SidebarGroupLabel>
@@ -258,20 +274,20 @@ export default function Layout({ children }) {
           </SidebarFooter> */}
         </Sidebar>
 
-        <main className="flex-1 flex flex-col relative z-10">
-          {/* Header */}
-          <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-6 py-4 sticky top-0 z-20">
+        <main className="flex-1 flex flex-col relative z-10 pt-14 md:pt-0">
+          {/* Responsive Header */}
+          <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 md:px-6 py-3 md:py-4 sticky top-0 z-20 hidden md:block">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                {/* <SidebarTrigger className="hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200" /> */}
-                <h1 className="text-xl font-bold text-gray-900">
+              <div className="flex items-center text-center gap-2 md:gap-4">
+                <SidebarTrigger className="md:hidden hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200" />
+                <h1 className="md:text-xl font-bold text-gray-900">
                   Manufacturing Dashboard
                 </h1>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 md:gap-3">
                 <Button variant="ghost" size="icon" className="relative">
-                  {/* <Bell className="w-5 h-5 text-gray-600" /> */}
-                  {/* <Badge className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-red-500" /> */}
+                  {/* <Bell className="w-5 h-5 text-gray-600" />
+                  <Badge className="absolute -top-1 -right-1 w-2 h-2 p-0 bg-red-500" /> */}
                 </Button>
                 <div className="relative" ref={profileDropdownRef}>
                   <Button
@@ -336,8 +352,8 @@ export default function Layout({ children }) {
             </div>
           </header>
 
-          {/* Main Content */}
-          <div className="flex-1 overflow-auto">
+          {/* Main Content - Responsive */}
+          <div className="flex-1 overflow-auto p-3 md:p-6">
             <div className="h-full">{children}</div>
           </div>
         </main>

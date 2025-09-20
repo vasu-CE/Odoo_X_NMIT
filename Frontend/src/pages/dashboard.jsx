@@ -390,7 +390,7 @@ export default function Dashboard() {
       <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 lg:px-6 py-4 shadow-sm">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           {/* Left side - Menu and Actions */}
-          <div className="flex items-center gap-4 w-full lg:w-auto">
+          <div className="flex items-center gap-2 sm:gap-4 w-full lg:w-auto">
             {/* Hamburger Menu */}
             <Button
               variant="ghost"
@@ -403,26 +403,27 @@ export default function Dashboard() {
 
             {/* New Button */}
             <Button
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105 text-xs sm:text-sm whitespace-nowrap"
               onClick={() =>
                 (window.location.href = "/manufacturing-orders/new")
               }
             >
-              <Plus className="w-4 h-4 mr-2" />
-              New Manufacturing Order
+              <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">New Manufacturing Order</span>
+              <span className="xs:hidden">New Order</span>
             </Button>
           </div>
 
           {/* Right side - Search and View Controls */}
-          <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
             {/* Search Bar */}
-            <div className="relative flex-1 lg:flex-none lg:w-80">
+            <div className="relative flex-1 w-full sm:w-auto lg:w-80">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Search Manufacturing Orders..."
+                placeholder="Search Orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300 bg-white/80 backdrop-blur-sm"
+                className="pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300 bg-white/80 backdrop-blur-sm w-full"
               />
             </div>
 
@@ -519,7 +520,7 @@ export default function Dashboard() {
           <div className="bg-white/80 backdrop-blur-md rounded-xl border border-blue-200/60 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
             {/* Table Header */}
             <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-200/60">
-              <div className="grid grid-cols-8 gap-4 px-4 py-3 text-sm font-medium text-blue-700">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4 px-4 py-3 text-sm font-medium text-blue-700">
                 <div className="flex items-center">
                   <Checkbox
                     checked={
@@ -530,13 +531,13 @@ export default function Dashboard() {
                     className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-300"
                   />
                 </div>
-                <div className="hidden sm:block">Reference</div>
-                <div className="hidden md:block">Start Date</div>
-                <div className="hidden lg:block">Finished Product</div>
-                <div className="hidden lg:block">Component Status</div>
-                <div className="hidden md:block">Quantity</div>
-                <div className="hidden sm:block">Unit</div>
-                <div>State</div>
+                <div className="block">Reference</div>
+                <div className="hidden sm:block">Start Date</div>
+                <div className="hidden md:block">Finished Product</div>
+                <div className="hidden md:block">Component Status</div>
+                <div className="hidden lg:block">Quantity</div>
+                <div className="hidden lg:block">Unit</div>
+                <div className="block">State</div>
               </div>
             </div>
 
@@ -547,15 +548,15 @@ export default function Dashboard() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-8 gap-4 px-4 py-4 animate-pulse"
+                    className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4 px-4 py-4 animate-pulse"
                   >
                     <div className="h-4 bg-gray-200 rounded"></div>
                     <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded sm:block"></div>
+                    <div className="h-4 bg-gray-200 rounded md:block"></div>
+                    <div className="h-4 bg-gray-200 rounded md:block"></div>
+                    <div className="h-4 bg-gray-200 rounded lg:block"></div>
+                    <div className="h-4 bg-gray-200 rounded lg:block"></div>
                     <div className="h-4 bg-gray-200 rounded"></div>
                   </div>
                 ))
@@ -563,7 +564,7 @@ export default function Dashboard() {
                 filteredOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-blue-50/50 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400 hover:shadow-md"
+                    className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4 px-4 py-4 hover:bg-blue-50/50 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400 hover:shadow-md"
                   >
                     <div className="flex items-center">
                       <Checkbox
@@ -574,16 +575,22 @@ export default function Dashboard() {
                         className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-300"
                       />
                     </div>
-                    <div className="font-mono text-sm text-gray-900 hidden sm:block">
-                      {order.reference}
+                    <div className="flex items-center">
+                      <span className="font-mono text-sm font-medium text-blue-700 truncate">
+                        {order.reference}
+                      </span>
                     </div>
-                    <div className="text-sm text-gray-700 hidden md:block">
-                      {order.startDate}
+                    <div className="hidden sm:flex items-center">
+                      <span
+                        className={`text-sm ${order.isLate ? "text-red-600" : "text-gray-600"}`}
+                      >
+                        {order.startDate}
+                      </span>
                     </div>
-                    <div className="text-sm text-gray-700 hidden lg:block">
-                      {order.finishedProduct}
+                    <div className="hidden md:flex items-center">
+                      <span className="text-sm text-gray-700 truncate">{order.finishedProduct}</span>
                     </div>
-                    <div className="text-sm hidden lg:block">
+                    <div className="hidden md:flex items-center">
                       <Badge
                         variant={
                           order.componentStatus === "Available"
@@ -595,11 +602,11 @@ export default function Dashboard() {
                         {order.componentStatus}
                       </Badge>
                     </div>
-                    <div className="text-sm text-gray-700 hidden md:block">
-                      {order.quantity}
+                    <div className="hidden lg:flex items-center">
+                      <span className="text-sm text-gray-700">{order.quantity}</span>
                     </div>
-                    <div className="text-sm text-gray-700 hidden sm:block">
-                      {order.unit}
+                    <div className="hidden lg:flex items-center">
+                      <span className="text-sm text-gray-500">{order.unit}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <Badge
