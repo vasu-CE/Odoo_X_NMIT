@@ -14,6 +14,7 @@ router.get('/', authenticate, [
   query('status').optional().isIn(['ACTIVE', 'MAINTENANCE', 'INACTIVE']),
   query('search').optional().isString()
 ], async (req, res) => {
+  console.log('hy')
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -23,7 +24,6 @@ router.get('/', authenticate, [
         details: errors.array()
       });
     }
-
     const {
       page = 1,
       limit = 20,

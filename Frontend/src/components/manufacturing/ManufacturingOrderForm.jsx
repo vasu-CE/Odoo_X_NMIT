@@ -73,9 +73,16 @@ export default function ManufacturingOrderForm() {
   const [products, setProducts] = useState([]);
   const [boms, setBoms] = useState([]);
   const [users, setUsers] = useState([]);
+  const [workCenters, setWorkCenters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("components");
   const [timers, setTimers] = useState({});
+  const [showWorkOrderForm, setShowWorkOrderForm] = useState(false);
+  const [workOrderForm, setWorkOrderForm] = useState({
+    operationName: "",
+    workCenterId: "",
+    plannedDuration: 60
+  });
 
   // Define handleCancelOrder early to avoid hoisting issues
   const handleCancelOrder = () => {
@@ -160,20 +167,32 @@ export default function ManufacturingOrderForm() {
 
   const loadReferenceData = async () => {
     try {
-      const [productsData, bomsData, usersData] = await Promise.all([
+      const [productsData, bomsData, usersData, workCentersData] = await Promise.all([
         apiService.getProducts(),
         apiService.getBOMs(),
         apiService.getUsers(),
+        apiService.getWorkCenters().catch(() => ({ data: [] })), // Fallback if work centers API doesn't exist
       ]);
+      console.log('BOMs loaded for dropdown:', bomsData.data?.boms || []);
+      console.log('Work Centers loaded:', workCentersData.data || []);
+      console.log('Work Centers type:', typeof workCentersData.data);
+      console.log('Work Centers isArray:', Array.isArray(workCentersData.data));
       setProducts(productsData.data?.products || []);
       setBoms(bomsData.data?.boms || []);
       setUsers(usersData.data?.users || []);
+      setWorkCenters(workCentersData.data?.workCenters || workCentersData.data || []);
     } catch (error) {
       console.error("Error loading reference data:", error);
       // Fallback to empty arrays if API fails
       setProducts([]);
       setBoms([]);
       setUsers([]);
+      setWorkCenters([
+        { id: "wc-1", name: "Assembly Line 1", code: "AL001", status: "ACTIVE" },
+        { id: "wc-2", name: "Quality Control Station", code: "QC001", status: "ACTIVE" },
+        { id: "wc-3", name: "Packaging Station", code: "PS001", status: "ACTIVE" },
+        { id: "wc-4", name: "Maintenance Bay", code: "MB001", status: "MAINTENANCE" }
+      ]);
     }
   };
 
@@ -189,6 +208,8 @@ export default function ManufacturingOrderForm() {
       setOrder((prev) => ({
         ...prev,
         bomId: "",
+        finishedProduct: "",
+        quantity: 1,
         components: [],
         workOrders: [],
       }));
@@ -198,10 +219,20 @@ export default function ManufacturingOrderForm() {
     try {
       const response = await apiService.getBOM(bomId);
       const bom = response.data;
+      console.log('BOM selected:', bom);
       setOrder((prev) => ({
         ...prev,
         bomId: bomId,
-        components: bom.components || [],
+        finishedProduct: bom.finished_product || "",
+        quantity: bom.quantity || 1,
+        components: bom.components?.map(comp => ({
+          id: `comp_${Date.now()}_${Math.random()}`,
+          componentName: comp.product?.name || comp.product_name || "",
+          availability: comp.product?.currentStock || 0,
+          toConsume: comp.quantity || 0,
+          consumed: 0,
+          units: comp.unit || "PCS"
+        })) || [],
         workOrders:
           bom.operations?.map((op) => ({
             id: `wo_${Date.now()}_${Math.random()}`,
@@ -439,29 +470,32 @@ export default function ManufacturingOrderForm() {
     }
   };
 
-  const handleAddWorkOrder = async () => {
+  const handleAddWorkOrder = () => {
     if (!order.id) {
       toast.error("Please save the order first before adding work orders");
       return;
     }
+    setShowWorkOrderForm(true);
+  };
 
-    const operationName = prompt("Enter operation name:");
-    if (!operationName) return;
+  const handleWorkOrderFormSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!workOrderForm.operationName || !workOrderForm.workCenterId) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
 
-    const workCenterName = prompt("Enter work center name:");
-    if (!workCenterName) return;
-
-    const plannedDuration = parseInt(
-      prompt("Enter planned duration in minutes:") || "60"
-    );
+    const selectedWorkCenter = workCenters.find(wc => wc.id === workOrderForm.workCenterId);
+    const workCenterName = selectedWorkCenter?.name || "";
 
     try {
       const response = await apiService.addWorkOrderToManufacturingOrder(
         order.id,
         {
-          operationName,
-          workCenterName,
-          plannedDuration,
+          operationName: workOrderForm.operationName,
+          workCenterName: workCenterName,
+          plannedDuration: workOrderForm.plannedDuration,
         }
       );
 
@@ -469,6 +503,14 @@ export default function ManufacturingOrderForm() {
         ...prev,
         workOrders: [...prev.workOrders, response.data],
       }));
+
+      // Reset form and close modal
+      setWorkOrderForm({
+        operationName: "",
+        workCenterId: "",
+        plannedDuration: 60
+      });
+      setShowWorkOrderForm(false);
       toast.success("Work order added successfully");
     } catch (error) {
       console.error("Error adding work order:", error);
@@ -722,7 +764,7 @@ export default function ManufacturingOrderForm() {
                     {Array.isArray(boms) &&
                       boms.map((bom) => (
                         <option key={bom.id} value={bom.id}>
-                          {bom.name}
+                          {bom.finished_product || bom.name || `BOM-${bom.id}`} {bom.reference ? `(${bom.reference})` : ''}
                         </option>
                       ))}
                   </select>
@@ -953,6 +995,71 @@ export default function ManufacturingOrderForm() {
           </div>
         </div>
       </div>
+
+      {/* Work Order Form Modal */}
+      {showWorkOrderForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-semibold mb-4">Add Work Order</h2>
+            <form onSubmit={handleWorkOrderFormSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="operationName">Operation Name *</Label>
+                <Input
+                  id="operationName"
+                  value={workOrderForm.operationName}
+                  onChange={(e) => setWorkOrderForm(prev => ({ ...prev, operationName: e.target.value }))}
+                  placeholder="Enter operation name"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="workCenterId">Work Center *</Label>
+                <select
+                  id="workCenterId"
+                  value={workOrderForm.workCenterId}
+                  onChange={(e) => setWorkOrderForm(prev => ({ ...prev, workCenterId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Select Work Center</option>
+                  {workCenters.filter(wc => wc.status === 'ACTIVE' || wc.status === 'active').map(workCenter => (
+                    <option key={workCenter.id} value={workCenter.id}>
+                      {workCenter.name} ({workCenter.code || workCenter.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <Label htmlFor="plannedDuration">Planned Duration (minutes)</Label>
+                <Input
+                  id="plannedDuration"
+                  type="number"
+                  value={workOrderForm.plannedDuration}
+                  onChange={(e) => setWorkOrderForm(prev => ({ ...prev, plannedDuration: parseInt(e.target.value) || 60 }))}
+                  min="1"
+                  placeholder="60"
+                />
+              </div>
+              
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowWorkOrderForm(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1">
+                  Add Work Order
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

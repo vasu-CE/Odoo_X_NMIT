@@ -447,10 +447,10 @@ export default function Dashboard() {
               </Button>
             </div>
 
-            {/* User Profile */}
-            <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
-              <User className="w-5 h-5" />
-            </Button>
+            {/* User Profile
+            // <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
+            //   <User className="w-5 h-5" />
+            // </Button> */}
           </div>
         </div>
       </div>

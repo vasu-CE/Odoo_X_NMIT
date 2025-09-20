@@ -38,6 +38,8 @@ router.get('/', authenticate, [
     if (productId) where.productId = productId;
     if (search) {
       where.OR = [
+        { finished_product: { contains: search, mode: 'insensitive' } },
+        { reference: { contains: search, mode: 'insensitive' } },
         { product: { name: { contains: search, mode: 'insensitive' } } },
         { version: { contains: search, mode: 'insensitive' } }
       ];
@@ -196,18 +198,17 @@ router.get('/:id', authenticate, async (req, res) => {
 // @desc    Create new BOM
 // @access  Private
 router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
-  body('productId').notEmpty().withMessage('Product ID is required'),
-  body('version').optional().isString(),
+  body('finished_product').notEmpty().withMessage('Finished product name is required'),
+  body('quantity').isFloat({ min: 0.01 }).withMessage('Quantity must be positive'),
+  body('reference').optional().isString(),
   body('components').isArray().withMessage('Components must be an array'),
-  body('components.*.productId').notEmpty().withMessage('Component product ID is required'),
+  body('components.*.product_id').notEmpty().withMessage('Component product ID is required'),
   body('components.*.quantity').isFloat({ min: 0.01 }).withMessage('Component quantity must be positive'),
   body('components.*.unit').optional().isString(),
-  body('components.*.wastage').optional().isFloat({ min: 0 }),
-  body('operations').isArray().withMessage('Operations must be an array'),
-  body('operations.*.sequence').isInt({ min: 1 }).withMessage('Operation sequence must be positive'),
-  body('operations.*.name').notEmpty().withMessage('Operation name is required'),
-  body('operations.*.timeMinutes').isInt({ min: 1 }).withMessage('Operation time must be positive'),
-  body('operations.*.workCenterId').notEmpty().withMessage('Work center ID is required')
+  body('workOrders').optional().isArray().withMessage('Work orders must be an array'),
+  body('workOrders.*.operation').optional().notEmpty().withMessage('Operation name is required'),
+  body('workOrders.*.work_center_id').optional().notEmpty().withMessage('Work center ID is required'),
+  body('workOrders.*.expected_duration').optional().isFloat({ min: 0 }).withMessage('Expected duration must be non-negative')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -220,26 +221,15 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     }
 
     const {
-      productId,
-      version = '1.0',
+      finished_product,
+      quantity,
+      reference = '',
       components = [],
-      operations = []
+      workOrders = []
     } = req.body;
 
-    // Verify product exists
-    const product = await prisma.product.findUnique({
-      where: { id: productId }
-    });
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        error: 'Product not found'
-      });
-    }
-
     // Verify all component products exist
-    const componentProductIds = components.map(c => c.productId);
+    const componentProductIds = components.map(c => c.product_id);
     const componentProducts = await prisma.product.findMany({
       where: { id: { in: componentProductIds } }
     });
@@ -251,42 +241,60 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       });
     }
 
-    // Verify all work centers exist
-    const workCenterIds = operations.map(o => o.workCenterId);
-    const workCenters = await prisma.workCenter.findMany({
-      where: { id: { in: workCenterIds } }
-    });
-
-    if (workCenters.length !== workCenterIds.length) {
-      return res.status(400).json({
-        success: false,
-        error: 'One or more work centers not found'
+    // Verify all work centers exist (only if work orders exist)
+    if (workOrders && workOrders.length > 0) {
+      const workCenterIds = workOrders.map(wo => wo.work_center_id);
+      console.log('Work center IDs received:', workCenterIds);
+      console.log('Work orders received:', workOrders);
+      
+      const workCenters = await prisma.workCenter.findMany({
+        where: { id: { in: workCenterIds } }
       });
+      
+      console.log('Work centers found in database:', workCenters.map(wc => wc.id));
+      console.log('Expected work center IDs:', workCenterIds);
+      console.log('Found work centers count:', workCenters.length);
+      console.log('Expected work centers count:', workCenterIds.length);
+
+      if (workCenters.length !== workCenterIds.length) {
+        return res.status(400).json({
+          success: false,
+          error: 'One or more work centers not found',
+          details: {
+            received: workCenterIds,
+            found: workCenters.map(wc => wc.id),
+            missing: workCenterIds.filter(id => !workCenters.find(wc => wc.id === id))
+          }
+        });
+      }
+    } else {
+      console.log('No work orders provided, skipping work center validation');
     }
 
-    // Create BOM with components and operations
+    // Create BOM with components and work orders
     const bom = await prisma.bOM.create({
       data: {
-        productId,
-        version,
+        finished_product,
+        quantity,
+        reference,
         createdById: req.user.id,
         components: {
           create: components.map(comp => ({
-            productId: comp.productId,
+            productId: comp.product_id,
             quantity: comp.quantity,
             unit: comp.unit || 'PCS',
-            wastage: comp.wastage || 0
+            wastage: 0
           }))
         },
-        operations: {
-          create: operations.map(op => ({
-            sequence: op.sequence,
-            name: op.name,
-            description: op.description,
-            timeMinutes: op.timeMinutes,
-            workCenterId: op.workCenterId
+        operations: workOrders && workOrders.length > 0 ? {
+          create: workOrders.map((wo, index) => ({
+            sequence: index + 1,
+            name: wo.operation,
+            description: '',
+            timeMinutes: Math.round(wo.expected_duration),
+            workCenterId: wo.work_center_id
           }))
-        }
+        } : undefined
       },
       include: {
         product: {
@@ -332,7 +340,12 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     res.status(201).json({
       success: true,
       message: 'BOM created successfully',
-      data: bom
+      data: {
+        ...bom,
+        finished_product: bom.finished_product,
+        quantity: bom.quantity,
+        reference: bom.reference
+      }
     });
   } catch (error) {
     console.error('Create BOM error:', error);
