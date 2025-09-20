@@ -18,6 +18,7 @@ import {
   PlayCircle,
   PauseCircle,
   XCircle,
+  Table,
 } from "lucide-react";
 import apiService from "../../services/api";
 
@@ -130,8 +131,8 @@ export default function WorkOrdersAnalysis() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
-        <CardContent className="p-6">
+      <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg pt-6">
+        <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="relative">
