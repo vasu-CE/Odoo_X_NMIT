@@ -427,7 +427,7 @@ export default function StockManagement() {
                     <Plus className="w-4 h-4 mr-2" />
                     New
                   </Button>
-                  <Search className="w-5 h-5 text-gray-500" />
+                  {/* <Search className="w-5 h-5 text-gray-500" /> */}
                   <button
                     onClick={() =>
                       setViewMode(viewMode === "list" ? "grid" : "list")

@@ -38,43 +38,50 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
         id: "all",
         label: "All",
         count: filterCounts.all.total || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "draft",
         label: "Draft",
         count: filterCounts.all.draft || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "confirmed",
         label: "Confirmed",
         count: filterCounts.all.confirmed || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "in_progress",
         label: "In-Progress",
         count: filterCounts.all.in_progress || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "to_close",
         label: "To Close",
         count: filterCounts.all.to_close || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "not_assigned",
         label: "Not Assigned",
         count: filterCounts.all.not_assigned || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "late",
         label: "Late",
         count: filterCounts.all.late || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
     ],
     my: [
@@ -82,35 +89,40 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
         id: "all",
         label: "All My Orders",
         count: filterCounts.my.total || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "confirmed",
         label: "Confirmed",
         count: filterCounts.my.confirmed || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "in_progress",
         label: "In-Progress",
         count: filterCounts.my.in_progress || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "to_close",
         label: "To Close",
         count: filterCounts.my.to_close || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
         id: "late",
         label: "Late",
         count: filterCounts.my.late || 0,
-        color: "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
     ],
   };
-  
+
   return baseFilters[activeFilterGroup] || baseFilters.all;
 };
 
@@ -373,30 +385,25 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       {/* Header Section - Title and Menu Bar */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 lg:px-6 py-4 shadow-sm">
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           {/* Left side - Menu and Actions */}
           <div className="flex items-center gap-4 w-full lg:w-auto">
             {/* Hamburger Menu */}
-            <Button variant="ghost" size="icon" className="lg:hidden hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+            >
               <Menu className="w-5 h-5" />
             </Button>
 
-            {/* App Logo and Name */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Package className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-gray-900">
-                ManufacturingOS
-              </span>
-            </div>
 
             {/* New Button */}
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105"
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
               onClick={() =>
                 (window.location.href = "/manufacturing-orders/new")
               }
@@ -415,19 +422,19 @@ export default function Dashboard() {
                 placeholder="Search Manufacturing Orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-blue-300"
+                className="pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-300 bg-white/80 backdrop-blur-sm"
               />
             </div>
 
             {/* View Mode Toggle */}
-            <div className="flex items-center border border-blue-200 rounded-md bg-blue-50">
+            <div className="flex items-center border border-blue-200 rounded-lg bg-blue-50/80 backdrop-blur-sm">
               <Button
                 variant={viewMode === "list" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("list")}
-                className={`rounded-r-none border-r transition-all duration-200 cursor-pointer ${
-                  viewMode === "list" 
-                    ? "bg-blue-600 text-white hover:bg-blue-700" 
+                className={`rounded-r-none border-r transition-all duration-300 cursor-pointer ${
+                  viewMode === "list"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
                     : "hover:bg-blue-100 hover:text-blue-600"
                 }`}
               >
@@ -437,26 +444,21 @@ export default function Dashboard() {
                 variant={viewMode === "kanban" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("kanban")}
-                className={`rounded-l-none transition-all duration-200 cursor-pointer ${
-                  viewMode === "kanban" 
-                    ? "bg-blue-600 text-white hover:bg-blue-700" 
+                className={`rounded-l-none transition-all duration-300 cursor-pointer ${
+                  viewMode === "kanban"
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md"
                     : "hover:bg-blue-100 hover:text-blue-600"
                 }`}
               >
                 <Grid3X3 className="w-4 h-4" />
               </Button>
             </div>
-
-            {/* User Profile
-            // <Button variant="ghost" size="icon" className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
-            //   <User className="w-5 h-5" />
-            // </Button> */}
           </div>
         </div>
       </div>
 
       {/* Filter Section - Dashboard */}
-      <div className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 lg:px-6 py-4 shadow-sm">
         <div className="space-y-4">
           {/* Filter Group Toggle */}
           <div className="flex gap-1">
@@ -464,9 +466,9 @@ export default function Dashboard() {
               variant={activeFilterGroup === "all" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveFilterGroup("all")}
-              className={`text-sm transition-all duration-200 cursor-pointer ${
-                activeFilterGroup === "all" 
-                  ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+              className={`text-sm transition-all duration-300 cursor-pointer ${
+                activeFilterGroup === "all"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg"
                   : "hover:bg-blue-50 hover:text-blue-600 border border-blue-200"
               }`}
             >
@@ -476,9 +478,9 @@ export default function Dashboard() {
               variant={activeFilterGroup === "my" ? "default" : "ghost"}
               size="sm"
               onClick={() => setActiveFilterGroup("my")}
-              className={`text-sm transition-all duration-200 cursor-pointer ${
-                activeFilterGroup === "my" 
-                  ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+              className={`text-sm transition-all duration-300 cursor-pointer ${
+                activeFilterGroup === "my"
+                  ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg"
                   : "hover:bg-blue-50 hover:text-blue-600 border border-blue-200"
               }`}
             >
@@ -496,36 +498,17 @@ export default function Dashboard() {
                 }
                 size="sm"
                 onClick={() => setActiveStatusFilter(filter.id)}
-                className={`flex flex-col items-center py-2 px-3 h-auto transition-all duration-200 cursor-pointer transform hover:scale-105 ${
-                  activeStatusFilter === filter.id 
-                    ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md" 
+                className={`flex flex-col items-center py-2 px-3 h-auto transition-all duration-300 cursor-pointer transform hover:scale-105 ${
+                  activeStatusFilter === filter.id
+                    ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-lg"
                     : filter.color
                 }`}
               >
-                <span className="text-lg font-semibold">
-                  {filter.count}
-                </span>
+                <span className="text-lg font-semibold">{filter.count}</span>
                 <span className="text-xs">{filter.label}</span>
               </Button>
             ))}
           </div>
-
-          {/* Filter Descriptions */}
-          {/* <div className="text-xs text-gray-500 space-y-1">
-            <p>
-              • Filter Manufacturing orders when user clicks on any of the state
-              button, highlight the clicked button and add filter on search
-              according to the button click
-            </p>
-            <p>
-              • Late Filter show manufacturing order whose start date has
-              already passed and are still in confirmed state.
-            </p>
-            <p>
-              • Not Assigned filter shows manufacturing order which don't have
-              any assignee.
-            </p>
-          </div> */}
         </div>
       </div>
 
@@ -533,9 +516,9 @@ export default function Dashboard() {
       <div className="px-4 lg:px-6 py-6">
         {viewMode === "list" ? (
           /* List View - Table */
-          <div className="bg-white rounded-lg border border-blue-200 shadow-sm overflow-hidden hover:shadow-md transition-all duration-200">
+          <div className="bg-white/80 backdrop-blur-md rounded-xl border border-blue-200/60 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
             {/* Table Header */}
-            <div className="bg-blue-50 border-b border-blue-200">
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-200/60">
               <div className="grid grid-cols-8 gap-4 px-4 py-3 text-sm font-medium text-blue-700">
                 <div className="flex items-center">
                   <Checkbox
@@ -544,7 +527,7 @@ export default function Dashboard() {
                       filteredOrders.length > 0
                     }
                     onCheckedChange={handleSelectAll}
-                    className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
+                    className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-300"
                   />
                 </div>
                 <div className="hidden sm:block">Reference</div>
@@ -580,7 +563,7 @@ export default function Dashboard() {
                 filteredOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-blue-50 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-blue-300"
+                    className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-blue-50/50 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400 hover:shadow-md"
                   >
                     <div className="flex items-center">
                       <Checkbox
@@ -588,7 +571,7 @@ export default function Dashboard() {
                         onCheckedChange={(checked) =>
                           handleSelectOrder(order.id, checked)
                         }
-                        className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
+                        className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-300"
                       />
                     </div>
                     <div className="font-mono text-sm text-gray-900 hidden sm:block">
@@ -607,7 +590,7 @@ export default function Dashboard() {
                             ? "default"
                             : "destructive"
                         }
-                        className="text-xs hover:scale-105 transition-all duration-200 cursor-pointer"
+                        className="text-xs hover:scale-105 transition-all duration-300 cursor-pointer"
                       >
                         {order.componentStatus}
                       </Badge>
@@ -619,10 +602,18 @@ export default function Dashboard() {
                       {order.unit}
                     </div>
                     <div className="flex items-center justify-between">
-                      <Badge className={`text-xs ${getStatusColor(order.state)} hover:scale-105 transition-all duration-200 cursor-pointer`}>
+                      <Badge
+                        className={`text-xs ${getStatusColor(
+                          order.state
+                        )} hover:scale-105 transition-all duration-300 cursor-pointer`}
+                      >
                         {order.state}
                       </Badge>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+                      >
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </div>
@@ -644,7 +635,7 @@ export default function Dashboard() {
               Array.from({ length: 6 }).map((_, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-lg border border-blue-200 p-6 animate-pulse"
+                  className="bg-white/80 backdrop-blur-md rounded-xl border border-blue-200/60 p-6 animate-pulse"
                 >
                   <div className="h-4 bg-gray-200 rounded mb-4"></div>
                   <div className="h-3 bg-gray-200 rounded mb-2"></div>
@@ -659,7 +650,7 @@ export default function Dashboard() {
               filteredOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="bg-white rounded-lg border border-blue-200 p-6 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer"
+                  className="bg-white/80 backdrop-blur-md rounded-xl border border-blue-200/60 p-6 shadow-lg hover:shadow-xl hover:border-blue-400 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -668,7 +659,7 @@ export default function Dashboard() {
                         onCheckedChange={(checked) =>
                           handleSelectOrder(order.id, checked)
                         }
-                        className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-200"
+                        className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-300"
                       />
                       <div>
                         <div className="font-mono text-sm font-semibold text-gray-900">
@@ -679,7 +670,11 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+                    >
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </div>
@@ -714,9 +709,7 @@ export default function Dashboard() {
                     <Badge className={`text-xs ${getStatusColor(order.state)}`}>
                       {order.state}
                     </Badge>
-                    <div className="text-xs text-gray-500">
-                      {order.unit}
-                    </div>
+                    <div className="text-xs text-gray-500">{order.unit}</div>
                   </div>
                 </div>
               ))
@@ -734,7 +727,7 @@ export default function Dashboard() {
           {filteredOrders.map((order) => (
             <div
               key={`mobile-${order.id}`}
-              className="bg-white rounded-lg border border-blue-200 p-4 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer"
+              className="bg-white/80 backdrop-blur-md rounded-xl border border-blue-200/60 p-4 shadow-lg hover:shadow-xl hover:border-blue-400 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -753,7 +746,11 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
+                >
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </div>
@@ -778,7 +775,7 @@ export default function Dashboard() {
                           ? "default"
                           : "destructive"
                       }
-                      className="text-xs hover:scale-105 transition-all duration-200 cursor-pointer"
+                      className="text-xs hover:scale-105 transition-all duration-300 cursor-pointer"
                     >
                       {order.componentStatus}
                     </Badge>
@@ -787,7 +784,11 @@ export default function Dashboard() {
                 <div>
                   <span className="text-gray-500">State:</span>
                   <div>
-                    <Badge className={`text-xs ${getStatusColor(order.state)} hover:scale-105 transition-all duration-200 cursor-pointer`}>
+                    <Badge
+                      className={`text-xs ${getStatusColor(
+                        order.state
+                      )} hover:scale-105 transition-all duration-300 cursor-pointer`}
+                    >
                       {order.state}
                     </Badge>
                   </div>
@@ -800,8 +801,8 @@ export default function Dashboard() {
 
       {/* Create Order Dialog */}
       {showCreateDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-blue-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-blue-200/60">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -811,7 +812,7 @@ export default function Dashboard() {
                   variant="ghost"
                   size="icon"
                   onClick={() => setShowCreateDialog(false)}
-                  className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 cursor-pointer"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 cursor-pointer"
                 >
                   <XCircle className="w-4 h-4" />
                 </Button>
@@ -830,7 +831,7 @@ export default function Dashboard() {
                         product_id: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-200 cursor-pointer"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm"
                   >
                     <option value="">Select a product</option>
                     {/* You would populate this with actual products from API */}
@@ -854,7 +855,7 @@ export default function Dashboard() {
                         quantity: parseInt(e.target.value) || 1,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-200 cursor-pointer"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm"
                   />
                 </div>
 
@@ -871,7 +872,7 @@ export default function Dashboard() {
                         scheduled_start: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-200 cursor-pointer"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm"
                   />
                 </div>
 
@@ -887,7 +888,7 @@ export default function Dashboard() {
                         priority: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-200 cursor-pointer"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm"
                   >
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -909,7 +910,7 @@ export default function Dashboard() {
                       }))
                     }
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-200 cursor-pointer"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 hover:border-blue-300 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm"
                     placeholder="Optional notes..."
                   />
                 </div>
@@ -919,13 +920,13 @@ export default function Dashboard() {
                 <Button
                   variant="outline"
                   onClick={() => setShowCreateDialog(false)}
-                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-200 cursor-pointer"
+                  className="hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-all duration-300 cursor-pointer"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleCreateOrder}
-                  className="bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg transform hover:scale-105"
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   Create Order
                 </Button>
