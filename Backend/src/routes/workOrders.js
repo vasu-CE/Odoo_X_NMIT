@@ -60,19 +60,9 @@ router.get('/', authenticate, [
             select: {
               id: true,
               orderNumber: true,
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  type: true
-                }
-              }
-            }
-          },
-          workCenter: {
-            select: {
-              id: true,
-              name: true,
+              finishedProduct: true,
+              quantity: true,
+              units: true,
               status: true
             }
           },
@@ -113,6 +103,7 @@ router.get('/', authenticate, [
 // @desc    Get work orders for shop floor operator (assigned to them)
 // @access  Private (SHOP_FLOOR_OPERATOR only)
 router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR' , 'MANUFACTURING_MANAGER'), async (req, res) => {
+  console.log('Shop floor work orders');
   try {
     const { status, page = 1, limit = 20 } = req.query;
 
@@ -137,22 +128,12 @@ router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR' , 'MANUF
             select: {
               id: true,
               orderNumber: true,
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  type: true
-                }
-              }
-            }
-          },
-          workCenter: {
-            select: {
-              id: true,
-              name: true,
+              finishedProduct: true,
+              quantity: true,
+              units: true,
               status: true
             }
-          }
+          },
         }
       }),
       prisma.workOrder.count({ where })
@@ -207,22 +188,12 @@ router.get('/my-assignments', authenticate, async (req, res) => {
             select: {
               id: true,
               orderNumber: true,
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  type: true
-                }
-              }
-            }
-          },
-          workCenter: {
-            select: {
-              id: true,
-              name: true,
+              finishedProduct: true,
+              quantity: true,
+              units: true,
               status: true
             }
-          }
+          },
         }
       }),
       prisma.workOrder.count({ where })
@@ -269,15 +240,6 @@ router.get('/:id', authenticate, async (req, res) => {
                 type: true
               }
             }
-          }
-        },
-        workCenter: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            status: true,
-            hourlyRate: true
           }
         },
         assignedTo: {
@@ -527,7 +489,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
 // @route   PATCH /api/work-orders/:id/start
 // @desc    Start work order
 // @access  Private (SHOP_FLOOR_OPERATOR only)
-router.patch('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
+router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -544,12 +506,9 @@ router.patch('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async
         manufacturingOrder: {
           select: {
             orderNumber: true,
-            product: { select: { name: true } }
+            finishedProduct: true
           }
         },
-        workCenter: {
-          select: { name: true }
-        }
       }
     });
 
@@ -576,7 +535,7 @@ router.patch('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async
 // @route   PATCH /api/work-orders/:id/pause
 // @desc    Pause work order
 // @access  Private (SHOP_FLOOR_OPERATOR only)
-router.patch('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
+router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -623,12 +582,9 @@ router.patch('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async
         manufacturingOrder: {
           select: {
             orderNumber: true,
-            product: { select: { name: true } }
+            finishedProduct: true
           }
         },
-        workCenter: {
-          select: { name: true }
-        }
       }
     });
 
@@ -672,12 +628,9 @@ router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUF
         manufacturingOrder: {
           select: {
             orderNumber: true,
-            product: { select: { name: true } }
+            finishedProduct: true
           }
         },
-        workCenter: {
-          select: { name: true }
-        }
       }
     });
 
@@ -753,12 +706,9 @@ router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
         manufacturingOrder: {
           select: {
             orderNumber: true,
-            product: { select: { name: true } }
+            finishedProduct: true
           }
         },
-        workCenter: {
-          select: { name: true }
-        }
       }
     });
 
@@ -802,12 +752,9 @@ router.patch('/:id/cancel', authenticate, authorize('SHOP_FLOOR_OPERATOR'), asyn
         manufacturingOrder: {
           select: {
             orderNumber: true,
-            product: { select: { name: true } }
+            finishedProduct: true
           }
         },
-        workCenter: {
-          select: { name: true }
-        }
       }
     });
 

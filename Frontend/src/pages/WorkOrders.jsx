@@ -271,8 +271,8 @@ export default function WorkOrders() {
     const matchesSearch =
       wo.operationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       wo.manufacturingOrder?.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wo.workCenter?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wo.manufacturingOrder?.product?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      wo.workCenterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      wo.manufacturingOrder?.finishedProduct?.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesSearch;
   });
@@ -391,13 +391,13 @@ export default function WorkOrders() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center text-sm text-gray-900">
                               <Factory className="w-4 h-4 mr-2 text-gray-400" />
-                              {workOrder.workCenter?.name}
+                              {workOrder.workCenterName}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center text-sm text-gray-900">
                               <Package className="w-4 h-4 mr-2 text-gray-400" />
-                              {workOrder.manufacturingOrder?.product?.name || "-"}
+                              {workOrder.manufacturingOrder?.finishedProduct || "-"}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -538,12 +538,12 @@ export default function WorkOrders() {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2">
                       <Factory className="w-4 h-4 text-gray-400" />
-                      <span>{workOrder.workCenter?.name}</span>
+                      <span>{workOrder.workCenterName}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Package className="w-4 h-4 text-gray-400" />
                       <span>
-                        {workOrder.manufacturingOrder?.product?.name || "-"}
+                        {workOrder.manufacturingOrder?.finishedProduct || "-"}
                       </span>
                     </div>
                     <div className="flex justify-between">
