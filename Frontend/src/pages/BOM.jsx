@@ -26,6 +26,8 @@ import {
   ArrowLeft,
   Save,
   X,
+  Factory,
+  Clock,
 } from "lucide-react";
 
 export default function BOMPage() {
@@ -44,6 +46,8 @@ export default function BOMPage() {
     reference: "",
     components: []
   });
+  const [activeTab, setActiveTab] = useState("components");
+  const [workOrders, setWorkOrders] = useState([]);
 
   // Static sample data for demonstration
   const sampleBOMs = [
@@ -272,6 +276,25 @@ export default function BOMPage() {
       ...prev,
       components: prev.components.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleAddWorkOrder = () => {
+    setWorkOrders(prev => [...prev, {
+      id: Date.now(),
+      operation: "",
+      work_center: "",
+      expected_duration: ""
+    }]);
+  };
+
+  const handleUpdateWorkOrder = (index, field, value) => {
+    setWorkOrders(prev => prev.map((wo, i) => 
+      i === index ? { ...wo, [field]: value } : wo
+    ));
+  };
+
+  const handleRemoveWorkOrder = (index) => {
+    setWorkOrders(prev => prev.filter((_, i) => i !== index));
   };
 
   // Filter BOMs
@@ -507,7 +530,7 @@ export default function BOMPage() {
         {/* New BOM Form Modal */}
         {showNewForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Bill of Materials</h2>
                 <div className="flex gap-2">
@@ -525,7 +548,7 @@ export default function BOMPage() {
               <div className="space-y-4">
                 <div className="text-sm text-gray-500 mb-2">BOM-000001</div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="finished_product">Finished product</Label>
                     <select
@@ -570,60 +593,183 @@ export default function BOMPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium">Components</h3>
-                    <Button size="sm" onClick={handleAddComponent}>
-                      Add a product
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {formData.components.map((component, index) => (
-                      <div key={index} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg">
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <select
-                            value={component.product_name}
-                            onChange={(e) => handleUpdateComponent(index, 'product_name', e.target.value)}
-                            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
-                          >
-                            <option value="">Select Product</option>
-                            {products.filter(p => p.category !== "Furniture").map(product => (
-                              <option key={product.id} value={product.name}>
-                                {product.name}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="flex">
-                            <Input
-                              type="number"
-                              value={component.quantity}
-                              onChange={(e) => handleUpdateComponent(index, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="rounded-r-none"
-                            />
-                            <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm text-gray-600">
-                              {component.unit}
-                            </span>
+                {/* Tabs */}
+                <div className="border-b border-gray-200">
+                  <nav className="-mb-px flex space-x-8">
+                    <button
+                      onClick={() => setActiveTab("components")}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "components"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <Package className="w-4 h-4 inline mr-2" />
+                      Components
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("workorders")}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "workorders"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <Factory className="w-4 h-4 inline mr-2" />
+                      Work Orders
+                    </button>
+                  </nav>
+                </div>
+
+                {/* Tab Content */}
+                {activeTab === "components" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">Components</h3>
+                      <Button size="sm" onClick={handleAddComponent}>
+                        Add a product
+                      </Button>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {formData.components.map((component, index) => (
+                        <div key={index} className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                          <div className="flex-1 grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium text-gray-600">To consume</Label>
+                              <select
+                                value={component.product_name}
+                                onChange={(e) => handleUpdateComponent(index, 'product_name', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                <option value="">Select Product</option>
+                                {products.filter(p => p.category !== "Furniture").map(product => (
+                                  <option key={product.id} value={product.name}>
+                                    {product.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs font-medium text-gray-600">Units</Label>
+                              <div className="flex">
+                                <Input
+                                  type="number"
+                                  value={component.quantity}
+                                  onChange={(e) => handleUpdateComponent(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                  className="rounded-r-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="numeric field, float value >0"
+                                />
+                                <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm text-gray-600 flex items-center">
+                                  {component.unit}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center pt-6">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleRemoveComponent(index)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRemoveComponent(index)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    ))}
-                    {formData.components.length === 0 && (
-                      <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
-                        <Package className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                        <p>No components added yet</p>
-                      </div>
-                    )}
+                      ))}
+                      {formData.components.length === 0 && (
+                        <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                          <Package className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                          <p>No components added yet</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {activeTab === "workorders" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">Work Orders</h3>
+                      <Button size="sm" onClick={handleAddWorkOrder}>
+                        Add a line
+                      </Button>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200 bg-gray-50">
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Operations</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Work Center</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">Expected Duration</th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-700 w-20">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {workOrders.map((workOrder, index) => (
+                            <tr key={workOrder.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                              <td className="py-3 px-4">
+                                <Input
+                                  value={workOrder.operation}
+                                  onChange={(e) => handleUpdateWorkOrder(index, 'operation', e.target.value)}
+                                  className="w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Operation name"
+                                />
+                              </td>
+                              <td className="py-3 px-4">
+                                <select
+                                  value={workOrder.work_center}
+                                  onChange={(e) => handleUpdateWorkOrder(index, 'work_center', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                  <option value="">Select Work Center</option>
+                                  <option value="Assembly">Assembly</option>
+                                  <option value="Machining">Machining</option>
+                                  <option value="Packaging">Packaging</option>
+                                  <option value="Quality Control">Quality Control</option>
+                                </select>
+                              </td>
+                              <td className="py-3 px-4">
+                                <div className="flex">
+                                  <Input
+                                    type="number"
+                                    value={workOrder.expected_duration}
+                                    onChange={(e) => handleUpdateWorkOrder(index, 'expected_duration', e.target.value)}
+                                    className="rounded-r-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Duration"
+                                  />
+                                  <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm text-gray-600 flex items-center">
+                                    min
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRemoveWorkOrder(index)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                          {workOrders.length === 0 && (
+                            <tr>
+                              <td colSpan="4" className="py-8 text-center text-gray-500">
+                                <Factory className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                <p>No work orders added yet</p>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 <div className="text-xs text-gray-500">
                   On New Button, Create a template which can be used in manufacturing orders
@@ -636,7 +782,7 @@ export default function BOMPage() {
         {/* Edit BOM Form Modal */}
         {showEditForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Bill of Materials</h2>
                 <div className="flex gap-2">
@@ -689,44 +835,99 @@ export default function BOMPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium">Components</h3>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    {formData.components.map((component, index) => (
-                      <div key={index} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg">
-                        <div className="flex-1 grid grid-cols-2 gap-2">
-                          <div className="text-sm text-gray-600">{component.product_name}</div>
-                          <div className="text-sm text-gray-600">
-                            {component.quantity} {component.unit}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {/* Tabs */}
+                <div className="border-b border-gray-200">
+                  <nav className="-mb-px flex space-x-8">
+                    <button
+                      onClick={() => setActiveTab("components")}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "components"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <Package className="w-4 h-4 inline mr-2" />
+                      Components
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("workorders")}
+                      className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "workorders"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <Factory className="w-4 h-4 inline mr-2" />
+                      Work Orders
+                    </button>
+                  </nav>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-medium">Operations</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 px-3 font-medium text-gray-700">Work Center</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700">Expected Duration</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td className="py-2 px-3 text-gray-500">-</td>
-                          <td className="py-2 px-3 text-gray-500">-</td>
-                        </tr>
-                      </tbody>
-                    </table>
+                {/* Tab Content */}
+                {activeTab === "components" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">Components</h3>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {formData.components.map((component, index) => (
+                        <div key={index} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg">
+                          <div className="flex-1 grid grid-cols-2 gap-2">
+                            <div className="text-sm text-gray-600">{component.product_name}</div>
+                            <div className="text-sm text-gray-600">
+                              {component.quantity} {component.unit}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {formData.components.length === 0 && (
+                        <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+                          <Package className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                          <p>No components available</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {activeTab === "workorders" && (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium">Work Orders</h3>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-200">
+                            <th className="text-left py-2 px-3 font-medium text-gray-700">Operations</th>
+                            <th className="text-left py-2 px-3 font-medium text-gray-700">Work Center</th>
+                            <th className="text-left py-2 px-3 font-medium text-gray-700">Expected Duration</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {workOrders.length > 0 ? (
+                            workOrders.map((workOrder, index) => (
+                              <tr key={workOrder.id} className="border-b border-gray-100">
+                                <td className="py-2 px-3 text-sm text-gray-600">{workOrder.operation}</td>
+                                <td className="py-2 px-3 text-sm text-gray-600">{workOrder.work_center}</td>
+                                <td className="py-2 px-3 text-sm text-gray-600">{workOrder.expected_duration} min</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="3" className="py-8 text-center text-gray-500">
+                                <Factory className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                <p>No work orders available</p>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 <div className="text-xs text-gray-500">
                   All fields of bom should be populate on manufacturing order, if bom is selected on manufacturing order

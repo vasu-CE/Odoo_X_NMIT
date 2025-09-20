@@ -192,8 +192,6 @@ export default function WorkOrders() {
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-gray-900">Work Orders</h1>
             <div className="flex items-center gap-2">
-              <Search className="w-5 h-5 text-gray-500" />
-              <Plus className="w-5 h-5 text-gray-500" />
               <button
                 onClick={() =>
                   setViewMode(viewMode === "list" ? "grid" : "list")
