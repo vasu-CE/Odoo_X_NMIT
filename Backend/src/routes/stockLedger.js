@@ -361,10 +361,12 @@ router.put('/products/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'
 // @desc    Create stock movement (incoming/outgoing/adjustment)
 // @access  Private
 router.post('/movements', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
-  body('productId').notEmpty().withMessage('Product ID is required'),
+  body('productId').optional().isString(),
+  body('productName').optional().isString(),
   body('movementType').isIn(['IN', 'OUT', 'ADJUSTMENT']).withMessage('Invalid movement type'),
   body('quantity').isInt({ min: 1 }).withMessage('Quantity must be positive'),
   body('unitCost').optional().isFloat({ min: 0 }),
+  body('unit').optional().isString(),
   body('reference').optional().isString(),
   body('referenceId').optional().isString(),
   body('notes').optional().isString()
@@ -381,18 +383,56 @@ router.post('/movements', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'),
 
     const {
       productId,
+      productName,
       movementType,
       quantity,
       unitCost,
+      unit,
       reference,
       referenceId,
       notes
     } = req.body;
 
-    // Verify product exists
-    const product = await prisma.product.findUnique({
-      where: { id: productId }
-    });
+    let product;
+    let actualProductId = productId;
+
+    if (productId) {
+      // Verify product exists by ID
+      product = await prisma.product.findUnique({
+        where: { id: productId }
+      });
+    } else if (productName) {
+      // Find or create product by name
+      product = await prisma.product.findFirst({
+        where: { 
+          name: { 
+            equals: productName, 
+            mode: 'insensitive' 
+          } 
+        }
+      });
+
+      if (!product) {
+        // Create new product
+        product = await prisma.product.create({
+          data: {
+            name: productName,
+            type: 'FINISHED_GOOD',
+            unit: unit || 'PCS',
+            purchasePrice: unitCost || 0,
+            currentStock: 0,
+            reorderPoint: 0,
+            category: 'Stock Entry'
+          }
+        });
+      }
+      actualProductId = product.id;
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Either productId or productName is required'
+      });
+    }
 
     if (!product) {
       return res.status(404).json({
@@ -401,22 +441,17 @@ router.post('/movements', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'),
       });
     }
 
-    // Check if outgoing movement has sufficient stock
-    if (movementType === 'OUT' && product.currentStock < quantity) {
-      return res.status(400).json({
-        success: false,
-        error: 'Insufficient stock for outgoing movement'
-      });
-    }
+    // Allow any stock movement - no constraints
+    // Note: In production, you might want to add business logic constraints here
 
-    // Calculate new stock level
+    // Calculate new stock level - allow negative stock
     let newStock = product.currentStock;
     if (movementType === 'IN') {
       newStock += quantity;
     } else if (movementType === 'OUT') {
-      newStock -= quantity;
+      newStock -= quantity; // Allow negative stock
     } else if (movementType === 'ADJUSTMENT') {
-      newStock = quantity; // Direct adjustment
+      newStock = quantity; // Direct adjustment - can be any value
     }
 
     // Use transaction to ensure data consistency
@@ -424,7 +459,7 @@ router.post('/movements', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'),
       // Create stock movement
       const stockMovement = await tx.stockMovement.create({
         data: {
-          productId,
+          productId: actualProductId,
           movementType,
           quantity,
           unitCost,
@@ -437,7 +472,7 @@ router.post('/movements', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'),
 
       // Update product stock
       const updatedProduct = await tx.product.update({
-        where: { id: productId },
+        where: { id: actualProductId },
         data: { currentStock: newStock }
       });
 
