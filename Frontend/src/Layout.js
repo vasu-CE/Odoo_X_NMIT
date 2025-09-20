@@ -85,7 +85,7 @@ const navigationItems = [
   },
 ];
 
-export default function Layout({ children }) {
+export default function Layout({ children, onLogout }) {
   const location = useLocation();
 
   return (
@@ -225,13 +225,24 @@ export default function Layout({ children }) {
                   Manage production workflows
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-gray-200/60"
-              >
-                <Settings className="w-4 h-4 text-gray-500" />
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-gray-200/60"
+                >
+                  <Settings className="w-4 h-4 text-gray-500" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-red-100 text-red-600"
+                  onClick={onLogout}
+                  title="Logout"
+                >
+                  <User className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </SidebarFooter>
         </Sidebar>
