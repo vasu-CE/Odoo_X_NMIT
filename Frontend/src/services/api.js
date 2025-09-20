@@ -590,6 +590,49 @@ class ApiService {
     );
     return response.data;
   }
+
+  // Stock Ledger Methods
+  async getStockLedgerProducts(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/stock-ledger/products${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async getStockLedgerAggregation() {
+    return this.request('/stock-ledger/aggregation');
+  }
+
+  async createStockLedgerProduct(data) {
+    return this.request('/stock-ledger/products', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateStockLedgerProduct(id, data) {
+    return this.request(`/stock-ledger/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async createStockMovement(data) {
+    return this.request('/stock-ledger/movements', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async getProductMovements(productId, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/stock-ledger/movements/${productId}${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async autoUpdateStock(data) {
+    return this.request('/stock-ledger/auto-update', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
 }
 
 // Create and export a singleton instance

@@ -15,6 +15,7 @@ import bomRoutes from './routes/boms.js';
 import workCenterRoutes from './routes/workCenters.js';
 import productRoutes from './routes/products.js';
 import stockRoutes from './routes/stock.js';
+import stockLedgerRoutes from './routes/stockLedger.js';
 import reportRoutes from './routes/reports.js';
 import userRoutes from './routes/users.js';
 
@@ -82,6 +83,7 @@ app.use('/api/boms', bomRoutes);
 app.use('/api/work-centers', workCenterRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/stock-movements', stockRoutes);
+app.use('/api/stock-ledger', stockLedgerRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/users', userRoutes);
 
