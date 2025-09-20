@@ -18,6 +18,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import apiService from "../services/api";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
@@ -159,20 +160,25 @@ export default function ProfilePage() {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      
+
+      console.log(response);
       if (response.success) {
-        setMessage("Password changed successfully!");
+        toast.success("Password changed successfully!");
         setPasswordData({
           currentPassword: "",
           newPassword: "",
           confirmPassword: ""
         });
       } else {
+        toast.error("Failed to change password: " + response.error);
         setMessage("Failed to change password: " + response.error);
       }
     } catch (error) {
-      console.error("Error changing password:", error);
-      setMessage("Error changing password: " + error.message);
+      const errorMsg =
+        error?.response?.data?.error ||
+        error?.message ||
+        "An unknown error occurred";
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -449,7 +455,7 @@ export default function ProfilePage() {
               <Button
                 onClick={handleChangePassword}
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white/90"
               >
                 {isSubmitting ? (
                   <>
