@@ -40,13 +40,6 @@ const navigationItems = [
     bgColor: "bg-blue-50",
   },
   {
-    title: "Manufacturing Orders",
-    url: createPageUrl("ManufacturingOrders"),
-    icon: Package2,
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-  },
-  {
     title: "Work Orders",
     url: createPageUrl("WorkOrders"),
     icon: Zap,
