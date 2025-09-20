@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { WorkCenter, WorkOrder } from '../../entities/all';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { WorkCenter, WorkOrder } from "../../entities/all";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import {
   ArrowLeft,
   Factory,
@@ -21,25 +21,25 @@ import {
   AlertCircle,
   BarChart3,
   Calendar,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 
 const statusConfig = {
   active: {
-    color: 'bg-green-100 text-green-800',
+    color: "bg-green-100 text-green-800",
     icon: Activity,
-    label: 'Active'
+    label: "Active",
   },
   maintenance: {
-    color: 'bg-yellow-100 text-yellow-800',
+    color: "bg-yellow-100 text-yellow-800",
     icon: AlertTriangle,
-    label: 'Maintenance'
+    label: "Maintenance",
   },
   inactive: {
-    color: 'bg-red-100 text-red-800',
+    color: "bg-red-100 text-red-800",
     icon: Factory,
-    label: 'Inactive'
-  }
+    label: "Inactive",
+  },
 };
 
 export default function WorkCenterDetail() {
@@ -50,14 +50,14 @@ export default function WorkCenterDetail() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     cost_per_hour: 0,
-    status: 'active',
+    status: "active",
     capacity: 1,
-    location: '',
-    manager: '',
-    notes: ''
+    location: "",
+    manager: "",
+    notes: "",
   });
 
   useEffect(() => {
@@ -71,50 +71,55 @@ export default function WorkCenterDetail() {
       setLoading(true);
       const [workCenterData, workOrdersData] = await Promise.all([
         WorkCenter.get(id),
-        WorkOrder.list()
+        WorkOrder.list(),
       ]);
 
       if (workCenterData) {
         setWorkCenter(workCenterData);
         setFormData({
-          name: workCenterData.name || '',
-          description: workCenterData.description || '',
+          name: workCenterData.name || "",
+          description: workCenterData.description || "",
           cost_per_hour: workCenterData.cost_per_hour || 0,
-          status: workCenterData.status || 'active',
+          status: workCenterData.status || "active",
           capacity: workCenterData.capacity || 1,
-          location: workCenterData.location || '',
-          manager: workCenterData.manager || '',
-          notes: workCenterData.notes || ''
+          location: workCenterData.location || "",
+          manager: workCenterData.manager || "",
+          notes: workCenterData.notes || "",
         });
 
         // Filter work orders for this work center
-        const relatedWorkOrders = workOrdersData.filter(wo => wo.work_center_id === parseInt(id));
+        const relatedWorkOrders = workOrdersData.filter(
+          (wo) => wo.work_center_id === parseInt(id)
+        );
         setWorkOrders(relatedWorkOrders);
       }
     } catch (error) {
-      console.error('Error loading work center details:', error);
-      toast.error('Failed to load work center details');
+      console.error("Error loading work center details:", error);
+      toast.error("Failed to load work center details");
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field) => (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: e.target.value
+      [field]: e.target.value,
     }));
   };
 
   const handleSave = async () => {
     try {
-      const result = id === 'new' 
-        ? await WorkCenter.create(formData)
-        : await WorkCenter.update(id, formData);
+      const result =
+        id === "new"
+          ? await WorkCenter.create(formData)
+          : await WorkCenter.update(id, formData);
 
       if (result) {
-        toast.success(`Work Center ${id === 'new' ? 'created' : 'updated'} successfully`);
-        if (id === 'new') {
+        toast.success(
+          `Work Center ${id === "new" ? "created" : "updated"} successfully`
+        );
+        if (id === "new") {
           navigate(`/work-centers/${result.id}`);
         } else {
           setIsEditing(false);
@@ -122,8 +127,8 @@ export default function WorkCenterDetail() {
         }
       }
     } catch (error) {
-      console.error('Error saving work center:', error);
-      toast.error('Failed to save work center');
+      console.error("Error saving work center:", error);
+      toast.error("Failed to save work center");
     }
   };
 
@@ -133,7 +138,9 @@ export default function WorkCenterDetail() {
 
   const calculateUtilization = () => {
     if (!workCenter) return 0;
-    const activeWorkOrders = workOrders.filter(wo => wo.status === 'in_progress').length;
+    const activeWorkOrders = workOrders.filter(
+      (wo) => wo.status === "in_progress"
+    ).length;
     return Math.min((activeWorkOrders / workCenter.capacity) * 100, 100);
   };
 
@@ -154,13 +161,13 @@ export default function WorkCenterDetail() {
     );
   }
 
-  if (!workCenter && id !== 'new') {
+  if (!workCenter && id !== "new") {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600">Work center not found</p>
-          <Button onClick={() => navigate('/work-centers')} className="mt-4">
+          <Button onClick={() => navigate("/work-centers")} className="mt-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Work Centers
           </Button>
@@ -181,7 +188,7 @@ export default function WorkCenterDetail() {
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => navigate('/work-centers')}
+              onClick={() => navigate("/work-centers")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -189,7 +196,9 @@ export default function WorkCenterDetail() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {id === 'new' ? 'Create New Work Center' : (workCenter?.name || 'Work Center Details')}
+                {id === "new"
+                  ? "Create New Work Center"
+                  : workCenter?.name || "Work Center Details"}
               </h1>
               {workCenter && (
                 <div className="flex items-center gap-2 mt-1">
@@ -198,7 +207,8 @@ export default function WorkCenterDetail() {
                     {statusInfo.label}
                   </Badge>
                   <span className="text-sm text-gray-500">
-                    Created {new Date(workCenter.created_date).toLocaleDateString()}
+                    Created{" "}
+                    {new Date(workCenter.created_date).toLocaleDateString()}
                   </span>
                 </div>
               )}
@@ -206,19 +216,19 @@ export default function WorkCenterDetail() {
           </div>
 
           <div className="flex gap-2">
-            {id !== 'new' && (
+            {id !== "new" && (
               <>
                 {!isEditing ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                  >
+                  <Button variant="outline" onClick={() => setIsEditing(true)}>
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </Button>
                 ) : (
                   <>
-                    <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditing(false)}
+                    >
                       Cancel
                     </Button>
                     <Button onClick={handleSave}>
@@ -229,7 +239,7 @@ export default function WorkCenterDetail() {
                 )}
               </>
             )}
-            {id === 'new' && (
+            {id === "new" && (
               <Button onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" />
                 Create Work Center
@@ -257,8 +267,8 @@ export default function WorkCenterDetail() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={handleInputChange('name')}
-                      disabled={!isEditing && id !== 'new'}
+                      onChange={handleInputChange("name")}
+                      disabled={!isEditing && id !== "new"}
                     />
                   </div>
                   <div>
@@ -266,8 +276,8 @@ export default function WorkCenterDetail() {
                     <select
                       id="status"
                       value={formData.status}
-                      onChange={handleInputChange('status')}
-                      disabled={!isEditing && id !== 'new'}
+                      onChange={handleInputChange("status")}
+                      disabled={!isEditing && id !== "new"}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
                     >
                       <option value="active">Active</option>
@@ -282,8 +292,8 @@ export default function WorkCenterDetail() {
                       type="number"
                       step="0.01"
                       value={formData.cost_per_hour}
-                      onChange={handleInputChange('cost_per_hour')}
-                      disabled={!isEditing && id !== 'new'}
+                      onChange={handleInputChange("cost_per_hour")}
+                      disabled={!isEditing && id !== "new"}
                     />
                   </div>
                   <div>
@@ -292,8 +302,8 @@ export default function WorkCenterDetail() {
                       id="capacity"
                       type="number"
                       value={formData.capacity}
-                      onChange={handleInputChange('capacity')}
-                      disabled={!isEditing && id !== 'new'}
+                      onChange={handleInputChange("capacity")}
+                      disabled={!isEditing && id !== "new"}
                     />
                   </div>
                   <div>
@@ -301,8 +311,8 @@ export default function WorkCenterDetail() {
                     <Input
                       id="location"
                       value={formData.location}
-                      onChange={handleInputChange('location')}
-                      disabled={!isEditing && id !== 'new'}
+                      onChange={handleInputChange("location")}
+                      disabled={!isEditing && id !== "new"}
                     />
                   </div>
                   <div>
@@ -310,8 +320,8 @@ export default function WorkCenterDetail() {
                     <Input
                       id="manager"
                       value={formData.manager}
-                      onChange={handleInputChange('manager')}
-                      disabled={!isEditing && id !== 'new'}
+                      onChange={handleInputChange("manager")}
+                      disabled={!isEditing && id !== "new"}
                     />
                   </div>
                 </div>
@@ -320,8 +330,8 @@ export default function WorkCenterDetail() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={handleInputChange('description')}
-                    disabled={!isEditing && id !== 'new'}
+                    onChange={handleInputChange("description")}
+                    disabled={!isEditing && id !== "new"}
                     rows={3}
                   />
                 </div>
@@ -330,8 +340,8 @@ export default function WorkCenterDetail() {
                   <Textarea
                     id="notes"
                     value={formData.notes}
-                    onChange={handleInputChange('notes')}
-                    disabled={!isEditing && id !== 'new'}
+                    onChange={handleInputChange("notes")}
+                    disabled={!isEditing && id !== "new"}
                     rows={2}
                   />
                 </div>
@@ -350,20 +360,29 @@ export default function WorkCenterDetail() {
                 <CardContent>
                   <div className="space-y-3">
                     {getRecentWorkOrders().map((wo) => (
-                      <div key={wo.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                      <div
+                        key={wo.id}
+                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                      >
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{wo.work_order_number}</p>
-                          <p className="text-sm text-gray-600">{wo.operation_name}</p>
+                          <p className="font-medium text-gray-900">
+                            {wo.work_order_number}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {wo.operation_name}
+                          </p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Badge className={
-                            wo.status === 'completed' 
-                              ? 'bg-green-100 text-green-800' 
-                              : wo.status === 'in_progress'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }>
-                            {wo.status?.replace('_', ' ')}
+                          <Badge
+                            className={
+                              wo.status === "DONE"
+                                ? "bg-green-100 text-green-800"
+                                : wo.status === "in_progress"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }
+                          >
+                            {wo.status?.replace("_", " ")}
                           </Badge>
                           <span className="text-sm text-gray-500">
                             {new Date(wo.created_date).toLocaleDateString()}
@@ -394,16 +413,23 @@ export default function WorkCenterDetail() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Capacity</span>
-                  <span className="font-semibold">{formData.capacity} units</span>
+                  <span className="font-semibold">
+                    {formData.capacity} units
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Cost per Hour</span>
-                  <span className="font-semibold">${formData.cost_per_hour}</span>
+                  <span className="font-semibold">
+                    ${formData.cost_per_hour}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Active Work Orders</span>
                   <span className="font-semibold">
-                    {workOrders.filter(wo => wo.status === 'in_progress').length}
+                    {
+                      workOrders.filter((wo) => wo.status === "in_progress")
+                        .length
+                    }
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -421,20 +447,31 @@ export default function WorkCenterDetail() {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Current Utilization</span>
-                    <span className="text-lg font-semibold">{utilization.toFixed(1)}%</span>
+                    <span className="text-sm text-gray-600">
+                      Current Utilization
+                    </span>
+                    <span className="text-lg font-semibold">
+                      {utilization.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
+                    <div
                       className={`h-3 rounded-full transition-all duration-300 ${
-                        utilization > 90 ? 'bg-red-500' : 
-                        utilization > 70 ? 'bg-yellow-500' : 'bg-green-500'
+                        utilization > 90
+                          ? "bg-red-500"
+                          : utilization > 70
+                          ? "bg-yellow-500"
+                          : "bg-green-500"
                       }`}
                       style={{ width: `${utilization}%` }}
                     ></div>
                   </div>
                   <div className="text-xs text-gray-500">
-                    {workOrders.filter(wo => wo.status === 'in_progress').length} of {formData.capacity} slots in use
+                    {
+                      workOrders.filter((wo) => wo.status === "in_progress")
+                        .length
+                    }{" "}
+                    of {formData.capacity} slots in use
                   </div>
                 </div>
               </CardContent>
@@ -449,23 +486,35 @@ export default function WorkCenterDetail() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Completed Orders</span>
                   <span className="font-semibold">
-                    {workOrders.filter(wo => wo.status === 'completed').length}
+                    {workOrders.filter((wo) => wo.status === "DONE").length}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Completion Rate</span>
                   <span className="font-semibold">
-                    {workOrders.length > 0 
-                      ? Math.round((workOrders.filter(wo => wo.status === 'completed').length / workOrders.length) * 100)
-                      : 0}%
+                    {workOrders.length > 0
+                      ? Math.round(
+                          (workOrders.filter((wo) => wo.status === "DONE")
+                            .length /
+                            workOrders.length) *
+                            100
+                        )
+                      : 0}
+                    %
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Avg. Duration</span>
                   <span className="font-semibold">
-                    {workOrders.length > 0 
-                      ? Math.round(workOrders.reduce((sum, wo) => sum + (wo.actual_duration || 0), 0) / workOrders.length)
-                      : 0} min
+                    {workOrders.length > 0
+                      ? Math.round(
+                          workOrders.reduce(
+                            (sum, wo) => sum + (wo.actual_duration || 0),
+                            0
+                          ) / workOrders.length
+                        )
+                      : 0}{" "}
+                    min
                   </span>
                 </div>
               </CardContent>

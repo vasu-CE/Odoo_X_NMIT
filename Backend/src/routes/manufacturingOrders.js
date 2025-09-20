@@ -103,7 +103,7 @@ router.get(
           take: parseInt(limit),
           orderBy: { createdAt: "desc" },
           include: {
-            assignee: {
+            assignedTo: {
               select: {
                 id: true,
                 name: true,
@@ -197,7 +197,7 @@ router.get("/:id", authenticate, async (req, res) => {
     const order = await prisma.manufacturingOrder.findUnique({
       where: { id },
       include: {
-        assignee: {
+        assignedTo: {
           select: {
             id: true,
             name: true,
@@ -285,19 +285,24 @@ router.post(
   authenticate,
   authorize("MANUFACTURING_MANAGER", "ADMIN"),
   [
-    body("finishedProduct")
-      .notEmpty()
-      .withMessage("Finished product is required"),
+    body("productId").notEmpty().withMessage("Product ID is required"),
     body("quantity")
       .isInt({ min: 1 })
       .withMessage("Quantity must be a positive integer"),
     body("units").optional().isString(),
     body("priority").optional().isIn(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-    body("scheduleDate")
+    body("scheduledDate")
       .isISO8601()
-      .withMessage("Valid schedule date is required"),
-    body("assigneeId").optional().isString(),
-    body("bomId").optional().isString(),
+      .withMessage("Valid scheduled date is required"),
+    body("assignedToId").optional().isString(),
+    body("bomId")
+      .optional()
+      .custom((value) => {
+        if (value === null || value === undefined || value === "") {
+          return true; // Allow null, undefined, or empty string
+        }
+        return typeof value === "string"; // Only validate if it's not null/undefined/empty
+      }),
     body("notes").optional().isString(),
   ],
   async (req, res) => {
@@ -312,12 +317,11 @@ router.post(
       }
 
       const {
-        finishedProduct,
+        productId,
         quantity,
-        units = "PCS",
         priority = "MEDIUM",
-        scheduleDate,
-        assigneeId,
+        scheduledDate,
+        assignedToId,
         bomId,
         notes,
       } = req.body;
@@ -331,17 +335,16 @@ router.post(
         const newOrder = await tx.manufacturingOrder.create({
           data: {
             orderNumber,
-            finishedProduct,
+            productId,
             quantity,
-            units,
             priority,
-            scheduleDate: new Date(scheduleDate),
-            assigneeId,
+            scheduledDate: new Date(scheduledDate),
+            assignedToId,
             bomId,
             notes,
           },
           include: {
-            assignee: {
+            assignedTo: {
               select: {
                 id: true,
                 name: true,
@@ -400,8 +403,8 @@ router.post(
                 data: {
                   manufacturingOrderId: newOrder.id,
                   operationName: operation.name,
-                  workCenterName: operation.workCenter.name,
-                  plannedDuration: operation.timeMinutes,
+                  workCenterId: operation.workCenter.id,
+                  quantity: quantity,
                   estimatedTimeMinutes: operation.timeMinutes,
                   status: "TO_DO",
                 },
@@ -463,12 +466,12 @@ router.put(
   authenticate,
   authorize("MANUFACTURING_MANAGER", "ADMIN"),
   [
-    body("finishedProduct").optional().isString(),
+    body("productId").optional().isString(),
     body("quantity").optional().isInt({ min: 1 }),
     body("units").optional().isString(),
     body("priority").optional().isIn(["LOW", "MEDIUM", "HIGH", "URGENT"]),
-    body("scheduleDate").optional().isISO8601(),
-    body("assigneeId").optional().isString(),
+    body("scheduledDate").optional().isISO8601(),
+    body("assignedToId").optional().isString(),
     body("notes").optional().isString(),
   ],
   async (req, res) => {
@@ -491,9 +494,9 @@ router.put(
       delete updateData.status;
       delete updateData.createdAt;
 
-      // Convert scheduleDate to Date if provided
-      if (updateData.scheduleDate) {
-        updateData.scheduleDate = new Date(updateData.scheduleDate);
+      // Convert scheduledDate to Date if provided
+      if (updateData.scheduledDate) {
+        updateData.scheduledDate = new Date(updateData.scheduledDate);
       }
 
       const order = await prisma.manufacturingOrder.update({
@@ -631,7 +634,7 @@ router.patch(
           where: { id },
           data: updateData,
           include: {
-            assignee: {
+            assignedTo: {
               select: {
                 id: true,
                 name: true,
@@ -703,6 +706,100 @@ router.patch(
 
         return updatedOrder;
       });
+
+      // Handle stock production and consumption when manufacturing order is completed
+      if (newStatus === "DONE" && currentStatus !== "DONE") {
+        const orderWithDetails = await prisma.manufacturingOrder.findUnique({
+          where: { id },
+          include: {
+            bom: {
+              include: {
+                product: true,
+                components: {
+                  include: {
+                    product: true,
+                  },
+                },
+              },
+            },
+            components: true,
+          },
+        });
+
+        if (orderWithDetails) {
+          // Handle material consumption
+          if (
+            orderWithDetails.components &&
+            orderWithDetails.components.length > 0
+          ) {
+            for (const component of orderWithDetails.components) {
+              // Find the corresponding product from the BOM components
+              const bomComponent = orderWithDetails.bom.components.find(
+                (bc) => bc.product.name === component.componentName
+              );
+
+              if (bomComponent && component.toConsume > 0) {
+                const product = bomComponent.product;
+
+                // Create stock movement for consumption
+                await prisma.stockMovement.create({
+                  data: {
+                    productId: product.id,
+                    movementType: "OUT",
+                    quantity: component.toConsume,
+                    reference: orderWithDetails.orderNumber,
+                    referenceId: orderWithDetails.id,
+                    notes: `Material consumption for manufacturing order: ${orderWithDetails.orderNumber}`,
+                  },
+                });
+
+                // Update product stock
+                await prisma.product.update({
+                  where: { id: product.id },
+                  data: {
+                    currentStock: {
+                      decrement: component.toConsume,
+                    },
+                  },
+                });
+
+                // Update component consumed quantity
+                await prisma.component.update({
+                  where: { id: component.id },
+                  data: { consumed: component.toConsume },
+                });
+              }
+            }
+          }
+
+          // Handle finished product production
+          if (orderWithDetails.bom && orderWithDetails.bom.product) {
+            const finishedProduct = orderWithDetails.bom.product;
+
+            // Create stock movement for production
+            await prisma.stockMovement.create({
+              data: {
+                productId: finishedProduct.id,
+                movementType: "IN",
+                quantity: orderWithDetails.quantity,
+                reference: orderWithDetails.orderNumber,
+                referenceId: orderWithDetails.id,
+                notes: `Production completion for manufacturing order: ${orderWithDetails.orderNumber}`,
+              },
+            });
+
+            // Update finished product stock
+            await prisma.product.update({
+              where: { id: finishedProduct.id },
+              data: {
+                currentStock: {
+                  increment: orderWithDetails.quantity,
+                },
+              },
+            });
+          }
+        }
+      }
 
       res.json({
         success: true,
@@ -1234,8 +1331,13 @@ router.post(
       }
 
       const { id } = req.params;
-      const { operationName, workCenterName, plannedDuration, estimatedTimeMinutes, assignedToId } =
-        req.body;
+      const {
+        operationName,
+        workCenterName,
+        plannedDuration,
+        estimatedTimeMinutes,
+        assignedToId,
+      } = req.body;
 
       // Check if manufacturing order exists and is in draft state
       const order = await prisma.manufacturingOrder.findUnique({

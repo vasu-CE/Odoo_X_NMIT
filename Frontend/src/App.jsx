@@ -22,6 +22,8 @@ import WorkCenterDetail from "./components/manufacturing/WorkCenterDetail";
 import StockManagement from "./pages/StockManagement";
 import StockLedgerDetail from "./components/manufacturing/StockLedgerDetail";
 import Reports from "./pages/Reports";
+import Products from "./pages/Products";
+import ProfileSetup from "./pages/ProfileSetup";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -156,6 +158,26 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Reports />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/products"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Products />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile-setup"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProfileSetup />
                 </Layout>
               </ProtectedRoute>
             }

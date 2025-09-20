@@ -42,7 +42,7 @@ const statusConfig = {
   completed: {
     color: "bg-green-100 text-green-800",
     icon: CheckCircle,
-    label: "Completed",
+    label: "Done",
     actions: ["print"],
   },
   cancelled: {
@@ -260,7 +260,7 @@ export default function ManufacturingOrderDetail() {
                   variant="outline"
                   onClick={() => setIsEditing(true)}
                   disabled={
-                    order.status === "completed" || order.status === "cancelled"
+                    order.status === "DONE" || order.status === "cancelled"
                   }
                 >
                   <Save className="w-4 h-4 mr-2" />
@@ -510,7 +510,7 @@ export default function ManufacturingOrderDetail() {
                             <td className="py-2 px-3">
                               <Badge
                                 className={
-                                  wo.status === "completed"
+                                  wo.status === "DONE"
                                     ? "bg-green-100 text-green-800"
                                     : wo.status === "in_progress"
                                     ? "bg-blue-100 text-blue-800"
@@ -555,7 +555,7 @@ export default function ManufacturingOrderDetail() {
                   <span className="font-semibold">
                     {workOrders.length > 0
                       ? Math.round(
-                          (workOrders.filter((wo) => wo.status === "completed")
+                          (workOrders.filter((wo) => wo.status === "DONE")
                             .length /
                             workOrders.length) *
                             100
@@ -608,7 +608,7 @@ export default function ManufacturingOrderDetail() {
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                       <div>
-                        <p className="text-sm font-medium">Completed</p>
+                        <p className="text-sm font-medium">Done</p>
                         <p className="text-xs text-gray-500">
                           {new Date(order.actual_end).toLocaleString()}
                         </p>

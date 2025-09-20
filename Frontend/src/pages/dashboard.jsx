@@ -260,7 +260,9 @@ export default function Dashboard() {
 
     const matchesStatus =
       activeStatusFilter === "all" ||
-      order.state.toLowerCase().replace(" ", "_") === activeStatusFilter;
+      order.state.toLowerCase().replace(" ", "_") === activeStatusFilter ||
+      (activeStatusFilter === "not_assigned" && !order.isAssigned) ||
+      (activeStatusFilter === "late" && order.isLate);
 
     return matchesSearch && matchesStatus;
   });
@@ -346,12 +348,12 @@ export default function Dashboard() {
 
             {/* New Button */}
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white ml-40"
               onClick={() =>
                 (window.location.href = "/manufacturing-orders/new")
               }
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2 " />
               New Manufacturing Order
             </Button>
           </div>
@@ -390,9 +392,9 @@ export default function Dashboard() {
             </div>
 
             {/* User Profile */}
-            <Button variant="ghost" size="icon">
+            {/* <Button variant="ghost" size="icon">
               <User className="w-5 h-5" />
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>

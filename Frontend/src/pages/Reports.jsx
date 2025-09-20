@@ -52,14 +52,15 @@ export default function Reports() {
 
   const loadData = async () => {
     try {
-      const [moData, woData, woAnalysisData, prodData, wcData, stockData] = await Promise.all([
-        ManufacturingOrder.list("-created_date", 100),
-        WorkOrder.list("-created_date", 100),
-        apiService.getWorkOrderAnalysis({ limit: 100 }),
-        Product.list("-created_date", 100),
-        WorkCenter.list("-created_date", 50),
-        StockMovement.list("-created_date", 200),
-      ]);
+      const [moData, woData, woAnalysisData, prodData, wcData, stockData] =
+        await Promise.all([
+          ManufacturingOrder.list("-created_date", 100),
+          WorkOrder.list("-created_date", 100),
+          apiService.getWorkOrderAnalysis({ limit: 100 }),
+          Product.list("-created_date", 100),
+          WorkCenter.list("-created_date", 50),
+          StockMovement.list("-created_date", 200),
+        ]);
       setManufacturingOrders(moData);
       setWorkOrders(woData);
       setWorkOrderAnalysis(woAnalysisData.workOrders || []);
@@ -76,7 +77,7 @@ export default function Reports() {
   // Calculate KPIs
   const totalOrders = manufacturingOrders.length;
   const completedOrders = manufacturingOrders.filter(
-    (order) => order.status === "completed"
+    (order) => order.status === "DONE"
   ).length;
   const activeOrders = manufacturingOrders.filter(
     (order) => order.status === "in_progress"
@@ -86,7 +87,7 @@ export default function Reports() {
 
   const totalWorkOrders = workOrders.length;
   const completedWorkOrders = workOrders.filter(
-    (wo) => wo.status === "completed"
+    (wo) => wo.status === "DONE"
   ).length;
   const workOrderCompletionRate =
     totalWorkOrders > 0
@@ -344,7 +345,7 @@ export default function Reports() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-2xl font-bold text-gray-600">
-                  {workOrders.filter((wo) => wo.status === "pending").length}
+                  {workOrders.filter((wo) => wo.status === "TO_DO").length}
                 </div>
                 <div className="text-sm text-gray-600">Pending</div>
               </div>
@@ -381,7 +382,7 @@ export default function Reports() {
                 <Table className="h-5 w-5 text-gray-600" />
                 Work Orders Analysis
               </CardTitle>
-              
+
               {/* Search and Filter Controls */}
               <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                 <div className="relative">
@@ -393,7 +394,7 @@ export default function Reports() {
                     className="pl-10 w-full md:w-64"
                   />
                 </div>
-                
+
                 <select
                   value={operationFilter}
                   onChange={(e) => setOperationFilter(e.target.value)}
@@ -405,7 +406,7 @@ export default function Reports() {
                   <option value="Packaging">Packaging</option>
                   <option value="Testing">Testing</option>
                 </select>
-                
+
                 <select
                   value={workCenterFilter}
                   onChange={(e) => setWorkCenterFilter(e.target.value)}
@@ -418,16 +419,16 @@ export default function Reports() {
                     </option>
                   ))}
                 </select>
-                
+
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
                 >
                   <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
+                  <option value="TO_DO">To Do</option>
                   <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
+                  <option value="DONE">Done</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
@@ -438,78 +439,129 @@ export default function Reports() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Operation</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Work Center</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Product</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Quantity</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Expected Duration</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Real Duration</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Operation
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Work Center
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Product
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Quantity
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Expected Duration
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Real Duration
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                      Status
+                    </th>
                   </tr>
                 </thead>
-                    <tbody>
-                      {workOrderAnalysis
-                        .filter((wo) => {
-                          const matchesSearch = wo.operationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                              wo.workCenterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                              wo.productName?.toLowerCase().includes(searchTerm.toLowerCase());
-                          const matchesOperation = operationFilter === "all" || wo.operationName === operationFilter;
-                          const matchesWorkCenter = workCenterFilter === "all" || wo.workCenterName === workCenterFilter;
-                          const matchesStatus = statusFilter === "all" || wo.status === statusFilter;
-                          
-                          return matchesSearch && matchesOperation && matchesWorkCenter && matchesStatus;
-                        })
-                        .map((wo) => {
-                          return (
-                            <tr key={wo.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                              <td className="py-3 px-4 text-gray-900 font-medium">
-                                {wo.operationName || "N/A"}
-                              </td>
-                              <td className="py-3 px-4 text-gray-700">
-                                {wo.workCenterName || "N/A"}
-                              </td>
-                              <td className="py-3 px-4 text-gray-700">
-                                {wo.productName || "N/A"}
-                              </td>
-                              <td className="py-3 px-4 text-gray-700">
-                                {wo.quantity || 0}
-                              </td>
-                              <td className="py-3 px-4 text-gray-700">
-                                {wo.expectedDuration || "N/A"}
-                              </td>
-                              <td className="py-3 px-4 text-gray-700">
-                                {wo.realDuration || "00:00"}
-                              </td>
-                              <td className="py-3 px-4">
-                                <Badge 
-                                  className={`text-xs ${
-                                    wo.status === "completed" 
-                                      ? "bg-green-100 text-green-800" 
-                                      : wo.status === "in progress"
-                                      ? "bg-blue-100 text-blue-800"
-                                      : wo.status === "pending"
-                                      ? "bg-yellow-100 text-yellow-800"
-                                      : "bg-red-100 text-red-800"
-                                  }`}
-                                >
-                                  {wo.status?.replace("_", " ") || "Unknown"}
-                                </Badge>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
+                <tbody>
+                  {workOrderAnalysis
+                    .filter((wo) => {
+                      const matchesSearch =
+                        wo.operationName
+                          ?.toLowerCase()
+                          .includes(searchTerm.toLowerCase()) ||
+                        wo.workCenterName
+                          ?.toLowerCase()
+                          .includes(searchTerm.toLowerCase()) ||
+                        wo.productName
+                          ?.toLowerCase()
+                          .includes(searchTerm.toLowerCase());
+                      const matchesOperation =
+                        operationFilter === "all" ||
+                        wo.operationName === operationFilter;
+                      const matchesWorkCenter =
+                        workCenterFilter === "all" ||
+                        wo.workCenterName === workCenterFilter;
+                      const matchesStatus =
+                        statusFilter === "all" || wo.status === statusFilter;
+
+                      return (
+                        matchesSearch &&
+                        matchesOperation &&
+                        matchesWorkCenter &&
+                        matchesStatus
+                      );
+                    })
+                    .map((wo) => {
+                      return (
+                        <tr
+                          key={wo.id}
+                          className="border-b border-gray-100 hover:bg-gray-50/50"
+                        >
+                          <td className="py-3 px-4 text-gray-900 font-medium">
+                            {wo.operationName || "N/A"}
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">
+                            {wo.workCenterName || "N/A"}
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">
+                            {wo.productName || "N/A"}
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">
+                            {wo.quantity || 0}
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">
+                            {wo.expectedDuration || "N/A"}
+                          </td>
+                          <td className="py-3 px-4 text-gray-700">
+                            {wo.realDuration || "00:00"}
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge
+                              className={`text-xs ${
+                                wo.status === "DONE"
+                                  ? "bg-green-100 text-green-800"
+                                  : wo.status === "in progress"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : wo.status === "TO_DO"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {wo.status?.replace("_", " ") || "Unknown"}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
               </table>
-              
+
               {workOrderAnalysis.filter((wo) => {
-                const matchesSearch = wo.operationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    wo.workCenterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    wo.productName?.toLowerCase().includes(searchTerm.toLowerCase());
-                const matchesOperation = operationFilter === "all" || wo.operationName === operationFilter;
-                const matchesWorkCenter = workCenterFilter === "all" || wo.workCenterName === workCenterFilter;
-                const matchesStatus = statusFilter === "all" || wo.status === statusFilter;
-                
-                return matchesSearch && matchesOperation && matchesWorkCenter && matchesStatus;
+                const matchesSearch =
+                  wo.operationName
+                    ?.toLowerCase()
+                    .includes(searchTerm.toLowerCase()) ||
+                  wo.workCenterName
+                    ?.toLowerCase()
+                    .includes(searchTerm.toLowerCase()) ||
+                  wo.productName
+                    ?.toLowerCase()
+                    .includes(searchTerm.toLowerCase());
+                const matchesOperation =
+                  operationFilter === "all" ||
+                  wo.operationName === operationFilter;
+                const matchesWorkCenter =
+                  workCenterFilter === "all" ||
+                  wo.workCenterName === workCenterFilter;
+                const matchesStatus =
+                  statusFilter === "all" || wo.status === statusFilter;
+
+                return (
+                  matchesSearch &&
+                  matchesOperation &&
+                  matchesWorkCenter &&
+                  matchesStatus
+                );
               }).length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <Table className="w-12 h-12 mx-auto mb-4 text-gray-300" />

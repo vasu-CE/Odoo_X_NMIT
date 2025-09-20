@@ -29,6 +29,7 @@ import {
   Factory,
   Clock,
 } from "lucide-react";
+import MaterialSelectionPopup from "../components/manufacturing/MaterialSelectionPopup";
 
 export default function BOMPage() {
   const [boms, setBoms] = useState([]);
@@ -44,10 +45,12 @@ export default function BOMPage() {
     finished_product: "",
     quantity: "",
     reference: "",
-    components: []
+    components: [],
   });
   const [activeTab, setActiveTab] = useState("components");
   const [workOrders, setWorkOrders] = useState([]);
+  const [showMaterialPopup, setShowMaterialPopup] = useState(false);
+  const [selectedComponentIndex, setSelectedComponentIndex] = useState(null);
 
   // Static sample data for demonstration
   const sampleBOMs = [
@@ -60,8 +63,8 @@ export default function BOMPage() {
       components: [
         { product_name: "Wood Panel", quantity: 2, unit: "pcs" },
         { product_name: "Screws", quantity: 8, unit: "pcs" },
-        { product_name: "Drawer Slides", quantity: 1, unit: "set" }
-      ]
+        { product_name: "Drawer Slides", quantity: 1, unit: "set" },
+      ],
     },
     {
       id: 2,
@@ -72,8 +75,8 @@ export default function BOMPage() {
       components: [
         { product_name: "Wood Panel", quantity: 1, unit: "pcs" },
         { product_name: "Hinges", quantity: 2, unit: "pcs" },
-        { product_name: "Door Handle", quantity: 1, unit: "pcs" }
-      ]
+        { product_name: "Door Handle", quantity: 1, unit: "pcs" },
+      ],
     },
     {
       id: 3,
@@ -83,9 +86,9 @@ export default function BOMPage() {
       status: "draft",
       components: [
         { product_name: "Wood Panel", quantity: 1, unit: "pcs" },
-        { product_name: "Edge Banding", quantity: 4, unit: "m" }
-      ]
-    }
+        { product_name: "Edge Banding", quantity: 4, unit: "m" },
+      ],
+    },
   ];
 
   const sampleProducts = [
@@ -97,7 +100,7 @@ export default function BOMPage() {
     { id: 6, name: "Drawer Slides", category: "Hardware" },
     { id: 7, name: "Hinges", category: "Hardware" },
     { id: 8, name: "Door Handle", category: "Hardware" },
-    { id: 9, name: "Edge Banding", category: "Raw Material" }
+    { id: 9, name: "Edge Banding", category: "Raw Material" },
   ];
 
   useEffect(() => {
@@ -107,21 +110,21 @@ export default function BOMPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       // Try to load from API first
       try {
         const [bomsData, productsData] = await Promise.all([
           BOM.list("-created_date"),
           Product.list("-created_date"),
         ]);
-        
+
         if (bomsData && bomsData.length > 0) {
           setBoms(bomsData);
         } else {
           // Fallback to static data if API returns empty
           setBoms(sampleBOMs);
         }
-        
+
         if (productsData && productsData.length > 0) {
           setProducts(productsData);
         } else {
@@ -166,7 +169,7 @@ export default function BOMPage() {
       finished_product: "",
       quantity: "",
       reference: "",
-      components: []
+      components: [],
     });
     setShowNewForm(true);
     setShowEditForm(false);
@@ -178,7 +181,7 @@ export default function BOMPage() {
       finished_product: bom.finished_product,
       quantity: bom.quantity.toString(),
       reference: bom.reference,
-      components: bom.components || []
+      components: bom.components || [],
     });
     setEditingBOM(bom);
     setShowEditForm(true);
@@ -190,7 +193,7 @@ export default function BOMPage() {
       const bomData = {
         ...formData,
         quantity: parseFloat(formData.quantity),
-        status: "draft"
+        status: "draft",
       };
 
       let result;
@@ -198,36 +201,42 @@ export default function BOMPage() {
         // Update existing BOM
         result = await BOM.update(editingBOM.id, bomData);
         if (result) {
-          setBoms(prev => prev.map(bom => 
-            bom.id === editingBOM.id 
-              ? { ...bom, ...result }
-              : bom
-          ));
+          setBoms((prev) =>
+            prev.map((bom) =>
+              bom.id === editingBOM.id ? { ...bom, ...result } : bom
+            )
+          );
         } else {
           // Fallback to local state update if API fails
-          setBoms(prev => prev.map(bom => 
-            bom.id === editingBOM.id 
-              ? { ...bom, ...formData, quantity: parseFloat(formData.quantity) }
-              : bom
-          ));
+          setBoms((prev) =>
+            prev.map((bom) =>
+              bom.id === editingBOM.id
+                ? {
+                    ...bom,
+                    ...formData,
+                    quantity: parseFloat(formData.quantity),
+                  }
+                : bom
+            )
+          );
         }
       } else {
         // Create new BOM
         result = await BOM.create(bomData);
         if (result) {
-          setBoms(prev => [result, ...prev]);
+          setBoms((prev) => [result, ...prev]);
         } else {
           // Fallback to local state update if API fails
           const newBOM = {
             id: Date.now(),
             ...formData,
             quantity: parseFloat(formData.quantity),
-            status: "draft"
+            status: "draft",
           };
-          setBoms(prev => [newBOM, ...prev]);
+          setBoms((prev) => [newBOM, ...prev]);
         }
       }
-      
+
       setShowNewForm(false);
       setShowEditForm(false);
       setEditingBOM(null);
@@ -235,19 +244,21 @@ export default function BOMPage() {
       console.error("Error saving BOM:", error);
       // Fallback to local state update if API fails
       if (editingBOM) {
-        setBoms(prev => prev.map(bom => 
-          bom.id === editingBOM.id 
-            ? { ...bom, ...formData, quantity: parseFloat(formData.quantity) }
-            : bom
-        ));
+        setBoms((prev) =>
+          prev.map((bom) =>
+            bom.id === editingBOM.id
+              ? { ...bom, ...formData, quantity: parseFloat(formData.quantity) }
+              : bom
+          )
+        );
       } else {
         const newBOM = {
           id: Date.now(),
           ...formData,
           quantity: parseFloat(formData.quantity),
-          status: "draft"
+          status: "draft",
         };
-        setBoms(prev => [newBOM, ...prev]);
+        setBoms((prev) => [newBOM, ...prev]);
       }
       setShowNewForm(false);
       setShowEditForm(false);
@@ -256,51 +267,75 @@ export default function BOMPage() {
   };
 
   const handleAddComponent = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      components: [...prev.components, { product_name: "", quantity: 1, unit: "pcs" }]
+      components: [
+        ...prev.components,
+        { product_name: "", quantity: 1, unit: "pcs" },
+      ],
     }));
   };
 
   const handleUpdateComponent = (index, field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      components: prev.components.map((comp, i) => 
+      components: prev.components.map((comp, i) =>
         i === index ? { ...comp, [field]: value } : comp
-      )
+      ),
     }));
   };
 
   const handleRemoveComponent = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      components: prev.components.filter((_, i) => i !== index)
+      components: prev.components.filter((_, i) => i !== index),
     }));
   };
 
+  const handleMaterialSelect = (product) => {
+    if (selectedComponentIndex !== null) {
+      handleUpdateComponent(
+        selectedComponentIndex,
+        "product_name",
+        product.name
+      );
+      handleUpdateComponent(
+        selectedComponentIndex,
+        "unit",
+        product.unit || "PCS"
+      );
+    }
+    setShowMaterialPopup(false);
+    setSelectedComponentIndex(null);
+  };
+
   const handleAddWorkOrder = () => {
-    setWorkOrders(prev => [...prev, {
-      id: Date.now(),
-      operation: "",
-      work_center: "",
-      expected_duration: ""
-    }]);
+    setWorkOrders((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        operation: "",
+        work_center: "",
+        expected_duration: "",
+      },
+    ]);
   };
 
   const handleUpdateWorkOrder = (index, field, value) => {
-    setWorkOrders(prev => prev.map((wo, i) => 
-      i === index ? { ...wo, [field]: value } : wo
-    ));
+    setWorkOrders((prev) =>
+      prev.map((wo, i) => (i === index ? { ...wo, [field]: value } : wo))
+    );
   };
 
   const handleRemoveWorkOrder = (index) => {
-    setWorkOrders(prev => prev.filter((_, i) => i !== index));
+    setWorkOrders((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Filter BOMs
-  const filteredBOMs = boms.filter((bom) =>
-    bom.finished_product?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bom.reference?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredBOMs = boms.filter(
+    (bom) =>
+      bom.finished_product?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bom.reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -323,14 +358,16 @@ export default function BOMPage() {
           {/* Header with Search */}
           <div className="p-6 border-b border-gray-200/60">
             <div className="flex items-center justify-between mb-4">
-              <Button 
+              <Button
                 onClick={handleNewBOM}
                 className="bg-blue-600 hover:bg-blue-700 shadow-md"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New
               </Button>
-              <h2 className="text-2xl font-bold text-gray-900">Bills of Materials</h2>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Bills of Materials
+              </h2>
               <div className="flex items-center gap-2">
                 <Button
                   variant={viewMode === "list" ? "outline" : "default"}
@@ -348,7 +385,7 @@ export default function BOMPage() {
                 </Button>
               </div>
             </div>
-            
+
             {/* Large Search Bar */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -373,29 +410,52 @@ export default function BOMPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Finished Product</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Reference</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Quantity</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                        Finished Product
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                        Reference
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                        Quantity
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredBOMs.map((bom) => (
-                      <tr key={bom.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                      <tr
+                        key={bom.id}
+                        className="border-b border-gray-100 hover:bg-gray-50/50"
+                      >
                         <td className="py-3 px-4">
-                          <div className="font-medium text-gray-900">{bom.finished_product}</div>
+                          <div className="font-medium text-gray-900">
+                            {bom.finished_product}
+                          </div>
                         </td>
                         <td className="py-3 px-4">
                           <div className="text-gray-600">{bom.reference}</div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="text-gray-600">{bom.quantity} Units</div>
+                          <div className="text-gray-600">
+                            {bom.quantity} Units
+                          </div>
                         </td>
                         <td className="py-3 px-4">
-                          <Badge 
-                            variant={bom.status === "active" ? "default" : "secondary"}
-                            className={bom.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}
+                          <Badge
+                            variant={
+                              bom.status === "active" ? "default" : "secondary"
+                            }
+                            className={
+                              bom.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                            }
                           >
                             {bom.status}
                           </Badge>
@@ -460,19 +520,25 @@ export default function BOMPage() {
 
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-700">Components:</p>
+                        <p className="text-sm font-medium text-gray-700">
+                          Components:
+                        </p>
                         <div className="space-y-1 max-h-32 overflow-y-auto">
-                          {bom.components?.slice(0, 3).map((component, index) => (
-                            <div
-                              key={index}
-                              className="flex justify-between items-center text-sm bg-gray-50/80 rounded px-2 py-1"
-                            >
-                              <span className="text-gray-700">{component.product_name}</span>
-                              <span className="text-gray-500">
-                                {component.quantity} {component.unit}
-                              </span>
-                            </div>
-                          ))}
+                          {bom.components
+                            ?.slice(0, 3)
+                            .map((component, index) => (
+                              <div
+                                key={index}
+                                className="flex justify-between items-center text-sm bg-gray-50/80 rounded px-2 py-1"
+                              >
+                                <span className="text-gray-700">
+                                  {component.product_name}
+                                </span>
+                                <span className="text-gray-500">
+                                  {component.quantity} {component.unit}
+                                </span>
+                              </div>
+                            ))}
                           {bom.components?.length > 3 && (
                             <p className="text-xs text-gray-500 text-center">
                               +{bom.components.length - 3} more components
@@ -518,9 +584,13 @@ export default function BOMPage() {
             {filteredBOMs.length === 0 && !loading && (
               <div className="text-center py-12">
                 <ClipboardList className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No BOMs found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No BOMs found
+                </h3>
                 <p className="text-gray-500 mb-6">
-                  {searchTerm ? "Try adjusting your search" : "Create your first bill of materials to get started"}
+                  {searchTerm
+                    ? "Try adjusting your search"
+                    : "Create your first bill of materials to get started"}
                 </p>
               </div>
             )}
@@ -534,7 +604,10 @@ export default function BOMPage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Bill of Materials</h2>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setShowNewForm(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowNewForm(false)}
+                  >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back
                   </Button>
@@ -547,24 +620,33 @@ export default function BOMPage() {
 
               <div className="space-y-4">
                 <div className="text-sm text-gray-500 mb-2">BOM-000001</div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="finished_product">Finished product</Label>
                     <select
                       id="finished_product"
                       value={formData.finished_product}
-                      onChange={(e) => setFormData(prev => ({ ...prev, finished_product: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          finished_product: e.target.value,
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
                     >
                       <option value="">Select Product</option>
-                      {products.filter(p => p.category === "Furniture").map(product => (
-                        <option key={product.id} value={product.name}>
-                          {product.name}
-                        </option>
-                      ))}
+                      {products
+                        .filter((p) => p.category === "Furniture")
+                        .map((product) => (
+                          <option key={product.id} value={product.name}>
+                            {product.name}
+                          </option>
+                        ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-1">Many2one field, fetch from stock ledger</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Many2one field, fetch from stock ledger
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="quantity">Quantity</Label>
@@ -573,7 +655,12 @@ export default function BOMPage() {
                         id="quantity"
                         type="number"
                         value={formData.quantity}
-                        onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            quantity: e.target.value,
+                          }))
+                        }
                         className="rounded-r-none"
                       />
                       <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm text-gray-600">
@@ -586,10 +673,17 @@ export default function BOMPage() {
                     <Input
                       id="reference"
                       value={formData.reference}
-                      onChange={(e) => setFormData(prev => ({ ...prev, reference: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          reference: e.target.value,
+                        }))
+                      }
                       maxLength={8}
                     />
-                    <p className="text-xs text-gray-500 mt-1">Text Field allow no more than 8 character</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Text Field allow no more than 8 character
+                    </p>
                   </div>
                 </div>
 
@@ -630,33 +724,46 @@ export default function BOMPage() {
                         Add a product
                       </Button>
                     </div>
-                    
+
                     <div className="space-y-3">
                       {formData.components.map((component, index) => (
-                        <div key={index} className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50/50">
+                        <div
+                          key={index}
+                          className="flex items-start gap-3 p-4 border border-gray-200 rounded-lg bg-gray-50/50"
+                        >
                           <div className="flex-1 grid grid-cols-2 gap-4">
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium text-gray-600">To consume</Label>
-                              <select
-                                value={component.product_name}
-                                onChange={(e) => handleUpdateComponent(index, 'product_name', e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              <Label className="text-xs font-medium text-gray-600">
+                                To consume
+                              </Label>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedComponentIndex(index);
+                                  setShowMaterialPopup(true);
+                                }}
+                                className="w-full justify-start text-left h-10 px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               >
-                                <option value="">Select Product</option>
-                                {products.filter(p => p.category !== "Furniture").map(product => (
-                                  <option key={product.id} value={product.name}>
-                                    {product.name}
-                                  </option>
-                                ))}
-                              </select>
+                                {component.product_name ||
+                                  "Click to select material"}
+                              </Button>
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-xs font-medium text-gray-600">Units</Label>
+                              <Label className="text-xs font-medium text-gray-600">
+                                Units
+                              </Label>
                               <div className="flex">
                                 <Input
                                   type="number"
                                   value={component.quantity}
-                                  onChange={(e) => handleUpdateComponent(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                  onChange={(e) =>
+                                    handleUpdateComponent(
+                                      index,
+                                      "quantity",
+                                      parseFloat(e.target.value) || 0
+                                    )
+                                  }
                                   className="rounded-r-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="numeric field, float value >0"
                                 />
@@ -696,24 +803,41 @@ export default function BOMPage() {
                         Add a line
                       </Button>
                     </div>
-                    
+
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-gray-200 bg-gray-50">
-                            <th className="text-left py-3 px-4 font-medium text-gray-700">Operations</th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-700">Work Center</th>
-                            <th className="text-left py-3 px-4 font-medium text-gray-700">Expected Duration</th>
-                            <th className="text-center py-3 px-4 font-medium text-gray-700 w-20">Actions</th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">
+                              Operations
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">
+                              Work Center
+                            </th>
+                            <th className="text-left py-3 px-4 font-medium text-gray-700">
+                              Expected Duration
+                            </th>
+                            <th className="text-center py-3 px-4 font-medium text-gray-700 w-20">
+                              Actions
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {workOrders.map((workOrder, index) => (
-                            <tr key={workOrder.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                            <tr
+                              key={workOrder.id}
+                              className="border-b border-gray-100 hover:bg-gray-50/50"
+                            >
                               <td className="py-3 px-4">
                                 <Input
                                   value={workOrder.operation}
-                                  onChange={(e) => handleUpdateWorkOrder(index, 'operation', e.target.value)}
+                                  onChange={(e) =>
+                                    handleUpdateWorkOrder(
+                                      index,
+                                      "operation",
+                                      e.target.value
+                                    )
+                                  }
                                   className="w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="Operation name"
                                 />
@@ -721,14 +845,22 @@ export default function BOMPage() {
                               <td className="py-3 px-4">
                                 <select
                                   value={workOrder.work_center}
-                                  onChange={(e) => handleUpdateWorkOrder(index, 'work_center', e.target.value)}
+                                  onChange={(e) =>
+                                    handleUpdateWorkOrder(
+                                      index,
+                                      "work_center",
+                                      e.target.value
+                                    )
+                                  }
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
                                   <option value="">Select Work Center</option>
                                   <option value="Assembly">Assembly</option>
                                   <option value="Machining">Machining</option>
                                   <option value="Packaging">Packaging</option>
-                                  <option value="Quality Control">Quality Control</option>
+                                  <option value="Quality Control">
+                                    Quality Control
+                                  </option>
                                 </select>
                               </td>
                               <td className="py-3 px-4">
@@ -736,7 +868,13 @@ export default function BOMPage() {
                                   <Input
                                     type="number"
                                     value={workOrder.expected_duration}
-                                    onChange={(e) => handleUpdateWorkOrder(index, 'expected_duration', e.target.value)}
+                                    onChange={(e) =>
+                                      handleUpdateWorkOrder(
+                                        index,
+                                        "expected_duration",
+                                        e.target.value
+                                      )
+                                    }
                                     className="rounded-r-none text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Duration"
                                   />
@@ -759,7 +897,10 @@ export default function BOMPage() {
                           ))}
                           {workOrders.length === 0 && (
                             <tr>
-                              <td colSpan="4" className="py-8 text-center text-gray-500">
+                              <td
+                                colSpan="4"
+                                className="py-8 text-center text-gray-500"
+                              >
                                 <Factory className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                                 <p>No work orders added yet</p>
                               </td>
@@ -772,7 +913,8 @@ export default function BOMPage() {
                 )}
 
                 <div className="text-xs text-gray-500">
-                  On New Button, Create a template which can be used in manufacturing orders
+                  On New Button, Create a template which can be used in
+                  manufacturing orders
                 </div>
               </div>
             </div>
@@ -786,7 +928,10 @@ export default function BOMPage() {
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Bill of Materials</h2>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setShowEditForm(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowEditForm(false)}
+                  >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Back
                   </Button>
@@ -799,24 +944,35 @@ export default function BOMPage() {
 
               <div className="space-y-4">
                 <div className="text-sm text-gray-500 mb-2">MO-000001</div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="edit_finished_product">Finished product</Label>
+                    <Label htmlFor="edit_finished_product">
+                      Finished product
+                    </Label>
                     <select
                       id="edit_finished_product"
                       value={formData.finished_product}
-                      onChange={(e) => setFormData(prev => ({ ...prev, finished_product: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          finished_product: e.target.value,
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
                     >
                       <option value="">Select Product</option>
-                      {products.filter(p => p.category === "Furniture").map(product => (
-                        <option key={product.id} value={product.name}>
-                          {product.name}
-                        </option>
-                      ))}
+                      {products
+                        .filter((p) => p.category === "Furniture")
+                        .map((product) => (
+                          <option key={product.id} value={product.name}>
+                            {product.name}
+                          </option>
+                        ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-1">Many Zone field, fetch from stock ledger</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Many Zone field, fetch from stock ledger
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="edit_quantity">Quantity</Label>
@@ -825,7 +981,12 @@ export default function BOMPage() {
                         id="edit_quantity"
                         type="number"
                         value={formData.quantity}
-                        onChange={(e) => setFormData(prev => ({ ...prev, quantity: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            quantity: e.target.value,
+                          }))
+                        }
                         className="rounded-r-none"
                       />
                       <span className="px-3 py-2 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md text-sm text-gray-600">
@@ -869,12 +1030,17 @@ export default function BOMPage() {
                     <div className="flex justify-between items-center">
                       <h3 className="font-medium">Components</h3>
                     </div>
-                    
+
                     <div className="space-y-2">
                       {formData.components.map((component, index) => (
-                        <div key={index} className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg">
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg"
+                        >
                           <div className="flex-1 grid grid-cols-2 gap-2">
-                            <div className="text-sm text-gray-600">{component.product_name}</div>
+                            <div className="text-sm text-gray-600">
+                              {component.product_name}
+                            </div>
                             <div className="text-sm text-gray-600">
                               {component.quantity} {component.unit}
                             </div>
@@ -896,28 +1062,46 @@ export default function BOMPage() {
                     <div className="flex justify-between items-center">
                       <h3 className="font-medium">Work Orders</h3>
                     </div>
-                    
+
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-gray-200">
-                            <th className="text-left py-2 px-3 font-medium text-gray-700">Operations</th>
-                            <th className="text-left py-2 px-3 font-medium text-gray-700">Work Center</th>
-                            <th className="text-left py-2 px-3 font-medium text-gray-700">Expected Duration</th>
+                            <th className="text-left py-2 px-3 font-medium text-gray-700">
+                              Operations
+                            </th>
+                            <th className="text-left py-2 px-3 font-medium text-gray-700">
+                              Work Center
+                            </th>
+                            <th className="text-left py-2 px-3 font-medium text-gray-700">
+                              Expected Duration
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {workOrders.length > 0 ? (
                             workOrders.map((workOrder, index) => (
-                              <tr key={workOrder.id} className="border-b border-gray-100">
-                                <td className="py-2 px-3 text-sm text-gray-600">{workOrder.operation}</td>
-                                <td className="py-2 px-3 text-sm text-gray-600">{workOrder.work_center}</td>
-                                <td className="py-2 px-3 text-sm text-gray-600">{workOrder.expected_duration} min</td>
+                              <tr
+                                key={workOrder.id}
+                                className="border-b border-gray-100"
+                              >
+                                <td className="py-2 px-3 text-sm text-gray-600">
+                                  {workOrder.operation}
+                                </td>
+                                <td className="py-2 px-3 text-sm text-gray-600">
+                                  {workOrder.work_center}
+                                </td>
+                                <td className="py-2 px-3 text-sm text-gray-600">
+                                  {workOrder.expected_duration} min
+                                </td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan="3" className="py-8 text-center text-gray-500">
+                              <td
+                                colSpan="3"
+                                className="py-8 text-center text-gray-500"
+                              >
                                 <Factory className="w-8 h-8 mx-auto mb-2 text-gray-300" />
                                 <p>No work orders available</p>
                               </td>
@@ -930,7 +1114,8 @@ export default function BOMPage() {
                 )}
 
                 <div className="text-xs text-gray-500">
-                  All fields of bom should be populate on manufacturing order, if bom is selected on manufacturing order
+                  All fields of bom should be populate on manufacturing order,
+                  if bom is selected on manufacturing order
                 </div>
               </div>
             </div>
@@ -958,16 +1143,22 @@ export default function BOMPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium text-gray-700">Product:</span>
-                    <p className="text-gray-600">{selectedBOM.finished_product}</p>
+                    <p className="text-gray-600">
+                      {selectedBOM.finished_product}
+                    </p>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700">Reference:</span>
+                    <span className="font-medium text-gray-700">
+                      Reference:
+                    </span>
                     <p className="text-gray-600">{selectedBOM.reference}</p>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-700 mb-2">Components:</h3>
+                  <h3 className="font-medium text-gray-700 mb-2">
+                    Components:
+                  </h3>
                   <div className="space-y-2">
                     {selectedBOM.components?.map((component, index) => (
                       <div
@@ -975,7 +1166,9 @@ export default function BOMPage() {
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
                       >
                         <div>
-                          <p className="font-medium text-gray-900">{component.product_name}</p>
+                          <p className="font-medium text-gray-900">
+                            {component.product_name}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-600">
@@ -991,6 +1184,22 @@ export default function BOMPage() {
           </div>
         )}
       </div>
+
+      {/* Material Selection Popup */}
+      <MaterialSelectionPopup
+        open={showMaterialPopup}
+        onOpenChange={setShowMaterialPopup}
+        onSelect={handleMaterialSelect}
+        currentSelection={
+          selectedComponentIndex !== null
+            ? products.find(
+                (p) =>
+                  p.name ===
+                  formData.components[selectedComponentIndex]?.product_name
+              )
+            : null
+        }
+      />
     </div>
   );
 }

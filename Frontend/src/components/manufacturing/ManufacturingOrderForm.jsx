@@ -515,6 +515,11 @@ export default function ManufacturingOrderForm() {
               <h1 className="text-2xl font-bold text-gray-900">
                 Manufacturing Order
               </h1>
+              {order.orderNumber && (
+                <p className="text-sm text-gray-600">
+                  Order: {order.orderNumber}
+                </p>
+              )}
             </div>
           </div>
 
@@ -627,10 +632,171 @@ export default function ManufacturingOrderForm() {
         </div>
       </div>
 
+      {/* Status Indicator and Progress */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  order.status === "DRAFT"
+                    ? "bg-gray-400"
+                    : order.status === "CONFIRMED"
+                    ? "bg-blue-500"
+                    : order.status === "IN_PROGRESS"
+                    ? "bg-orange-500"
+                    : order.status === "TO_CLOSE"
+                    ? "bg-yellow-500"
+                    : order.status === "DONE"
+                    ? "bg-green-500"
+                    : order.status === "CANCELLED"
+                    ? "bg-red-500"
+                    : "bg-gray-400"
+                }`}
+              ></div>
+              <span className="text-sm font-medium text-gray-700">
+                Status: {statusConfig[order.status]?.label || order.status}
+              </span>
+            </div>
+            {order.status !== "CANCELLED" && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Progress:</span>
+                <div className="w-32 bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${getProgressPercentage()}%` }}
+                  ></div>
+                </div>
+                <span className="text-sm text-gray-600">
+                  {Math.round(getProgressPercentage())}%
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-4 text-sm text-gray-600">
+            {order.startedAt && (
+              <div className="flex items-center gap-1">
+                <PlayCircle className="w-4 h-4" />
+                <span>
+                  Started: {new Date(order.startedAt).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+            {order.completedAt && (
+              <div className="flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" />
+                <span>
+                  Completed: {new Date(order.completedAt).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="p-6">
         <div className="max-w-6xl mx-auto">
           {/* Manufacturing Order Details */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <div
+            className={`bg-white rounded-lg border-2 p-6 mb-6 ${
+              order.status === "DRAFT"
+                ? "border-gray-300"
+                : order.status === "CONFIRMED"
+                ? "border-blue-300 bg-blue-50/30"
+                : order.status === "IN_PROGRESS"
+                ? "border-orange-300 bg-orange-50/30"
+                : order.status === "TO_CLOSE"
+                ? "border-yellow-300 bg-yellow-50/30"
+                : order.status === "DONE"
+                ? "border-green-300 bg-green-50/30"
+                : order.status === "CANCELLED"
+                ? "border-red-300 bg-red-50/30"
+                : "border-gray-300"
+            }`}
+          >
+            {/* State-specific message */}
+            {order.status === "DRAFT" && (
+              <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    Draft Order
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  This order is in draft status. Please fill in all required
+                  fields and confirm to proceed.
+                </p>
+              </div>
+            )}
+            {order.status === "CONFIRMED" && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700">
+                    Order Confirmed
+                  </span>
+                </div>
+                <p className="text-sm text-blue-600 mt-1">
+                  This order has been confirmed and is ready to start
+                  production.
+                </p>
+              </div>
+            )}
+            {order.status === "IN_PROGRESS" && (
+              <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <PlayCircle className="w-5 h-5 text-orange-600" />
+                  <span className="text-sm font-medium text-orange-700">
+                    Production In Progress
+                  </span>
+                </div>
+                <p className="text-sm text-orange-600 mt-1">
+                  This order is currently being produced. Monitor work orders
+                  and component consumption.
+                </p>
+              </div>
+            )}
+            {order.status === "TO_CLOSE" && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-yellow-600" />
+                  <span className="text-sm font-medium text-yellow-700">
+                    Ready to Close
+                  </span>
+                </div>
+                <p className="text-sm text-yellow-600 mt-1">
+                  Production is complete. Review the order and mark as done.
+                </p>
+              </div>
+            )}
+            {order.status === "DONE" && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-green-700">
+                    Order Completed
+                  </span>
+                </div>
+                <p className="text-sm text-green-600 mt-1">
+                  This order has been successfully completed.
+                </p>
+              </div>
+            )}
+            {order.status === "CANCELLED" && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <XCircle className="w-5 h-5 text-red-600" />
+                  <span className="text-sm font-medium text-red-700">
+                    Order Cancelled
+                  </span>
+                </div>
+                <p className="text-sm text-red-600 mt-1">
+                  This order has been cancelled and cannot be modified.
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column */}
               <div className="space-y-6">

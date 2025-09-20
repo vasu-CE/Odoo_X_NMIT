@@ -28,6 +28,7 @@ export default function SignupPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    role: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -67,6 +68,10 @@ export default function SignupPage() {
       newErrors.confirmPassword = "Passwords do not match";
     }
 
+    if (!formData.role) {
+      newErrors.role = "Please select a role";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -85,13 +90,14 @@ export default function SignupPage() {
         loginId: formData.loginId,
         email: formData.email,
         password: formData.password,
+        role: formData.role,
       });
 
       if (result.success) {
         toast.success("Account created successfully!", {
           description: "Welcome to ManufacturingOS! Redirecting...",
         });
-          navigate("/");
+        navigate("/");
       } else {
         toast.error("Signup failed", {
           description:
@@ -211,6 +217,46 @@ export default function SignupPage() {
                   <p className="text-sm text-red-600 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
                     {errors.email}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="role"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Role
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-4 h-11 border rounded-md bg-white text-gray-900 focus:outline-none focus:ring-2 ${
+                      errors.role
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    disabled={isLoading}
+                  >
+                    <option value="">Select your role</option>
+                    <option value="MANUFACTURING_MANAGER">
+                      Manufacturing Manager
+                    </option>
+                    <option value="SHOP_FLOOR_OPERATOR">
+                      Shop Floor Operator
+                    </option>
+                    <option value="INVENTORY_MANAGER">Inventory Manager</option>
+                    <option value="BUSINESS_OWNER">Business Owner</option>
+                  </select>
+                </div>
+                {errors.role && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.role}
                   </p>
                 )}
               </div>

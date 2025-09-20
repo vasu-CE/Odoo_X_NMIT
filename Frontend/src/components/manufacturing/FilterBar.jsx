@@ -155,7 +155,7 @@ export default function FilterBar({
               <SelectItem value="completed">
                 <div className="flex items-center gap-3">
                   {getStatusIcon("completed")}
-                  <span className="font-medium">Completed</span>
+                  <span className="font-medium">Done</span>
                   <Badge
                     variant="outline"
                     className="ml-auto text-xs bg-green-50 text-green-600"
@@ -203,7 +203,9 @@ export default function FilterBar({
                   {getPriorityIcon("low")}
                   <span className="font-medium">Low</span>
                   <Badge
-                    className={`ml-auto text-xs ${getPriorityBadgeColor("low")}`}
+                    className={`ml-auto text-xs ${getPriorityBadgeColor(
+                      "low"
+                    )}`}
                   >
                     Normal
                   </Badge>
@@ -215,8 +217,8 @@ export default function FilterBar({
                   <span className="font-medium">Medium</span>
                   <Badge
                     className={`ml-auto text-xs ${getPriorityBadgeColor(
-                    "medium"
-                  )}`}
+                      "medium"
+                    )}`}
                   >
                     Standard
                   </Badge>
@@ -227,7 +229,9 @@ export default function FilterBar({
                   {getPriorityIcon("high")}
                   <span className="font-medium">High</span>
                   <Badge
-                    className={`ml-auto text-xs ${getPriorityBadgeColor("high")}`}
+                    className={`ml-auto text-xs ${getPriorityBadgeColor(
+                      "high"
+                    )}`}
                   >
                     Important
                   </Badge>
@@ -239,8 +243,8 @@ export default function FilterBar({
                   <span className="font-medium">Urgent</span>
                   <Badge
                     className={`ml-auto text-xs ${getPriorityBadgeColor(
-                    "urgent"
-                  )}`}
+                      "urgent"
+                    )}`}
                   >
                     Critical
                   </Badge>

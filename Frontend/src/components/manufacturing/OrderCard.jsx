@@ -41,19 +41,19 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
     try {
       // Map frontend status to backend status
       const statusMap = {
-        'planned': 'PLANNED',
-        'confirmed': 'CONFIRMED', 
-        'in_progress': 'IN_PROGRESS',
-        'quality_hold': 'QUALITY_HOLD',
-        'completed': 'COMPLETED',
-        'cancelled': 'CANCELED'
+        planned: "PLANNED",
+        confirmed: "CONFIRMED",
+        in_progress: "IN_PROGRESS",
+        quality_hold: "QUALITY_HOLD",
+        completed: "DONE",
+        cancelled: "CANCELED",
       };
 
       const backendStatus = statusMap[newStatus] || newStatus.toUpperCase();
-      
+
       // Use the new status update API
       const result = await apiService.updateManufacturingOrderStatus(
-        order.id, 
+        order.id,
         backendStatus,
         `Status changed to ${newStatus}`
       );
@@ -79,7 +79,7 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
         return 0;
       case "in_progress":
         return 50;
-      case "completed":
+      case "DONE":
         return 100;
       case "cancelled":
         return 0;
@@ -95,12 +95,20 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
               <StatusIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
-              <span className="truncate">{order.order_number || `MO-${order.id.slice(-6)}`}</span>
+              <span className="truncate">
+                {order.order_number || `MO-${order.id.slice(-6)}`}
+              </span>
             </h3>
-            <p className="text-sm text-gray-600 mt-1 truncate">{order.product_name}</p>
+            <p className="text-sm text-gray-600 mt-1 truncate">
+              {order.product_name}
+            </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <Badge className={`${statusConfig[order.status]?.color} text-xs px-2 py-1`}>
+            <Badge
+              className={`${
+                statusConfig[order.status]?.color
+              } text-xs px-2 py-1`}
+            >
               {statusConfig[order.status]?.label}
             </Badge>
             <DropdownMenu>
@@ -115,7 +123,7 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem asChild>
-                  <Link 
+                  <Link
                     to={`/manufacturing-orders/${order.id}`}
                     className="flex items-center gap-3 text-sm w-full"
                   >
@@ -203,12 +211,7 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
-          <Button
-            size="sm"
-            variant="outline"
-            asChild
-            className="flex-1"
-          >
+          <Button size="sm" variant="outline" asChild className="flex-1">
             <Link to={`/manufacturing-orders/${order.id}`}>
               <Eye className="w-4 h-4 mr-1" />
               View Details
@@ -228,7 +231,7 @@ export default function OrderCard({ order, onUpdate, statusConfig }) {
           {order.status === "in_progress" && (
             <Button
               size="sm"
-              onClick={() => handleStatusChange("completed")}
+              onClick={() => handleStatusChange("DONE")}
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-700"
             >

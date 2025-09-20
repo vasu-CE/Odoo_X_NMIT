@@ -12,6 +12,8 @@ import {
   User,
   BarChart3,
   LogOut,
+  Package,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar,
@@ -198,13 +200,11 @@ export default function Layout({ children }) {
 
                   {/* Profile Dropdown */}
                   {showProfileDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 z-50">
                       <div className="py-2">
                         <div className="px-4 py-2 border-b border-gray-100">
                           <p className="text-sm font-medium text-gray-900">
-                            {user?.loginId ||
-                              user?.name ||
-                              "Production Manager"}
+                            {user?.name || user?.loginId || "User"}
                           </p>
                           <p className="text-xs text-gray-500">
                             {{
@@ -215,6 +215,23 @@ export default function Layout({ children }) {
                             }[user?.role] || "Unknown Role"}
                           </p>
                         </div>
+                        <Link
+                          to="/profile-setup"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <User className="w-4 h-4" />
+                          My Profile
+                        </Link>
+                        <Link
+                          to="/profile-setup?tab=reports"
+                          onClick={() => setShowProfileDropdown(false)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <BarChart3 className="w-4 h-4" />
+                          My Reports
+                        </Link>
+                        <div className="border-t border-gray-100 my-1"></div>
                         <button
                           onClick={() => {
                             logout();

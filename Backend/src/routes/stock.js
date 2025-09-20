@@ -56,38 +56,22 @@ router.get('/', authenticate, [
       ];
     }
 
-    const [stockMovements, total] = await Promise.all([
-      prisma.stockMovement.findMany({
-        where,
-        skip,
-        take: parseInt(limit),
-        orderBy: { createdAt: 'desc' },
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              unit: true,
-              type: true
-            }
+    const stockMovements = await prisma.stockMovement.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            unit: true,
+            type: true
           }
-        }
-      }),
-      prisma.stockMovement.count({ where })
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        stockMovements,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / parseInt(limit))
         }
       }
     });
+
+    res.json(stockMovements);
   } catch (error) {
     console.error('Get stock movements error:', error);
     res.status(500).json({

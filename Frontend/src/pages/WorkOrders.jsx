@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 const statusConfig = {
-  PENDING: {
+  TO_DO: {
     color: "bg-gray-100 text-gray-800",
     icon: Clock,
     label: "To do",
@@ -33,17 +33,12 @@ const statusConfig = {
     icon: PlayCircle,
     label: "In-progress",
   },
-  PAUSED: {
-    color: "bg-yellow-100 text-yellow-800",
-    icon: PauseCircle,
-    label: "Paused",
-  },
-  COMPLETED: {
+  DONE: {
     color: "bg-green-100 text-green-800",
     icon: CheckCircle,
     label: "Done",
   },
-  SKIPPED: {
+  CANCELLED: {
     color: "bg-red-100 text-red-800",
     icon: AlertTriangle,
     label: "Cancelled",
@@ -67,7 +62,7 @@ export default function WorkOrders() {
   const [viewMode, setViewMode] = useState("list"); // "list" or "grid"
   const [elapsedTimes, setElapsedTimes] = useState({}); // Track elapsed times for in-progress orders
 
-  const isShopFloorOperator = user?.role === 'SHOP_FLOOR_OPERATOR';
+  const isShopFloorOperator = user?.role === "SHOP_FLOOR_OPERATOR";
 
   useEffect(() => {
     if (user) {
@@ -78,11 +73,11 @@ export default function WorkOrders() {
   // Update elapsed times every second for in-progress work orders
   useEffect(() => {
     const interval = setInterval(() => {
-      setElapsedTimes(prev => {
+      setElapsedTimes((prev) => {
         const updated = { ...prev };
-        workOrders.forEach(wo => {
+        workOrders.forEach((wo) => {
           // Only update timer for IN_PROGRESS work orders
-          if (wo.status === 'IN_PROGRESS' && wo.startTime) {
+          if (wo.status === "IN_PROGRESS" && wo.startTime) {
             const startTime = new Date(wo.startTime);
             const now = new Date();
             const totalElapsed = Math.floor((now - startTime) / 1000); // seconds
@@ -90,7 +85,7 @@ export default function WorkOrders() {
             const pausedDurationSeconds = pausedDuration * 60;
             const elapsed = totalElapsed - pausedDurationSeconds;
             updated[wo.id] = Math.max(0, elapsed); // Ensure non-negative
-          } else if (wo.status === 'PAUSED') {
+          } else if (wo.status === "PAUSED") {
             // For paused work orders, keep the last calculated time (don't update)
             // The getRealDuration function will handle the display
           }
@@ -105,7 +100,7 @@ export default function WorkOrders() {
   const loadData = async () => {
     try {
       setLoading(true);
-      
+
       if (isShopFloorOperator) {
         // For shop floor operators, get their assigned work orders
         try {
@@ -113,11 +108,11 @@ export default function WorkOrders() {
           if (response.success) {
             setWorkOrders(response.data.workOrders);
           } else {
-            console.error('API Error:', response.error);
+            console.error("API Error:", response.error);
             setWorkOrders([]);
           }
         } catch (error) {
-          console.error('Network Error:', error);
+          console.error("Network Error:", error);
           setWorkOrders([]);
         }
       } else {
@@ -127,11 +122,11 @@ export default function WorkOrders() {
           if (response.success) {
             setWorkOrders(response.data.workOrders);
           } else {
-            console.error('API Error:', response.error);
+            console.error("API Error:", response.error);
             setWorkOrders([]);
           }
         } catch (error) {
-          console.error('Network Error:', error);
+          console.error("Network Error:", error);
           setWorkOrders([]);
         }
       }
@@ -139,7 +134,7 @@ export default function WorkOrders() {
       // Load manufacturing orders and work centers for reference
       const [moResponse, wcResponse] = await Promise.all([
         apiService.getManufacturingOrders(),
-        apiService.getWorkCenters()
+        apiService.getWorkCenters(),
       ]);
 
       if (moResponse.success) {
@@ -164,11 +159,17 @@ export default function WorkOrders() {
       const response = await apiService.startWorkOrder(workOrderId);
       if (response.success) {
         // Update local state instead of refreshing all data
-        setWorkOrders(prev => prev.map(wo => 
-          wo.id === workOrderId 
-            ? { ...wo, status: 'IN_PROGRESS', startTime: new Date().toISOString() }
-            : wo
-        ));
+        setWorkOrders((prev) =>
+          prev.map((wo) =>
+            wo.id === workOrderId
+              ? {
+                  ...wo,
+                  status: "IN_PROGRESS",
+                  startTime: new Date().toISOString(),
+                }
+              : wo
+          )
+        );
       }
     } catch (error) {
       console.error("Error starting work order:", error);
@@ -180,11 +181,13 @@ export default function WorkOrders() {
       const response = await apiService.pauseWorkOrder(workOrderId);
       if (response.success) {
         // Update local state instead of refreshing all data
-        setWorkOrders(prev => prev.map(wo => 
-          wo.id === workOrderId 
-            ? { ...wo, status: 'PAUSED', pausedAt: new Date().toISOString() }
-            : wo
-        ));
+        setWorkOrders((prev) =>
+          prev.map((wo) =>
+            wo.id === workOrderId
+              ? { ...wo, status: "PAUSED", pausedAt: new Date().toISOString() }
+              : wo
+          )
+        );
       }
     } catch (error) {
       console.error("Error pausing work order:", error);
@@ -196,11 +199,18 @@ export default function WorkOrders() {
       const response = await apiService.doneWorkOrder(workOrderId);
       if (response.success) {
         // Update local state instead of refreshing all data
-        setWorkOrders(prev => prev.map(wo => 
-          wo.id === workOrderId 
-            ? { ...wo, status: 'COMPLETED', endTime: new Date().toISOString(), completedAt: new Date().toISOString() }
-            : wo
-        ));
+        setWorkOrders((prev) =>
+          prev.map((wo) =>
+            wo.id === workOrderId
+              ? {
+                  ...wo,
+                  status: "DONE",
+                  endTime: new Date().toISOString(),
+                  completedAt: new Date().toISOString(),
+                }
+              : wo
+          )
+        );
       }
     } catch (error) {
       console.error("Error completing work order:", error);
@@ -212,11 +222,13 @@ export default function WorkOrders() {
       const response = await apiService.resumeWorkOrder(workOrderId);
       if (response.success) {
         // Update local state instead of refreshing all data
-        setWorkOrders(prev => prev.map(wo => 
-          wo.id === workOrderId 
-            ? { ...wo, status: 'IN_PROGRESS', pausedAt: null }
-            : wo
-        ));
+        setWorkOrders((prev) =>
+          prev.map((wo) =>
+            wo.id === workOrderId
+              ? { ...wo, status: "IN_PROGRESS", pausedAt: null }
+              : wo
+          )
+        );
       }
     } catch (error) {
       console.error("Error resuming work order:", error);
@@ -228,11 +240,13 @@ export default function WorkOrders() {
       const response = await apiService.cancelWorkOrder(workOrderId);
       if (response.success) {
         // Update local state instead of refreshing all data
-        setWorkOrders(prev => prev.map(wo => 
-          wo.id === workOrderId 
-            ? { ...wo, status: 'SKIPPED', endTime: new Date().toISOString() }
-            : wo
-        ));
+        setWorkOrders((prev) =>
+          prev.map((wo) =>
+            wo.id === workOrderId
+              ? { ...wo, status: "SKIPPED", endTime: new Date().toISOString() }
+              : wo
+          )
+        );
       }
     } catch (error) {
       console.error("Error cancelling work order:", error);
@@ -243,36 +257,44 @@ export default function WorkOrders() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const getRealDuration = (workOrder) => {
-    if (workOrder.status === 'COMPLETED' && workOrder.realDuration) {
+    if (workOrder.status === "DONE" && workOrder.realDuration) {
       return `${workOrder.realDuration} min`;
     }
-    if (workOrder.status === 'IN_PROGRESS' && elapsedTimes[workOrder.id]) {
+    if (workOrder.status === "IN_PROGRESS" && elapsedTimes[workOrder.id]) {
       return formatDuration(elapsedTimes[workOrder.id]);
     }
-    if (workOrder.status === 'PAUSED' && workOrder.startTime) {
+    if (workOrder.status === "PAUSED" && workOrder.startTime) {
       // Calculate elapsed time up to pause point (excluding paused duration)
       const startTime = new Date(workOrder.startTime);
-      const pausedAt = workOrder.pausedAt ? new Date(workOrder.pausedAt) : new Date();
+      const pausedAt = workOrder.pausedAt
+        ? new Date(workOrder.pausedAt)
+        : new Date();
       const totalElapsed = Math.floor((pausedAt - startTime) / 1000); // seconds
       const pausedDuration = workOrder.pausedDuration || 0; // paused duration in minutes
       const pausedDurationSeconds = pausedDuration * 60;
       const elapsed = Math.max(0, totalElapsed - pausedDurationSeconds);
       return formatDuration(elapsed);
     }
-    return workOrder.realDuration ? `${workOrder.realDuration} min` : '-';
+    return workOrder.realDuration ? `${workOrder.realDuration} min` : "-";
   };
 
   // Filter work orders
   const filteredWorkOrders = workOrders.filter((wo) => {
     const matchesSearch =
       wo.operationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wo.manufacturingOrder?.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      wo.manufacturingOrder?.orderNumber
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       wo.workCenter?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wo.manufacturingOrder?.product?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      wo.manufacturingOrder?.product?.name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
     return matchesSearch;
   });
@@ -378,7 +400,7 @@ export default function WorkOrders() {
                   ) : filteredWorkOrders.length > 0 ? (
                     filteredWorkOrders.map((workOrder) => {
                       const statusInfo =
-                        statusConfig[workOrder.status] || statusConfig.PENDING;
+                        statusConfig[workOrder.status] || statusConfig.TO_DO;
                       const StatusIcon = statusInfo.icon;
 
                       return (
@@ -397,7 +419,8 @@ export default function WorkOrders() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center text-sm text-gray-900">
                               <Package className="w-4 h-4 mr-2 text-gray-400" />
-                              {workOrder.manufacturingOrder?.product?.name || "-"}
+                              {workOrder.manufacturingOrder?.product?.name ||
+                                "-"}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -417,21 +440,25 @@ export default function WorkOrders() {
                           {isShopFloorOperator && (
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <div className="flex gap-2">
-                                {workOrder.status === 'PENDING' && (
+                                {workOrder.status === "TO_DO" && (
                                   <Button
                                     size="sm"
-                                    onClick={() => handleStartWorkOrder(workOrder.id)}
+                                    onClick={() =>
+                                      handleStartWorkOrder(workOrder.id)
+                                    }
                                     className="bg-green-600 hover:bg-green-700 text-white"
                                   >
                                     <Play className="w-3 h-3 mr-1" />
                                     Start
                                   </Button>
                                 )}
-                                {workOrder.status === 'IN_PROGRESS' && (
+                                {workOrder.status === "IN_PROGRESS" && (
                                   <>
                                     <Button
                                       size="sm"
-                                      onClick={() => handlePauseWorkOrder(workOrder.id)}
+                                      onClick={() =>
+                                        handlePauseWorkOrder(workOrder.id)
+                                      }
                                       className="bg-yellow-600 hover:bg-yellow-700 text-white"
                                     >
                                       <Pause className="w-3 h-3 mr-1" />
@@ -439,7 +466,9 @@ export default function WorkOrders() {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleDoneWorkOrder(workOrder.id)}
+                                      onClick={() =>
+                                        handleDoneWorkOrder(workOrder.id)
+                                      }
                                       className="bg-blue-600 hover:bg-blue-700 text-white"
                                     >
                                       <Check className="w-3 h-3 mr-1" />
@@ -447,11 +476,13 @@ export default function WorkOrders() {
                                     </Button>
                                   </>
                                 )}
-                                {workOrder.status === 'PAUSED' && (
+                                {workOrder.status === "PAUSED" && (
                                   <>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleResumeWorkOrder(workOrder.id)}
+                                      onClick={() =>
+                                        handleResumeWorkOrder(workOrder.id)
+                                      }
                                       className="bg-green-600 hover:bg-green-700 text-white"
                                     >
                                       <Play className="w-3 h-3 mr-1" />
@@ -459,7 +490,9 @@ export default function WorkOrders() {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      onClick={() => handleDoneWorkOrder(workOrder.id)}
+                                      onClick={() =>
+                                        handleDoneWorkOrder(workOrder.id)
+                                      }
                                       className="bg-blue-600 hover:bg-blue-700 text-white"
                                     >
                                       <Check className="w-3 h-3 mr-1" />
@@ -467,10 +500,12 @@ export default function WorkOrders() {
                                     </Button>
                                   </>
                                 )}
-                                {workOrder.status === 'PENDING' && (
+                                {workOrder.status === "TO_DO" && (
                                   <Button
                                     size="sm"
-                                    onClick={() => handleCancelWorkOrder(workOrder.id)}
+                                    onClick={() =>
+                                      handleCancelWorkOrder(workOrder.id)
+                                    }
                                     className="bg-red-600 hover:bg-red-700 text-white"
                                   >
                                     <AlertTriangle className="w-3 h-3 mr-1" />
@@ -485,7 +520,10 @@ export default function WorkOrders() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={isShopFloorOperator ? "7" : "6"} className="px-6 py-12 text-center">
+                      <td
+                        colSpan={isShopFloorOperator ? "7" : "6"}
+                        className="px-6 py-12 text-center"
+                      >
                         <div className="text-gray-500">
                           <p className="text-lg font-medium mb-2">
                             No work orders found
@@ -493,9 +531,9 @@ export default function WorkOrders() {
                           <p className="text-sm">
                             {searchTerm
                               ? "Try adjusting your search criteria"
-                              : isShopFloorOperator 
-                                ? "No work orders assigned to you"
-                                : "No work orders available"}
+                              : isShopFloorOperator
+                              ? "No work orders assigned to you"
+                              : "No work orders available"}
                           </p>
                         </div>
                       </td>
@@ -510,7 +548,7 @@ export default function WorkOrders() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredWorkOrders.map((workOrder) => {
               const statusInfo =
-                statusConfig[workOrder.status] || statusConfig.PENDING;
+                statusConfig[workOrder.status] || statusConfig.TO_DO;
               const StatusIcon = statusInfo.icon;
 
               return (
@@ -559,7 +597,7 @@ export default function WorkOrders() {
                   {isShopFloorOperator && (
                     <div className="mt-4 pt-4 border-t border-gray-200">
                       <div className="flex gap-2">
-                        {workOrder.status === 'PENDING' && (
+                        {workOrder.status === "TO_DO" && (
                           <Button
                             size="sm"
                             onClick={() => handleStartWorkOrder(workOrder.id)}
@@ -569,7 +607,7 @@ export default function WorkOrders() {
                             Start
                           </Button>
                         )}
-                        {workOrder.status === 'IN_PROGRESS' && (
+                        {workOrder.status === "IN_PROGRESS" && (
                           <>
                             <Button
                               size="sm"
@@ -589,11 +627,13 @@ export default function WorkOrders() {
                             </Button>
                           </>
                         )}
-                        {workOrder.status === 'PAUSED' && (
+                        {workOrder.status === "PAUSED" && (
                           <>
                             <Button
                               size="sm"
-                              onClick={() => handleResumeWorkOrder(workOrder.id)}
+                              onClick={() =>
+                                handleResumeWorkOrder(workOrder.id)
+                              }
                               className="bg-green-600 hover:bg-green-700 text-white flex-1"
                             >
                               <Play className="w-3 h-3 mr-1" />
@@ -609,7 +649,7 @@ export default function WorkOrders() {
                             </Button>
                           </>
                         )}
-                        {workOrder.status === 'PENDING' && (
+                        {workOrder.status === "TO_DO" && (
                           <Button
                             size="sm"
                             onClick={() => handleCancelWorkOrder(workOrder.id)}

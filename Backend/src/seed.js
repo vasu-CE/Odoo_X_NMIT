@@ -129,6 +129,7 @@ async function main() {
         reorderPoint: 50,
         hsnCode: "8473.30.10",
         category: "Widgets",
+        isActive: true,
       },
     }),
     prisma.product.upsert({
@@ -146,6 +147,7 @@ async function main() {
         reorderPoint: 30,
         hsnCode: "8473.30.20",
         category: "Widgets",
+        isActive: true,
       },
     }),
     prisma.product.upsert({
@@ -163,6 +165,7 @@ async function main() {
         reorderPoint: 100,
         hsnCode: "7208.10.00",
         category: "Raw Materials",
+        isActive: true,
       },
     }),
     prisma.product.upsert({
@@ -180,6 +183,7 @@ async function main() {
         reorderPoint: 50,
         hsnCode: "7208.20.00",
         category: "Raw Materials",
+        isActive: true,
       },
     }),
     prisma.product.upsert({
@@ -197,6 +201,7 @@ async function main() {
         reorderPoint: 25,
         hsnCode: "8473.30.30",
         category: "Components",
+        isActive: true,
       },
     }),
   ]);
@@ -320,14 +325,13 @@ async function main() {
     prisma.manufacturingOrder.create({
       data: {
         orderNumber: "MO-000001",
-        finishedProduct: "Widget A - Premium Model",
+        productId: "prod-1",
         quantity: 100,
-        units: "PCS",
         status: "IN_PROGRESS",
         priority: "HIGH",
-        scheduleDate: new Date("2024-01-15T08:00:00Z"),
+        scheduledDate: new Date("2024-01-15T08:00:00Z"),
         startedAt: new Date("2024-01-15T08:30:00Z"),
-        assigneeId: users[2].id,
+        assignedToId: users[2].id,
         bomId: bom1.id,
         estimatedCost: 1500.0,
         notes: "Priority order for customer ABC",
@@ -336,13 +340,12 @@ async function main() {
     prisma.manufacturingOrder.create({
       data: {
         orderNumber: "MO-000002",
-        finishedProduct: "Widget B - Standard Model",
+        productId: "prod-2",
         quantity: 50,
-        units: "PCS",
         status: "DRAFT",
         priority: "MEDIUM",
-        scheduleDate: new Date("2024-01-22T08:00:00Z"),
-        assigneeId: users[2].id,
+        scheduledDate: new Date("2024-01-22T08:00:00Z"),
+        assignedToId: users[2].id,
         bomId: bom2.id,
         estimatedCost: 800.0,
         notes: "Standard production order",
@@ -351,15 +354,14 @@ async function main() {
     prisma.manufacturingOrder.create({
       data: {
         orderNumber: "MO-000003",
-        finishedProduct: "Widget A - Premium Model",
+        productId: "prod-1",
         quantity: 200,
-        units: "PCS",
         status: "DONE",
         priority: "LOW",
-        scheduleDate: new Date("2024-01-10T08:00:00Z"),
+        scheduledDate: new Date("2024-01-10T08:00:00Z"),
         startedAt: new Date("2024-01-10T08:00:00Z"),
         completedAt: new Date("2024-01-12T16:30:00Z"),
-        assigneeId: users[2].id,
+        assignedToId: users[2].id,
         bomId: bom1.id,
         estimatedCost: 2000.0,
         actualCost: 1950.0,
@@ -369,13 +371,12 @@ async function main() {
     prisma.manufacturingOrder.create({
       data: {
         orderNumber: "MO-000004",
-        finishedProduct: "Custom Widget C",
+        productId: "prod-5",
         quantity: 25,
-        units: "PCS",
         status: "CONFIRMED",
         priority: "URGENT",
-        scheduleDate: new Date("2024-01-25T08:00:00Z"),
-        assigneeId: users[1].id,
+        scheduledDate: new Date("2024-01-25T08:00:00Z"),
+        assignedToId: users[1].id,
         estimatedCost: 500.0,
         notes: "Custom order for special client",
       },
@@ -461,38 +462,37 @@ async function main() {
       data: {
         manufacturingOrderId: manufacturingOrders[0].id,
         operationName: "Assembly",
-        workCenterName: "Assembly Line 1",
-        plannedDuration: 30, // 30 minutes per unit
-        realDuration: 15, // 15 minutes completed
+        workCenterId: "wc-1",
+        quantity: 100,
         estimatedTimeMinutes: 30,
         status: "IN_PROGRESS",
         assignedToId: users[2].id,
-        startTime: new Date("2024-01-15T08:30:00Z"),
-        comments: "Assembly in progress - 50% complete",
+        startedAt: new Date("2024-01-15T08:30:00Z"),
+        notes: "Assembly in progress - 50% complete",
       },
     }),
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[0].id,
         operationName: "Quality Check",
-        workCenterName: "Quality Control Station",
-        plannedDuration: 10, // 10 minutes per unit
+        workCenterId: "wc-2",
+        quantity: 100,
         estimatedTimeMinutes: 10,
         status: "TO_DO",
         assignedToId: users[2].id,
-        comments: "Waiting for assembly completion",
+        notes: "Waiting for assembly completion",
       },
     }),
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[0].id,
         operationName: "Packaging",
-        workCenterName: "Packaging Station",
-        plannedDuration: 5, // 5 minutes per unit
+        workCenterId: "wc-3",
+        quantity: 100,
         estimatedTimeMinutes: 5,
         status: "TO_DO",
         assignedToId: users[2].id,
-        comments: "Final packaging step",
+        notes: "Final packaging step",
       },
     }),
     // Work orders for MO-000002 (Draft)
@@ -500,24 +500,24 @@ async function main() {
       data: {
         manufacturingOrderId: manufacturingOrders[1].id,
         operationName: "Assembly",
-        workCenterName: "Assembly Line 1",
-        plannedDuration: 20, // 20 minutes per unit
+        workCenterId: "wc-1",
+        quantity: 50,
         estimatedTimeMinutes: 20,
         status: "TO_DO",
         assignedToId: users[2].id,
-        comments: "Ready to start",
+        notes: "Ready to start",
       },
     }),
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[1].id,
         operationName: "Packaging",
-        workCenterName: "Packaging Station",
-        plannedDuration: 5, // 5 minutes per unit
+        workCenterId: "wc-3",
+        quantity: 50,
         estimatedTimeMinutes: 5,
         status: "TO_DO",
         assignedToId: users[2].id,
-        comments: "Final packaging step",
+        notes: "Final packaging step",
       },
     }),
     // Work orders for MO-000003 (Done)
@@ -525,46 +525,45 @@ async function main() {
       data: {
         manufacturingOrderId: manufacturingOrders[2].id,
         operationName: "Assembly",
-        workCenterName: "Assembly Line 1",
-        plannedDuration: 30, // 30 minutes per unit
-        realDuration: 28, // 28 minutes actual
+        workCenterId: "wc-1",
+        quantity: 200,
         estimatedTimeMinutes: 30,
+        actualTimeMinutes: 28,
         status: "DONE",
         assignedToId: users[2].id,
-        startTime: new Date("2024-01-10T08:00:00Z"),
-        endTime: new Date("2024-01-11T18:00:00Z"),
-        comments: "Assembly completed successfully",
+        startedAt: new Date("2024-01-10T08:00:00Z"),
+        completedAt: new Date("2024-01-11T18:00:00Z"),
+        notes: "Assembly completed successfully",
       },
     }),
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[2].id,
         operationName: "Quality Check",
-        workCenterName: "Quality Control Station",
-        plannedDuration: 10, // 10 minutes per unit
-        realDuration: 9, // 9 minutes actual
+        workCenterId: "wc-2",
+        quantity: 200,
         estimatedTimeMinutes: 10,
+        actualTimeMinutes: 9,
         status: "DONE",
         assignedToId: users[2].id,
-        startTime: new Date("2024-01-11T18:00:00Z"),
-        endTime: new Date("2024-01-12T10:00:00Z"),
-        comments: "Quality check passed",
+        startedAt: new Date("2024-01-11T18:00:00Z"),
+        completedAt: new Date("2024-01-12T10:00:00Z"),
+        notes: "Quality check passed",
       },
     }),
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[2].id,
         operationName: "Packaging",
-        workCenterName: "Packaging Station",
-        plannedDuration: 5, // 5 minutes per unit
-        realDuration: 4, // 4 minutes actual
+        workCenterId: "wc-3",
+        quantity: 200,
         estimatedTimeMinutes: 5,
+        actualTimeMinutes: 4,
         status: "DONE",
         assignedToId: users[2].id,
-        startTime: new Date("2024-01-12T10:00:00Z"),
+        startedAt: new Date("2024-01-12T10:00:00Z"),
         completedAt: new Date("2024-01-12T16:30:00Z"),
-        realDuration: 950, // Add real duration for completed work order
-        comments: "Packaging completed",
+        notes: "Packaging completed",
       },
     }),
     // Work orders for MO-000004 (Confirmed)
@@ -572,24 +571,24 @@ async function main() {
       data: {
         manufacturingOrderId: manufacturingOrders[3].id,
         operationName: "Custom Assembly",
-        workCenterName: "Assembly Line 1",
-        plannedDuration: 45, // 45 minutes per unit
+        workCenterId: "wc-1",
+        quantity: 25,
         estimatedTimeMinutes: 45,
         status: "TO_DO",
         assignedToId: users[1].id,
-        comments: "Custom assembly process",
+        notes: "Custom assembly process",
       },
     }),
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[3].id,
         operationName: "Special Testing",
-        workCenterName: "Quality Control Station",
-        plannedDuration: 15, // 15 minutes per unit
+        workCenterId: "wc-2",
+        quantity: 25,
         estimatedTimeMinutes: 15,
         status: "TO_DO",
         assignedToId: users[1].id,
-        comments: "Special testing for custom widget",
+        notes: "Special testing for custom widget",
       },
     }),
   ]);

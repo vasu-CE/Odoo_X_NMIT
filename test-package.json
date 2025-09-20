@@ -1,0 +1,25 @@
+{
+  "name": "manufacturing-flow-test",
+  "version": "1.0.0",
+  "description": "Test suite for Manufacturing Flow validation",
+  "main": "test-manufacturing-flow.js",
+  "scripts": {
+    "test": "node test-manufacturing-flow.js",
+    "test:watch": "nodemon test-manufacturing-flow.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "keywords": [
+    "manufacturing",
+    "test",
+    "bom",
+    "work-order",
+    "stock-ledger"
+  ],
+  "author": "ManufacturingOS Team",
+  "license": "MIT"
+}
