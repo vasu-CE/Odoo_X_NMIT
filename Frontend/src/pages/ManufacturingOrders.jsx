@@ -277,8 +277,8 @@ export default function ManufacturingOrders() {
             
             {/* App Logo and Name */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Package className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <img src="/logo.png" alt="ManufacturingOS Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-lg font-semibold text-gray-900">ManufacturingOS</span>
             </div>

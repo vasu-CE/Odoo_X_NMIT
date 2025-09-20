@@ -4,12 +4,19 @@ import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import { prisma } from '../config/database.js';
 import { authenticate } from '../middleware/auth.js';
+import { sendResetLinkEmail } from '../services/emailHandler.js';
 
 const router = express.Router();
 
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+  });
+};
+
+const generateResetToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
+    expiresIn: '1h' // Reset tokens should expire in 1 hour for security
   });
 };
 
@@ -207,6 +214,11 @@ router.post('/forgot-password', [
       });
     }
 
+    const token = generateResetToken(user.id);
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    console.log(resetLink)
+    await sendResetLinkEmail(user.email, resetLink);
+
 
     res.json({
       success: true,
@@ -236,12 +248,45 @@ router.post('/reset-password', [
 
     const { token, password } = req.body;
 
+    // Verify the token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid or expired reset token'
+      });
+    }
+
+    // Find the user
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Hash the new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Update the user's password
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    });
 
     res.json({
       success: true,
       message: 'Password reset successfully'
     });
   } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error'

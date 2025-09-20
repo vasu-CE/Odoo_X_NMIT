@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./Layout.jsx";
+import LandingPage from "./pages/LandingPage";
 import Dashboard from "./pages/dashboard";
 import ManufacturingOrders from "./pages/ManufacturingOrders";
 import ManufacturingOrderDetail from "./components/manufacturing/ManufacturingOrderDetail";
@@ -25,6 +26,7 @@ import Reports from "./pages/Reports";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import ProfilePage from "./pages/ProfilePage";
 
 import "./App.css";
@@ -36,9 +38,11 @@ function App() {
         <Toaster position="top-right" richColors />
         <Routes>
           {/* Public Routes */}
+          <Route path="/landing" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Protected Routes */}
           <Route
@@ -173,7 +177,7 @@ function App() {
           />
 
           {/* Catch all route - redirect to dashboard */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/landing" replace />} />
         </Routes>
       </Router>
     </AuthProvider>
