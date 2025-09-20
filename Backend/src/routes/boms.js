@@ -5,9 +5,6 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// @route   GET /api/boms
-// @desc    Get all BOMs
-// @access  Private
 router.get('/', authenticate, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -109,7 +106,7 @@ router.get('/', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get BOMs error:', error);
+('Get BOMs error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch BOMs'
@@ -186,7 +183,7 @@ router.get('/:id', authenticate, async (req, res) => {
       data: bom
     });
   } catch (error) {
-    console.error('Get BOM error:', error);
+('Get BOM error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch BOM'
@@ -349,7 +346,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       }
     });
   } catch (error) {
-    console.error('Create BOM error:', error);
+('Create BOM error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create BOM'
@@ -483,7 +480,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: bom
     });
   } catch (error) {
-    console.error('Update BOM error:', error);
+('Update BOM error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to update BOM'
@@ -521,7 +518,7 @@ router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'),
       message: 'BOM deleted successfully'
     });
   } catch (error) {
-    console.error('Delete BOM error:', error);
+('Delete BOM error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -582,7 +579,7 @@ router.post('/:id/activate', authenticate, authorize('MANUFACTURING_MANAGER', 'A
       data: activatedBom
     });
   } catch (error) {
-    console.error('Activate BOM error:', error);
+('Activate BOM error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to activate BOM'
@@ -649,7 +646,7 @@ router.get('/product/:productId', authenticate, async (req, res) => {
       data: boms
     });
   } catch (error) {
-    console.error('Get BOMs by product error:', error);
+('Get BOMs by product error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch BOMs for product'

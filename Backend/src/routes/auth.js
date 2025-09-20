@@ -7,16 +7,12 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   });
 };
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
 router.post('/register', [
   body('loginId').trim().notEmpty().withMessage('Login ID is required'),
   body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
@@ -36,7 +32,6 @@ router.post('/register', [
 
     const { loginId, email, password, role = 'SHOP_FLOOR_OPERATOR' } = req.body;
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -48,15 +43,13 @@ router.post('/register', [
       });
     }
 
-    // Hash password
     const saltRounds = 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         loginId,
-        name: loginId, // Use loginId as the name
+        name: loginId,
         email,
         password: hashedPassword,
         role
@@ -72,7 +65,6 @@ router.post('/register', [
       }
     });
 
-    // Generate token
     const token = generateToken(user.id);
 
     res.status(201).json({
@@ -84,7 +76,6 @@ router.post('/register', [
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error during registration'
@@ -92,9 +83,6 @@ router.post('/register', [
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
 router.post('/login', [
   body('identifier').notEmpty().withMessage('Login ID or email is required'),
   body('password').notEmpty().withMessage('Password is required')
@@ -111,10 +99,8 @@ router.post('/login', [
 
     const { identifier, password } = req.body;
 
-    // Determine if identifier is email or loginId
     const isEmail = /\S+@\S+\.\S+/.test(identifier);
     
-    // Find user by email or loginId
     const user = await prisma.user.findUnique({
       where: isEmail ? { email: identifier } : { loginId: identifier }
     });
@@ -126,7 +112,6 @@ router.post('/login', [
       });
     }
 
-    // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -135,10 +120,8 @@ router.post('/login', [
       });
     }
 
-    // Generate token
     const token = generateToken(user.id);
 
-    // Return user data (excluding password)
     const { password: _, ...userData } = user;
 
     res.json({
@@ -150,7 +133,6 @@ router.post('/login', [
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error during login'
@@ -158,9 +140,6 @@ router.post('/login', [
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
 router.get('/me', authenticate, async (req, res) => {
   try {
     res.json({
@@ -170,7 +149,6 @@ router.get('/me', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get user error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error'
@@ -178,9 +156,6 @@ router.get('/me', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/refresh
-// @desc    Refresh JWT token
-// @access  Private
 router.post('/refresh', authenticate, async (req, res) => {
   try {
     const token = generateToken(req.user.id);
@@ -192,7 +167,6 @@ router.post('/refresh', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Token refresh error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error during token refresh'
@@ -200,9 +174,6 @@ router.post('/refresh', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/logout
-// @desc    Logout user (client-side token removal)
-// @access  Private
 router.post('/logout', authenticate, (req, res) => {
   res.json({
     success: true,
@@ -210,9 +181,6 @@ router.post('/logout', authenticate, (req, res) => {
   });
 });
 
-// @route   POST /api/auth/forgot-password
-// @desc    Request password reset
-// @access  Public
 router.post('/forgot-password', [
   body('email').isEmail().normalizeEmail().withMessage('Valid email is required')
 ], async (req, res) => {
@@ -233,24 +201,18 @@ router.post('/forgot-password', [
     });
 
     if (!user) {
-      // Don't reveal if user exists or not
       return res.json({
         success: true,
         message: 'If an account with that email exists, a password reset link has been sent.'
       });
     }
 
-    // In a real application, you would:
-    // 1. Generate a reset token
-    // 2. Store it in the database with expiration
-    // 3. Send an email with the reset link
 
     res.json({
       success: true,
       message: 'If an account with that email exists, a password reset link has been sent.'
     });
   } catch (error) {
-    console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error'
@@ -258,9 +220,6 @@ router.post('/forgot-password', [
   }
 });
 
-// @route   POST /api/auth/reset-password
-// @desc    Reset password
-// @access  Public
 router.post('/reset-password', [
   body('token').notEmpty().withMessage('Reset token is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
@@ -277,17 +236,12 @@ router.post('/reset-password', [
 
     const { token, password } = req.body;
 
-    // In a real application, you would:
-    // 1. Verify the reset token
-    // 2. Check if it's not expired
-    // 3. Update the password
 
     res.json({
       success: true,
       message: 'Password reset successfully'
     });
   } catch (error) {
-    console.error('Reset password error:', error);
     res.status(500).json({
       success: false,
       error: 'Server error'

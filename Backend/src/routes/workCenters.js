@@ -84,7 +84,7 @@ router.get('/', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get work centers error:', error);
+('Get work centers error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work centers'
@@ -167,7 +167,7 @@ router.get('/:id', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get work center error:', error);
+('Get work center error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work center'
@@ -239,7 +239,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: workCenter
     });
   } catch (error) {
-    console.error('Create work center error:', error);
+('Create work center error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create work center'
@@ -288,7 +288,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: workCenter
     });
   } catch (error) {
-    console.error('Update work center error:', error);
+('Update work center error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -333,7 +333,7 @@ router.delete('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'),
       message: 'Work center deleted successfully'
     });
   } catch (error) {
-    console.error('Delete work center error:', error);
+('Delete work center error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -438,7 +438,7 @@ router.get('/:id/utilization', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get work center utilization error:', error);
+('Get work center utilization error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work center utilization'
@@ -512,7 +512,7 @@ router.get('/:id/schedule', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get work center schedule error:', error);
+('Get work center schedule error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work center schedule'

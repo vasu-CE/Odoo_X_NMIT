@@ -148,7 +148,7 @@ router.get('/production-summary', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Production summary report error:', error);
+('Production summary report error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to generate production summary report'
@@ -275,7 +275,7 @@ router.get('/resource-utilization', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Resource utilization report error:', error);
+('Resource utilization report error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to generate resource utilization report'
@@ -387,7 +387,7 @@ router.get('/inventory-valuation', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Inventory valuation report error:', error);
+('Inventory valuation report error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to generate inventory valuation report'
@@ -568,7 +568,7 @@ router.get('/work-order-performance', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Work order performance report error:', error);
+('Work order performance report error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to generate work order performance report'
@@ -740,7 +740,7 @@ router.get('/work-order-analysis', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Work order analysis report error:', error);
+('Work order analysis report error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to generate work order analysis report'
@@ -781,7 +781,7 @@ router.post('/export', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN')
       }
     });
   } catch (error) {
-    console.error('Export report error:', error);
+('Export report error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to export report'

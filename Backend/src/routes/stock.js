@@ -89,7 +89,7 @@ router.get('/', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get stock movements error:', error);
+('Get stock movements error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch stock movements'
@@ -193,7 +193,7 @@ router.post('/', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
       data: result.stockMovement
     });
   } catch (error) {
-    console.error('Create stock movement error:', error);
+('Create stock movement error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create stock movement'
@@ -264,7 +264,7 @@ router.get('/product/:productId', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get product stock movements error:', error);
+('Get product stock movements error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch product stock movements'
@@ -373,7 +373,7 @@ router.get('/inventory/summary', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get inventory summary error:', error);
+('Get inventory summary error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch inventory summary'
@@ -416,7 +416,7 @@ router.get('/inventory/low-stock', authenticate, async (req, res) => {
       data: lowStockProducts
     });
   } catch (error) {
-    console.error('Get low stock products error:', error);
+('Get low stock products error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch low stock products'

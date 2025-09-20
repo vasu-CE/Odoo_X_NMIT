@@ -5,9 +5,6 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// @route   GET /api/products
-// @desc    Get all products
-// @access  Private
 router.get('/', authenticate, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -90,7 +87,7 @@ router.get('/', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get products error:', error);
+('Get products error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch products'
@@ -98,9 +95,6 @@ router.get('/', authenticate, [
   }
 });
 
-// @route   GET /api/products/:id
-// @desc    Get single product
-// @access  Private
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -157,7 +151,7 @@ router.get('/:id', authenticate, async (req, res) => {
       data: product
     });
   } catch (error) {
-    console.error('Get product error:', error);
+('Get product error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch product'
@@ -165,9 +159,6 @@ router.get('/:id', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/products
-// @desc    Create new product
-// @access  Private
 router.post('/', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
   body('name').notEmpty().withMessage('Name is required'),
   body('type').isIn(['RAW_MATERIAL', 'WIP', 'FINISHED_GOOD', 'CONSUMABLE']).withMessage('Invalid product type'),
@@ -224,7 +215,7 @@ router.post('/', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
       data: product
     });
   } catch (error) {
-    console.error('Create product error:', error);
+('Create product error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create product'
@@ -232,9 +223,6 @@ router.post('/', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
   }
 });
 
-// @route   PUT /api/products/:id
-// @desc    Update product
-// @access  Private
 router.put('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
   body('name').optional().isString(),
   body('type').optional().isIn(['RAW_MATERIAL', 'WIP', 'FINISHED_GOOD', 'CONSUMABLE']),
@@ -276,7 +264,7 @@ router.put('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
       data: product
     });
   } catch (error) {
-    console.error('Update product error:', error);
+('Update product error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -290,9 +278,6 @@ router.put('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
   }
 });
 
-// @route   DELETE /api/products/:id
-// @desc    Delete product (soft delete)
-// @access  Private
 router.delete('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -323,7 +308,7 @@ router.delete('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), asy
       data: product
     });
   } catch (error) {
-    console.error('Delete product error:', error);
+('Delete product error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -337,9 +322,6 @@ router.delete('/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), asy
   }
 });
 
-// @route   GET /api/products/:id/stock
-// @desc    Get product stock information
-// @access  Private
 router.get('/:id/stock', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -416,7 +398,7 @@ router.get('/:id/stock', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get product stock error:', error);
+('Get product stock error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch product stock information'
@@ -424,9 +406,6 @@ router.get('/:id/stock', authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/products/:id/stock-adjustment
-// @desc    Adjust product stock
-// @access  Private
 router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
   body('quantity').isInt().withMessage('Quantity is required'),
   body('movementType').isIn(['IN', 'OUT', 'ADJUSTMENT']).withMessage('Invalid movement type'),
@@ -522,7 +501,7 @@ router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER'
       }
     });
   } catch (error) {
-    console.error('Stock adjustment error:', error);
+('Stock adjustment error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to adjust stock'
@@ -530,9 +509,6 @@ router.post('/:id/stock-adjustment', authenticate, authorize('INVENTORY_MANAGER'
   }
 });
 
-// @route   GET /api/products/stock-aggregation
-// @desc    Get comprehensive stock aggregation for all products
-// @access  Private
 router.get('/stock-aggregation', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), [
   query('category').optional().isString(),
   query('type').optional().isIn(['RAW_MATERIAL', 'WIP', 'FINISHED_GOOD', 'CONSUMABLE']),
@@ -653,7 +629,7 @@ router.get('/stock-aggregation', authenticate, authorize('INVENTORY_MANAGER', 'A
       }
     });
   } catch (error) {
-    console.error('Stock aggregation error:', error);
+('Stock aggregation error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to generate stock aggregation'

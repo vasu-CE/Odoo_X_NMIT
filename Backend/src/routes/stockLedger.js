@@ -136,7 +136,7 @@ router.get('/products', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get stock ledger products error:', error);
+('Get stock ledger products error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch products'
@@ -208,7 +208,7 @@ router.get('/aggregation', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get stock aggregation error:', error);
+('Get stock aggregation error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch stock aggregation'
@@ -291,7 +291,7 @@ router.post('/products', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'), 
       message: 'Product created successfully'
     });
   } catch (error) {
-    console.error('Create product error:', error);
+('Create product error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create product'
@@ -349,7 +349,7 @@ router.put('/products/:id', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'
       message: 'Product updated successfully'
     });
   } catch (error) {
-    console.error('Update product error:', error);
+('Update product error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to update product'
@@ -485,7 +485,7 @@ router.post('/movements', authenticate, authorize('INVENTORY_MANAGER', 'ADMIN'),
       message: 'Stock movement created successfully'
     });
   } catch (error) {
-    console.error('Create stock movement error:', error);
+('Create stock movement error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create stock movement'
@@ -637,7 +637,7 @@ router.post('/auto-update', authenticate, async (req, res) => {
       message: 'Stock updated automatically'
     });
   } catch (error) {
-    console.error('Auto-update stock error:', error);
+('Auto-update stock error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to auto-update stock'
@@ -709,7 +709,7 @@ router.get('/movements/:productId', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get product movements error:', error);
+('Get product movements error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch product movements'

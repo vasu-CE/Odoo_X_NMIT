@@ -5,9 +5,6 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// @route   GET /api/work-orders
-// @desc    Get all work orders
-// @access  Private
 router.get('/', authenticate, [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
@@ -99,7 +96,7 @@ router.get('/', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get work orders error:', error);
+('Get work orders error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work orders'
@@ -167,7 +164,7 @@ router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR' , 'MANUF
       }
     });
   } catch (error) {
-    console.error('Get shop floor work orders error:', error);
+('Get shop floor work orders error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work orders'
@@ -234,7 +231,7 @@ router.get('/my-assignments', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Get my assignments error:', error);
+('Get my assignments error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch assigned work orders'
@@ -300,7 +297,7 @@ router.get('/:id', authenticate, async (req, res) => {
       data: workOrder
     });
   } catch (error) {
-    console.error('Get work order error:', error);
+('Get work order error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work order'
@@ -425,7 +422,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: workOrder
     });
   } catch (error) {
-    console.error('Create work order error:', error);
+('Create work order error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create work order'
@@ -504,7 +501,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: workOrder
     });
   } catch (error) {
-    console.error('Update work order error:', error);
+('Update work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -550,7 +547,7 @@ router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
       data: workOrder
     });
   } catch (error) {
-    console.error('Start work order error:', error);
+('Start work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -626,7 +623,7 @@ router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
       data: workOrder
     });
   } catch (error) {
-    console.error('Pause work order error:', error);
+('Pause work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -672,7 +669,7 @@ router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUF
       data: workOrder
     });
   } catch (error) {
-    console.error('Resume work order error:', error);
+('Resume work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -750,7 +747,7 @@ router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
       data: workOrder
     });
   } catch (error) {
-    console.error('Complete work order error:', error);
+('Complete work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -796,7 +793,7 @@ router.patch('/:id/cancel', authenticate, authorize('SHOP_FLOOR_OPERATOR'), asyn
       data: workOrder
     });
   } catch (error) {
-    console.error('Cancel work order error:', error);
+('Cancel work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,

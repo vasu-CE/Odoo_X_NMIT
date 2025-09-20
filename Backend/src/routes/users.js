@@ -76,7 +76,7 @@ router.get('/', authenticate, [
       }
     });
   } catch (error) {
-    console.error('Get users error:', error);
+('Get users error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch users'
@@ -124,7 +124,7 @@ router.get('/:id', authenticate, async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error('Get user error:', error);
+('Get user error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch user'
@@ -193,7 +193,7 @@ router.post('/', authenticate, authorize('ADMIN', 'MANUFACTURING_MANAGER'), [
       data: user
     });
   } catch (error) {
-    console.error('Create user error:', error);
+('Create user error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create user'
@@ -262,7 +262,7 @@ router.put('/:id', authenticate, [
       data: user
     });
   } catch (error) {
-    console.error('Update user error:', error);
+('Update user error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -310,7 +310,7 @@ router.delete('/:id', authenticate, authorize('ADMIN'), async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error('Delete user error:', error);
+('Delete user error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -347,7 +347,7 @@ router.get('/profile', authenticate, async (req, res) => {
       data: user
     });
   } catch (error) {
-    console.error('Get profile error:', error);
+('Get profile error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch profile'
@@ -398,7 +398,7 @@ router.put('/profile', authenticate, [
       data: user
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+('Update profile error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to update profile'
@@ -470,7 +470,7 @@ router.post('/:id/change-password', authenticate, [
       message: 'Password changed successfully'
     });
   } catch (error) {
-    console.error('Change password error:', error);
+('Change password error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to change password'

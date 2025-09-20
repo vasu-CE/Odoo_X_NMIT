@@ -4,9 +4,6 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// @route   GET /api/dashboard/overview
-// @desc    Get dashboard overview data
-// @access  Private
 router.get('/overview', authenticate, async (req, res) => {
   try {
     const [
@@ -113,7 +110,6 @@ router.get('/overview', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Dashboard overview error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch dashboard data'
@@ -121,9 +117,6 @@ router.get('/overview', authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/dashboard/kpis
-// @desc    Get detailed KPIs
-// @access  Private
 router.get('/kpis', authenticate, async (req, res) => {
   try {
     const { period = '30' } = req.query;
@@ -199,7 +192,6 @@ router.get('/kpis', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Dashboard KPIs error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch KPI data'
@@ -207,9 +199,6 @@ router.get('/kpis', authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/dashboard/recent-orders
-// @desc    Get recent manufacturing orders
-// @access  Private
 router.get('/recent-orders', authenticate, async (req, res) => {
   try {
     const { limit = 10 } = req.query;
@@ -239,7 +228,6 @@ router.get('/recent-orders', authenticate, async (req, res) => {
       data: orders
     });
   } catch (error) {
-    console.error('Recent orders error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch recent orders'
@@ -247,9 +235,6 @@ router.get('/recent-orders', authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/dashboard/alerts
-// @desc    Get system alerts
-// @access  Private
 router.get('/alerts', authenticate, async (req, res) => {
   try {
     const [
@@ -366,7 +351,6 @@ router.get('/alerts', authenticate, async (req, res) => {
       data: alerts
     });
   } catch (error) {
-    console.error('Dashboard alerts error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch alerts'

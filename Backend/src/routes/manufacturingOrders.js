@@ -5,9 +5,7 @@ import { authenticate, authorize } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Generate order number in format MO-000001, MO-000002, etc.
 const generateOrderNumber = async () => {
-  // Find the highest existing order number to ensure sequential numbering
   const lastOrder = await prisma.manufacturingOrder.findFirst({
     orderBy: { orderNumber: "desc" },
     select: { orderNumber: true },
@@ -17,15 +15,11 @@ const generateOrderNumber = async () => {
     return "MO-000001";
   }
 
-  // Extract the number part and increment it
   const lastNumber = parseInt(lastOrder.orderNumber.split("-")[1]);
   const nextNumber = lastNumber + 1;
   return `MO-${String(nextNumber).padStart(6, "0")}`;
 };
 
-// @route   GET /api/manufacturing-orders/next-number
-// @desc    Get next available order number
-// @access  Private
 router.get("/next-number", authenticate, async (req, res) => {
   try {
     const orderNumber = await generateOrderNumber();
@@ -34,7 +28,6 @@ router.get("/next-number", authenticate, async (req, res) => {
       data: { orderNumber },
     });
   } catch (error) {
-    console.error("Get next order number error:", error);
     res.status(500).json({
       success: false,
       error: "Failed to generate order number",
@@ -42,9 +35,6 @@ router.get("/next-number", authenticate, async (req, res) => {
   }
 });
 
-// @route   GET /api/manufacturing-orders
-// @desc    Get all manufacturing orders
-// @access  Private
 router.get(
   "/",
   authenticate,
@@ -187,7 +177,6 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Get manufacturing orders error:", error);
       res.status(500).json({
         success: false,
         error: "Failed to fetch manufacturing orders",
@@ -196,9 +185,6 @@ router.get(
   }
 );
 
-// @route   GET /api/manufacturing-orders/:id
-// @desc    Get single manufacturing order
-// @access  Private
 router.get("/:id", authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -295,7 +281,6 @@ router.get("/:id", authenticate, async (req, res) => {
       data: order,
     });
   } catch (error) {
-    console.error("Get manufacturing order error:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch manufacturing order",
@@ -303,9 +288,6 @@ router.get("/:id", authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/manufacturing-orders
-// @desc    Create new manufacturing order
-// @access  Private
 router.post(
   "/",
   authenticate,
@@ -391,7 +373,6 @@ router.post(
 
         // If BOM is provided, auto-populate work orders and required materials
         if (bomId) {
-          console.log("BOM ID provided:", bomId);
           // Get BOM with components and operations
           const bom = await tx.bOM.findUnique({
             where: { id: bomId },
@@ -423,18 +404,9 @@ router.post(
           });
 
           if (bom) {
-            console.log(
-              "BOM found:",
-              bom.id,
-              "Operations:",
-              bom.operations.length,
-              "Components:",
-              bom.components.length
-            );
             // Create work orders from BOM operations
             const workOrders = [];
             for (const operation of bom.operations) {
-              console.log("Creating work order for operation:", operation.name);
               const workOrder = await tx.workOrder.create({
                 data: {
                   manufacturingOrderId: newOrder.id,
@@ -446,7 +418,6 @@ router.post(
                   status: "PENDING",
                 },
               });
-              console.log("Work order created:", workOrder.id);
               workOrders.push(workOrder);
             }
 
@@ -471,13 +442,11 @@ router.post(
             newOrder.workOrders = workOrders;
             newOrder.components = components;
           } else {
-            console.log("BOM not found for ID:", bomId);
           }
         }
 
         // If assignedWorkOrders is provided, create work orders from the payload
         if (assignedWorkOrders && assignedWorkOrders.length > 0) {
-          console.log("Creating work orders from assignedWorkOrders payload:", assignedWorkOrders.length);
           const customWorkOrders = [];
           
           for (const workOrderData of assignedWorkOrders) {
@@ -486,7 +455,6 @@ router.post(
               throw new Error(`Invalid work order data: missing required fields`);
             }
 
-            console.log("Creating custom work order:", workOrderData.operationName);
             const workOrder = await tx.workOrder.create({
               data: {
                 manufacturingOrderId: newOrder.id,
@@ -500,7 +468,6 @@ router.post(
                 comments: workOrderData.comments || null,
               },
             });
-            console.log("Custom work order created:", workOrder.id);
             customWorkOrders.push(workOrder);
           }
           
@@ -508,7 +475,6 @@ router.post(
           newOrder.workOrders = [...(newOrder.workOrders || []), ...customWorkOrders];
         } else if (!bomId) {
           // If no BOM and no assignedWorkOrders, create a default work order
-          console.log("No BOM or assignedWorkOrders provided, creating default work order");
           const defaultWorkOrder = await tx.workOrder.create({
             data: {
               manufacturingOrderId: newOrder.id,
@@ -522,7 +488,6 @@ router.post(
               comments: "Default work order created automatically",
             },
           });
-          console.log("Default work order created:", defaultWorkOrder.id);
           newOrder.workOrders = [defaultWorkOrder];
         }
 
@@ -590,9 +555,9 @@ router.post(
         data: completeOrder,
       });
     } catch (error) {
-      console.error("Create manufacturing order error:", error);
-      console.error("Error details:", error.message);
-      console.error("Stack trace:", error.stack);
+("Create manufacturing order error:", error);
+("Error details:", error.message);
+("Stack trace:", error.stack);
       res.status(500).json({
         success: false,
         error: "Failed to create manufacturing order",
@@ -602,9 +567,6 @@ router.post(
   }
 );
 
-// @route   PUT /api/manufacturing-orders/:id
-// @desc    Update manufacturing order
-// @access  Private
 router.put(
   "/:id",
   authenticate,
@@ -663,7 +625,7 @@ router.put(
         data: order,
       });
     } catch (error) {
-      console.error("Update manufacturing order error:", error);
+("Update manufacturing order error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -678,9 +640,6 @@ router.put(
   }
 );
 
-// @route   PATCH /api/manufacturing-orders/:id/status
-// @desc    Update manufacturing order status with proper state transitions
-// @access  Private
 router.patch(
   "/:id/status",
   authenticate,
@@ -857,7 +816,7 @@ router.patch(
         data: result,
       });
     } catch (error) {
-      console.error("Update manufacturing order status error:", error);
+("Update manufacturing order status error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -872,9 +831,6 @@ router.patch(
   }
 );
 
-// @route   DELETE /api/manufacturing-orders/:id
-// @desc    Delete manufacturing order
-// @access  Private
 router.delete(
   "/:id",
   authenticate,
@@ -912,7 +868,7 @@ router.delete(
         message: "Manufacturing order deleted successfully",
       });
     } catch (error) {
-      console.error("Delete manufacturing order error:", error);
+("Delete manufacturing order error:", error);
       res.status(500).json({
         success: false,
         error: "Failed to delete manufacturing order",
@@ -921,9 +877,6 @@ router.delete(
   }
 );
 
-// @route   POST /api/manufacturing-orders/:id/confirm
-// @desc    Confirm manufacturing order
-// @access  Private
 router.post(
   "/:id/confirm",
   authenticate,
@@ -951,7 +904,7 @@ router.post(
         data: order,
       });
     } catch (error) {
-      console.error("Confirm manufacturing order error:", error);
+("Confirm manufacturing order error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -966,9 +919,6 @@ router.post(
   }
 );
 
-// @route   POST /api/manufacturing-orders/:id/start
-// @desc    Start manufacturing order
-// @access  Private
 router.post(
   "/:id/start",
   authenticate,
@@ -999,7 +949,7 @@ router.post(
         data: order,
       });
     } catch (error) {
-      console.error("Start manufacturing order error:", error);
+("Start manufacturing order error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -1014,9 +964,6 @@ router.post(
   }
 );
 
-// @route   POST /api/manufacturing-orders/:id/complete
-// @desc    Complete manufacturing order
-// @access  Private
 router.post(
   "/:id/complete",
   authenticate,
@@ -1047,7 +994,7 @@ router.post(
         data: order,
       });
     } catch (error) {
-      console.error("Complete manufacturing order error:", error);
+("Complete manufacturing order error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -1062,9 +1009,6 @@ router.post(
   }
 );
 
-// @route   POST /api/manufacturing-orders/:id/cancel
-// @desc    Cancel manufacturing order
-// @access  Private
 router.post(
   "/:id/cancel",
   authenticate,
@@ -1092,7 +1036,7 @@ router.post(
         data: order,
       });
     } catch (error) {
-      console.error("Cancel manufacturing order error:", error);
+("Cancel manufacturing order error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -1107,9 +1051,6 @@ router.post(
   }
 );
 
-// @route   GET /api/manufacturing-orders/:id/work-orders
-// @desc    Get work orders for manufacturing order
-// @access  Private
 router.get("/:id/work-orders", authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -1132,7 +1073,7 @@ router.get("/:id/work-orders", authenticate, async (req, res) => {
       data: workOrders,
     });
   } catch (error) {
-    console.error("Get work orders error:", error);
+("Get work orders error:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch work orders",
@@ -1140,9 +1081,6 @@ router.get("/:id/work-orders", authenticate, async (req, res) => {
   }
 });
 
-// @route   POST /api/manufacturing-orders/:id/components
-// @desc    Add component to manufacturing order
-// @access  Private
 router.post(
   "/:id/components",
   authenticate,
@@ -1212,7 +1150,7 @@ router.post(
         data: component,
       });
     } catch (error) {
-      console.error("Add component error:", error);
+("Add component error:", error);
       res.status(500).json({
         success: false,
         error: "Failed to add component",
@@ -1221,9 +1159,6 @@ router.post(
   }
 );
 
-// @route   PUT /api/manufacturing-orders/:id/components/:componentId
-// @desc    Update component in manufacturing order
-// @access  Private
 router.put(
   "/:id/components/:componentId",
   authenticate,
@@ -1276,7 +1211,7 @@ router.put(
         data: component,
       });
     } catch (error) {
-      console.error("Update component error:", error);
+("Update component error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -1291,9 +1226,6 @@ router.put(
   }
 );
 
-// @route   DELETE /api/manufacturing-orders/:id/components/:componentId
-// @desc    Delete component from manufacturing order
-// @access  Private
 router.delete(
   "/:id/components/:componentId",
   authenticate,
@@ -1334,7 +1266,7 @@ router.delete(
         message: "Component deleted successfully",
       });
     } catch (error) {
-      console.error("Delete component error:", error);
+("Delete component error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -1349,9 +1281,6 @@ router.delete(
   }
 );
 
-// @route   POST /api/manufacturing-orders/:id/work-orders
-// @desc    Add work order to manufacturing order
-// @access  Private
 router.post(
   "/:id/work-orders",
   authenticate,
@@ -1421,7 +1350,7 @@ router.post(
         data: workOrder,
       });
     } catch (error) {
-      console.error("Add work order error:", error);
+("Add work order error:", error);
       res.status(500).json({
         success: false,
         error: "Failed to add work order",
@@ -1430,9 +1359,6 @@ router.post(
   }
 );
 
-// @route   PUT /api/manufacturing-orders/:id/work-orders/:workOrderId
-// @desc    Update work order in manufacturing order
-// @access  Private
 router.put(
   "/:id/work-orders/:workOrderId",
   authenticate,
@@ -1488,7 +1414,7 @@ router.put(
         data: workOrder,
       });
     } catch (error) {
-      console.error("Update work order error:", error);
+("Update work order error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
@@ -1503,9 +1429,6 @@ router.put(
   }
 );
 
-// @route   DELETE /api/manufacturing-orders/:id/work-orders/:workOrderId
-// @desc    Delete work order from manufacturing order
-// @access  Private
 router.delete(
   "/:id/work-orders/:workOrderId",
   authenticate,
@@ -1546,7 +1469,7 @@ router.delete(
         message: "Work order deleted successfully",
       });
     } catch (error) {
-      console.error("Delete work order error:", error);
+("Delete work order error:", error);
       if (error.code === "P2025") {
         return res.status(404).json({
           success: false,
