@@ -1,24 +1,32 @@
 import React from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { 
-  Filter, 
-  X, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
+import {
+  Filter,
+  X,
+  CheckCircle,
+  Clock,
+  AlertCircle,
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
 } from "lucide-react";
 
-export default function FilterBar({ 
-  statusFilter, 
-  setStatusFilter, 
-  priorityFilter, 
-  setPriorityFilter 
+export default function FilterBar({
+  statusFilter,
+  setStatusFilter,
+  priorityFilter,
+  setPriorityFilter,
 }) {
-  const activeFiltersCount = [statusFilter, priorityFilter].filter(f => f !== "all").length;
+  const activeFiltersCount = [statusFilter, priorityFilter].filter(
+    (f) => f !== "all"
+  ).length;
 
   const getStatusIcon = (status) => {
     const icons = {
@@ -26,7 +34,7 @@ export default function FilterBar({
       planned: <Clock className="w-4 h-4" />,
       in_progress: <AlertCircle className="w-4 h-4" />,
       completed: <CheckCircle className="w-4 h-4" />,
-      cancelled: <X className="w-4 h-4" />
+      cancelled: <X className="w-4 h-4" />,
     };
     return icons[status] || icons.all;
   };
@@ -37,7 +45,7 @@ export default function FilterBar({
       planned: "text-blue-500",
       in_progress: "text-orange-500",
       completed: "text-green-500",
-      cancelled: "text-red-500"
+      cancelled: "text-red-500",
     };
     return colors[status] || colors.all;
   };
@@ -48,7 +56,7 @@ export default function FilterBar({
       low: <Clock className="w-4 h-4" />,
       medium: <AlertCircle className="w-4 h-4" />,
       high: <AlertTriangle className="w-4 h-4" />,
-      urgent: <X className="w-4 h-4" />
+      urgent: <X className="w-4 h-4" />,
     };
     return icons[priority] || icons.all;
   };
@@ -59,7 +67,7 @@ export default function FilterBar({
       low: "text-gray-500",
       medium: "text-yellow-500",
       high: "text-orange-500",
-      urgent: "text-red-500"
+      urgent: "text-red-500",
     };
     return colors[priority] || colors.all;
   };
@@ -69,7 +77,7 @@ export default function FilterBar({
       low: "bg-gray-100 text-gray-700 border-gray-200",
       medium: "bg-yellow-100 text-yellow-700 border-yellow-200",
       high: "bg-orange-100 text-orange-700 border-orange-200",
-      urgent: "bg-red-100 text-red-700 border-red-200"
+      urgent: "bg-red-100 text-red-700 border-red-200",
     };
     return colors[priority] || colors.medium;
   };
@@ -86,11 +94,16 @@ export default function FilterBar({
           <Filter className="w-4 h-4 text-blue-600" />
         </div>
         <div>
-          <span className="text-sm font-semibold text-gray-700">Filter Orders</span>
+          <span className="text-sm font-semibold text-gray-700">
+            Filter Orders
+          </span>
           <p className="text-xs text-gray-500">Refine your search results</p>
         </div>
         {activeFiltersCount > 0 && (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200 text-xs px-2 py-1">
+          <Badge
+            variant="secondary"
+            className="bg-blue-100 text-blue-700 border-blue-200 text-xs px-2 py-1"
+          >
             {activeFiltersCount} active
           </Badge>
         )}
@@ -106,7 +119,10 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getStatusIcon("all")}
                 <span className="font-medium">All Status</span>
-                <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600">
+                <Badge
+                  variant="outline"
+                  className="ml-auto text-xs bg-gray-50 text-gray-600"
+                >
                   All
                 </Badge>
               </div>
@@ -115,7 +131,10 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getStatusIcon("planned")}
                 <span className="font-medium">Planned</span>
-                <Badge variant="outline" className="ml-auto text-xs bg-blue-50 text-blue-600">
+                <Badge
+                  variant="outline"
+                  className="ml-auto text-xs bg-blue-50 text-blue-600"
+                >
                   Scheduled
                 </Badge>
               </div>
@@ -124,7 +143,10 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getStatusIcon("in_progress")}
                 <span className="font-medium">Active</span>
-                <Badge variant="outline" className="ml-auto text-xs bg-orange-50 text-orange-600">
+                <Badge
+                  variant="outline"
+                  className="ml-auto text-xs bg-orange-50 text-orange-600"
+                >
                   Running
                 </Badge>
               </div>
@@ -133,7 +155,10 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getStatusIcon("completed")}
                 <span className="font-medium">Completed</span>
-                <Badge variant="outline" className="ml-auto text-xs bg-green-50 text-green-600">
+                <Badge
+                  variant="outline"
+                  className="ml-auto text-xs bg-green-50 text-green-600"
+                >
                   Done
                 </Badge>
               </div>
@@ -142,7 +167,10 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getStatusIcon("cancelled")}
                 <span className="font-medium">Cancelled</span>
-                <Badge variant="outline" className="ml-auto text-xs bg-red-50 text-red-600">
+                <Badge
+                  variant="outline"
+                  className="ml-auto text-xs bg-red-50 text-red-600"
+                >
                   Stopped
                 </Badge>
               </div>
@@ -159,7 +187,10 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getPriorityIcon("all")}
                 <span className="font-medium">All Priority</span>
-                <Badge variant="outline" className="ml-auto text-xs bg-gray-50 text-gray-600">
+                <Badge
+                  variant="outline"
+                  className="ml-auto text-xs bg-gray-50 text-gray-600"
+                >
                   All
                 </Badge>
               </div>
@@ -168,7 +199,9 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getPriorityIcon("low")}
                 <span className="font-medium">Low</span>
-                <Badge className={`ml-auto text-xs ${getPriorityBadgeColor("low")}`}>
+                <Badge
+                  className={`ml-auto text-xs ${getPriorityBadgeColor("low")}`}
+                >
                   Normal
                 </Badge>
               </div>
@@ -177,7 +210,11 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getPriorityIcon("medium")}
                 <span className="font-medium">Medium</span>
-                <Badge className={`ml-auto text-xs ${getPriorityBadgeColor("medium")}`}>
+                <Badge
+                  className={`ml-auto text-xs ${getPriorityBadgeColor(
+                    "medium"
+                  )}`}
+                >
                   Standard
                 </Badge>
               </div>
@@ -186,7 +223,9 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getPriorityIcon("high")}
                 <span className="font-medium">High</span>
-                <Badge className={`ml-auto text-xs ${getPriorityBadgeColor("high")}`}>
+                <Badge
+                  className={`ml-auto text-xs ${getPriorityBadgeColor("high")}`}
+                >
                   Important
                 </Badge>
               </div>
@@ -195,7 +234,11 @@ export default function FilterBar({
               <div className="flex items-center gap-3">
                 {getPriorityIcon("urgent")}
                 <span className="font-medium">Urgent</span>
-                <Badge className={`ml-auto text-xs ${getPriorityBadgeColor("urgent")}`}>
+                <Badge
+                  className={`ml-auto text-xs ${getPriorityBadgeColor(
+                    "urgent"
+                  )}`}
+                >
                   Critical
                 </Badge>
               </div>
@@ -217,4 +260,4 @@ export default function FilterBar({
       </div>
     </div>
   );
-}   
+}
