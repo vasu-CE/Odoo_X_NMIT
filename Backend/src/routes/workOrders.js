@@ -109,6 +109,146 @@ router.get('/', authenticate, [
   }
 });
 
+// @route   GET /api/work-orders/shop-floor
+// @desc    Get work orders for shop floor operator (assigned to them)
+// @access  Private (SHOP_FLOOR_OPERATOR only)
+router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const where = {
+      assignedToId: req.user.id
+    };
+
+    if (status) {
+      where.status = status;
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [workOrders, total] = await Promise.all([
+      prisma.workOrder.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          manufacturingOrder: {
+            select: {
+              id: true,
+              orderNumber: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  type: true
+                }
+              }
+            }
+          },
+          workCenter: {
+            select: {
+              id: true,
+              name: true,
+              status: true
+            }
+          }
+        }
+      }),
+      prisma.workOrder.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        workOrders,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get shop floor work orders error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch work orders'
+    });
+  }
+});
+
+// @route   GET /api/work-orders/my-assignments
+// @desc    Get work orders assigned to current user
+// @access  Private
+router.get('/my-assignments', authenticate, async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const where = {
+      assignedToId: req.user.id
+    };
+
+    if (status) {
+      where.status = status;
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [workOrders, total] = await Promise.all([
+      prisma.workOrder.findMany({
+        where,
+        skip,
+        take: parseInt(limit),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          manufacturingOrder: {
+            select: {
+              id: true,
+              orderNumber: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  type: true
+                }
+              }
+            }
+          },
+          workCenter: {
+            select: {
+              id: true,
+              name: true,
+              status: true
+            }
+          }
+        }
+      }),
+      prisma.workOrder.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        workOrders,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get my assignments error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch assigned work orders'
+    });
+  }
+});
+
 // @route   GET /api/work-orders/:id
 // @desc    Get single work order
 // @access  Private
@@ -642,142 +782,51 @@ router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
   }
 });
 
-// @route   GET /api/work-orders/shop-floor
-// @desc    Get work orders for shop floor operator (assigned to them)
+// @route   PATCH /api/work-orders/:id/cancel
+// @desc    Cancel work order
 // @access  Private (SHOP_FLOOR_OPERATOR only)
-router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
+router.patch('/:id/cancel', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
+    const { id } = req.params;
 
-    const where = {
-      assignedToId: req.user.id
-    };
-
-    if (status) {
-      where.status = status;
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const [workOrders, total] = await Promise.all([
-      prisma.workOrder.findMany({
-        where,
-        skip,
-        take: parseInt(limit),
-        orderBy: { createdAt: 'desc' },
-        include: {
-          manufacturingOrder: {
-            select: {
-              id: true,
-              orderNumber: true,
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  type: true
-                }
-              }
-            }
-          },
-          workCenter: {
-            select: {
-              id: true,
-              name: true,
-              status: true
-            }
+    const workOrder = await prisma.workOrder.update({
+      where: { 
+        id,
+        status: { in: ['PENDING', 'IN_PROGRESS', 'PAUSED'] }
+      },
+      data: { 
+        status: 'SKIPPED',
+        endTime: new Date()
+      },
+      include: {
+        manufacturingOrder: {
+          select: {
+            orderNumber: true,
+            product: { select: { name: true } }
           }
-        }
-      }),
-      prisma.workOrder.count({ where })
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        workOrders,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / parseInt(limit))
+        },
+        workCenter: {
+          select: { name: true }
         }
       }
     });
-  } catch (error) {
-    console.error('Get shop floor work orders error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch work orders'
-    });
-  }
-});
-
-// @route   GET /api/work-orders/my-assignments
-// @desc    Get work orders assigned to current user
-// @access  Private
-router.get('/my-assignments', authenticate, async (req, res) => {
-  try {
-    const { status, page = 1, limit = 20 } = req.query;
-
-    const where = {
-      assignedToId: req.user.id
-    };
-
-    if (status) {
-      where.status = status;
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    const [workOrders, total] = await Promise.all([
-      prisma.workOrder.findMany({
-        where,
-        skip,
-        take: parseInt(limit),
-        orderBy: { createdAt: 'desc' },
-        include: {
-          manufacturingOrder: {
-            select: {
-              id: true,
-              orderNumber: true,
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  type: true
-                }
-              }
-            }
-          },
-          workCenter: {
-            select: {
-              id: true,
-              name: true,
-              status: true
-            }
-          }
-        }
-      }),
-      prisma.workOrder.count({ where })
-    ]);
 
     res.json({
       success: true,
-      data: {
-        workOrders,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / parseInt(limit))
-        }
-      }
+      message: 'Work order cancelled successfully',
+      data: workOrder
     });
   } catch (error) {
-    console.error('Get my assignments error:', error);
+    console.error('Cancel work order error:', error);
+    if (error.code === 'P2025') {
+      return res.status(404).json({
+        success: false,
+        error: 'Work order not found or cannot be cancelled'
+      });
+    }
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch assigned work orders'
+      error: 'Failed to cancel work order'
     });
   }
 });

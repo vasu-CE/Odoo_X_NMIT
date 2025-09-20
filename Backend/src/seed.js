@@ -379,7 +379,7 @@ async function main() {
         assignedToId: users[2].id,
         estimatedTimeMinutes: 3000, // 50 hours for 100 units
         actualTimeMinutes: 1500,
-        startedAt: new Date("2024-01-15T08:30:00Z"),
+        startTime: new Date("2024-01-15T08:30:00Z"),
         comments: "Assembly in progress",
       },
     }),
@@ -417,7 +417,7 @@ async function main() {
         assignedToId: users[2].id,
         estimatedTimeMinutes: 6000, // 100 hours for 200 units
         actualTimeMinutes: 5800,
-        startedAt: new Date("2024-01-10T08:00:00Z"),
+        startTime: new Date("2024-01-10T08:00:00Z"),
         completedAt: new Date("2024-01-11T18:00:00Z"),
         comments: "Assembly completed successfully",
       },
@@ -432,7 +432,7 @@ async function main() {
         assignedToId: users[2].id,
         estimatedTimeMinutes: 2000, // 33.3 hours for 200 units
         actualTimeMinutes: 1900,
-        startedAt: new Date("2024-01-11T18:00:00Z"),
+        startTime: new Date("2024-01-11T18:00:00Z"),
         completedAt: new Date("2024-01-12T10:00:00Z"),
         comments: "Quality check passed",
       },
@@ -447,9 +447,51 @@ async function main() {
         assignedToId: users[2].id,
         estimatedTimeMinutes: 1000, // 16.7 hours for 200 units
         actualTimeMinutes: 950,
-        startedAt: new Date("2024-01-12T10:00:00Z"),
+        startTime: new Date("2024-01-12T10:00:00Z"),
         completedAt: new Date("2024-01-12T16:30:00Z"),
+        realDuration: 950, // Add real duration for completed work order
         comments: "Packaging completed",
+      },
+    }),
+    // Add some work orders for MO-002 to test different statuses
+    prisma.workOrder.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[1].id,
+        operationName: "Assembly",
+        sequence: 1,
+        status: "PENDING",
+        workCenterId: "wc-1",
+        assignedToId: users[2].id,
+        estimatedTimeMinutes: 1000, // 16.7 hours for 50 units
+        comments: "Ready to start assembly",
+      },
+    }),
+    prisma.workOrder.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[1].id,
+        operationName: "Packaging",
+        sequence: 2,
+        status: "PENDING",
+        workCenterId: "wc-3",
+        assignedToId: users[2].id,
+        estimatedTimeMinutes: 250, // 4.2 hours for 50 units
+        comments: "Waiting for assembly completion",
+      },
+    }),
+    // Add a paused work order for testing
+    prisma.workOrder.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[0].id,
+        operationName: "Testing",
+        sequence: 4,
+        status: "PAUSED",
+        workCenterId: "wc-2",
+        assignedToId: users[2].id,
+        estimatedTimeMinutes: 200,
+        startTime: new Date("2024-01-15T10:00:00Z"),
+        pausedAt: new Date("2024-01-15T10:30:00Z"),
+        pausedDuration: 30, // 30 minutes paused
+        comments: "Testing paused for maintenance",
       },
     }),
   ]);
@@ -527,7 +569,7 @@ async function main() {
   console.log(`- Products: ${products.length}`);
   console.log(`- BOMs: 2`);
   console.log(`- Manufacturing Orders: ${manufacturingOrders.length}`);
-  console.log(`- Work Orders: 6`);
+  console.log(`- Work Orders: 9`);
   console.log(`- Stock Movements: 5`);
 
   console.log("\n🔑 Login Credentials:");

@@ -204,6 +204,12 @@ class ApiService {
     });
   }
 
+  async cancelWorkOrder(id) {
+    return this.request(`/work-orders/${id}/cancel`, {
+      method: 'PATCH'
+    });
+  }
+
   async getShopFloorWorkOrders(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/work-orders/shop-floor${queryString ? `?${queryString}` : ''}`);
