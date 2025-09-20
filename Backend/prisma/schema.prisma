@@ -176,7 +176,10 @@ model WorkOrder {
   assignedToId           String?
   estimatedTimeMinutes   Int
   actualTimeMinutes      Int?
-  startedAt              DateTime?
+  startTime              DateTime?
+  endTime                DateTime?
+  realDuration           Int?              // Duration in minutes (endTime - startTime - pausedDuration)
+  pausedDuration         Int?              @default(0) // Total paused duration in minutes
   pausedAt               DateTime?
   completedAt            DateTime?
   comments               String?

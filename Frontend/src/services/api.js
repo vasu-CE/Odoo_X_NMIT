@@ -175,13 +175,13 @@ class ApiService {
 
   async startWorkOrder(id) {
     return this.request(`/work-orders/${id}/start`, {
-      method: 'POST'
+      method: 'PATCH'
     });
   }
 
   async pauseWorkOrder(id) {
     return this.request(`/work-orders/${id}/pause`, {
-      method: 'POST'
+      method: 'PATCH'
     });
   }
 
@@ -196,6 +196,23 @@ class ApiService {
       method: 'POST',
       body: JSON.stringify(data)
     });
+  }
+
+  async doneWorkOrder(id) {
+    return this.request(`/work-orders/${id}/done`, {
+      method: 'PATCH'
+    });
+  }
+
+  async cancelWorkOrder(id) {
+    return this.request(`/work-orders/${id}/cancel`, {
+      method: 'PATCH'
+    });
+  }
+
+  async getShopFloorWorkOrders(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/work-orders/shop-floor${queryString ? `?${queryString}` : ''}`);
   }
 
   async getMyAssignments(params = {}) {
