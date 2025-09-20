@@ -1,26 +1,26 @@
 // API service for connecting frontend to backend
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = "http://localhost:3001/api";
 
 class ApiService {
   constructor() {
-    this.token = localStorage.getItem('authToken');
+    this.token = localStorage.getItem("authToken");
   }
 
   // Set authentication token
   setToken(token) {
     this.token = token;
     if (token) {
-      localStorage.setItem('authToken', token);
+      localStorage.setItem("authToken", token);
     } else {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem("authToken");
     }
   }
 
   // Get authentication headers
   getAuthHeaders() {
     return {
-      'Content-Type': 'application/json',
-      ...(this.token && { Authorization: `Bearer ${this.token}` })
+      "Content-Type": "application/json",
+      ...(this.token && { Authorization: `Bearer ${this.token}` }),
     };
   }
 
@@ -29,7 +29,7 @@ class ApiService {
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
       headers: this.getAuthHeaders(),
-      ...options
+      ...options,
     };
 
     try {
@@ -42,56 +42,63 @@ class ApiService {
 
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
+      console.error("API request failed:", error);
       throw error;
     }
   }
 
+  // Generic GET method
+  async get(endpoint) {
+    return this.request(endpoint, { method: "GET" });
+  }
+
   // Authentication methods
-  async login(identifier, password, type = 'email') {
+  async login(identifier, password, type = "email") {
     const payload = { identifier, password };
-      
-    const response = await this.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(payload)
+
+    const response = await this.request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
     });
-    
+
     if (response.success && response.data.token) {
       this.setToken(response.data.token);
     }
-    
+
     return response;
   }
 
   async register(userData) {
-    const response = await this.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData)
+    const response = await this.request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(userData),
     });
-    
+
     if (response.success && response.data.token) {
       this.setToken(response.data.token);
     }
-    
+
     return response;
   }
 
   async logout() {
-    const response = await this.request('/auth/logout', {
-      method: 'POST'
+    const response = await this.request("/auth/logout", {
+      method: "POST",
     });
     this.setToken(null);
     return response;
   }
 
   async getCurrentUser() {
-    return this.request('/auth/me');
+    return this.request("/auth/me");
   }
 
   // Manufacturing Orders
   async getManufacturingOrders(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/manufacturing-orders${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/manufacturing-orders${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getManufacturingOrder(id) {
@@ -99,60 +106,140 @@ class ApiService {
   }
 
   async createManufacturingOrder(data) {
-    return this.request('/manufacturing-orders', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return this.request("/manufacturing-orders", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   async updateManufacturingOrder(id, data) {
     return this.request(`/manufacturing-orders/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 
-  async updateManufacturingOrderStatus(id, status, notes = '') {
+  async updateManufacturingOrderStatus(id, status, notes = "") {
     return this.request(`/manufacturing-orders/${id}/status`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status, notes })
+      method: "PATCH",
+      body: JSON.stringify({ status, notes }),
     });
   }
 
   async deleteManufacturingOrder(id) {
     return this.request(`/manufacturing-orders/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 
   async confirmManufacturingOrder(id) {
     return this.request(`/manufacturing-orders/${id}/confirm`, {
-      method: 'POST'
+      method: "POST",
     });
   }
 
   async startManufacturingOrder(id) {
     return this.request(`/manufacturing-orders/${id}/start`, {
-      method: 'POST'
+      method: "POST",
     });
   }
 
   async completeManufacturingOrder(id) {
     return this.request(`/manufacturing-orders/${id}/complete`, {
-      method: 'POST'
+      method: "POST",
     });
   }
 
   async cancelManufacturingOrder(id) {
     return this.request(`/manufacturing-orders/${id}/cancel`, {
-      method: 'POST'
+      method: "POST",
     });
+  }
+
+  // Components for Manufacturing Orders
+  async addComponentToManufacturingOrder(manufacturingOrderId, componentData) {
+    return this.request(
+      `/manufacturing-orders/${manufacturingOrderId}/components`,
+      {
+        method: "POST",
+        body: JSON.stringify(componentData),
+      }
+    );
+  }
+
+  async updateComponentInManufacturingOrder(
+    manufacturingOrderId,
+    componentId,
+    componentData
+  ) {
+    return this.request(
+      `/manufacturing-orders/${manufacturingOrderId}/components/${componentId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(componentData),
+      }
+    );
+  }
+
+  async deleteComponentFromManufacturingOrder(
+    manufacturingOrderId,
+    componentId
+  ) {
+    return this.request(
+      `/manufacturing-orders/${manufacturingOrderId}/components/${componentId}`,
+      {
+        method: "DELETE",
+      }
+    );
+  }
+
+  // Work Orders for Manufacturing Orders
+  async addWorkOrderToManufacturingOrder(manufacturingOrderId, workOrderData) {
+    return this.request(
+      `/manufacturing-orders/${manufacturingOrderId}/work-orders`,
+      {
+        method: "POST",
+        body: JSON.stringify(workOrderData),
+      }
+    );
+  }
+
+  async updateWorkOrderInManufacturingOrder(
+    manufacturingOrderId,
+    workOrderId,
+    workOrderData
+  ) {
+    return this.request(
+      `/manufacturing-orders/${manufacturingOrderId}/work-orders/${workOrderId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(workOrderData),
+      }
+    );
+  }
+
+  async deleteWorkOrderFromManufacturingOrder(
+    manufacturingOrderId,
+    workOrderId
+  ) {
+    return this.request(
+      `/manufacturing-orders/${manufacturingOrderId}/work-orders/${workOrderId}`,
+      {
+        method: "DELETE",
+      }
+    );
+  }
+
+  async getWorkOrdersForManufacturingOrder(manufacturingOrderId) {
+    return this.request(
+      `/manufacturing-orders/${manufacturingOrderId}/work-orders`
+    );
   }
 
   // Work Orders
   async getWorkOrders(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/work-orders${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/work-orders${queryString ? `?${queryString}` : ""}`);
   }
 
   async getWorkOrder(id) {
@@ -160,41 +247,41 @@ class ApiService {
   }
 
   async createWorkOrder(data) {
-    return this.request('/work-orders', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return this.request("/work-orders", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   async updateWorkOrder(id, data) {
     return this.request(`/work-orders/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 
   async startWorkOrder(id) {
     return this.request(`/work-orders/${id}/start`, {
-      method: 'PATCH'
+      method: "POST",
     });
   }
 
   async pauseWorkOrder(id) {
     return this.request(`/work-orders/${id}/pause`, {
-      method: 'PATCH'
+      method: "POST",
     });
   }
 
   async resumeWorkOrder(id) {
     return this.request(`/work-orders/${id}/resume`, {
-      method: 'POST'
+      method: "POST",
     });
   }
 
   async completeWorkOrder(id, data = {}) {
     return this.request(`/work-orders/${id}/complete`, {
-      method: 'POST',
-      body: JSON.stringify(data)
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
@@ -217,13 +304,15 @@ class ApiService {
 
   async getMyAssignments(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/work-orders/my-assignments${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/work-orders/my-assignments${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   // Products
   async getProducts(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/products${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/products${queryString ? `?${queryString}` : ""}`);
   }
 
   async getProduct(id) {
@@ -231,41 +320,43 @@ class ApiService {
   }
 
   async createProduct(data) {
-    return this.request('/products', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return this.request("/products", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   async updateProduct(id, data) {
     return this.request(`/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 
   async deleteProduct(id) {
     return this.request(`/products/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 
   async getProductStock(id, params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/products/${id}/stock${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/products/${id}/stock${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async adjustProductStock(id, data) {
     return this.request(`/products/${id}/stock-adjustment`, {
-      method: 'POST',
-      body: JSON.stringify(data)
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   // Work Centers
   async getWorkCenters(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/work-centers${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/work-centers${queryString ? `?${queryString}` : ""}`);
   }
 
   async getWorkCenter(id) {
@@ -273,39 +364,43 @@ class ApiService {
   }
 
   async createWorkCenter(data) {
-    return this.request('/work-centers', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return this.request("/work-centers", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   async updateWorkCenter(id, data) {
     return this.request(`/work-centers/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 
   async deleteWorkCenter(id) {
     return this.request(`/work-centers/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 
   async getWorkCenterUtilization(id, params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/work-centers/${id}/utilization${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/work-centers/${id}/utilization${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getWorkCenterSchedule(id, params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/work-centers/${id}/schedule${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/work-centers/${id}/schedule${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   // BOMs
   async getBOMs(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/boms${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/boms${queryString ? `?${queryString}` : ""}`);
   }
 
   async getBOM(id) {
@@ -313,28 +408,28 @@ class ApiService {
   }
 
   async createBOM(data) {
-    return this.request('/boms', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return this.request("/boms", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   async updateBOM(id, data) {
     return this.request(`/boms/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 
   async deleteBOM(id) {
     return this.request(`/boms/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 
   async activateBOM(id) {
     return this.request(`/boms/${id}/activate`, {
-      method: 'POST'
+      method: "POST",
     });
   }
 
@@ -345,78 +440,98 @@ class ApiService {
   // Stock Movements
   async getStockMovements(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/stock-movements${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/stock-movements${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async createStockMovement(data) {
-    return this.request('/stock-movements', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return this.request("/stock-movements", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   async getStockMovementsByProduct(productId, params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/stock-movements/product/${productId}${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/stock-movements/product/${productId}${
+        queryString ? `?${queryString}` : ""
+      }`
+    );
   }
 
   async getInventorySummary() {
-    return this.request('/inventory/summary');
+    return this.request("/inventory/summary");
   }
 
   async getLowStockProducts() {
-    return this.request('/inventory/low-stock');
+    return this.request("/inventory/low-stock");
   }
 
   // Dashboard
   async getDashboardOverview() {
-    return this.request('/dashboard/overview');
+    return this.request("/dashboard/overview");
   }
 
   async getDashboardKPIs(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/dashboard/kpis${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/dashboard/kpis${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getRecentOrders(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/dashboard/recent-orders${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/dashboard/recent-orders${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getDashboardAlerts() {
-    return this.request('/dashboard/alerts');
+    return this.request("/dashboard/alerts");
   }
 
   // Reports
   async getProductionSummary(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/reports/production-summary${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/reports/production-summary${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getResourceUtilization(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/reports/resource-utilization${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/reports/resource-utilization${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getInventoryValuation(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/reports/inventory-valuation${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/reports/inventory-valuation${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getWorkOrderPerformance(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/reports/work-order-performance${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/reports/work-order-performance${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   async getWorkOrderAnalysis(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/reports/work-order-analysis${queryString ? `?${queryString}` : ''}`);
+    return this.request(
+      `/reports/work-order-analysis${queryString ? `?${queryString}` : ""}`
+    );
   }
 
   // Users
   async getUsers(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/users${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/users${queryString ? `?${queryString}` : ""}`);
   }
 
   async getUser(id) {
@@ -424,52 +539,55 @@ class ApiService {
   }
 
   async createUser(data) {
-    return this.request('/users', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return this.request("/users", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   async updateUser(id, data) {
     return this.request(`/users/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 
   async deleteUser(id) {
     return this.request(`/users/${id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 
   async getProfile() {
-    return this.request('/users/profile');
+    return this.request("/users/profile");
   }
 
   async updateProfile(data) {
-    return this.request('/users/profile', {
-      method: 'PUT',
-      body: JSON.stringify(data)
+    return this.request("/users/profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   }
 
   async changePassword(id, data) {
     return this.request(`/users/${id}/change-password`, {
-      method: 'POST',
-      body: JSON.stringify(data)
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   // Stock Aggregation
   async getStockAggregation(params = {}) {
     const queryParams = new URLSearchParams();
-    if (params.category) queryParams.append('category', params.category);
-    if (params.type) queryParams.append('type', params.type);
-    if (params.lowStock !== undefined) queryParams.append('lowStock', params.lowStock);
-    if (params.period) queryParams.append('period', params.period);
-    
-    const response = await this.request(`/products/stock-aggregation?${queryParams.toString()}`);
+    if (params.category) queryParams.append("category", params.category);
+    if (params.type) queryParams.append("type", params.type);
+    if (params.lowStock !== undefined)
+      queryParams.append("lowStock", params.lowStock);
+    if (params.period) queryParams.append("period", params.period);
+
+    const response = await this.request(
+      `/products/stock-aggregation?${queryParams.toString()}`
+    );
     return response.data;
   }
 }

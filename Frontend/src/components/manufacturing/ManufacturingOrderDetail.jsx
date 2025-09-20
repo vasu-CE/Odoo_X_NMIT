@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ManufacturingOrder, WorkOrder, BOM } from '../../entities/all';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ManufacturingOrder, WorkOrder, BOM } from "../../entities/all";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import {
   ArrowLeft,
   Package,
@@ -23,34 +23,34 @@ import {
   ClipboardList,
   Save,
   AlertCircle,
-} from 'lucide-react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { toast } from "sonner";
 
 const statusConfig = {
   planned: {
     color: "bg-blue-100 text-blue-800",
     icon: Calendar,
     label: "Planned",
-    actions: ['confirm', 'start', 'cancel']
+    actions: ["confirm", "start", "cancel"],
   },
   in_progress: {
     color: "bg-orange-100 text-orange-800",
     icon: PlayCircle,
     label: "In Progress",
-    actions: ['complete', 'cancel']
+    actions: ["complete", "cancel"],
   },
   completed: {
     color: "bg-green-100 text-green-800",
     icon: CheckCircle,
     label: "Completed",
-    actions: ['print']
+    actions: ["print"],
   },
   cancelled: {
     color: "bg-red-100 text-red-800",
     icon: XCircle,
     label: "Cancelled",
-    actions: []
-  }
+    actions: [],
+  },
 };
 
 export default function ManufacturingOrderDetail() {
@@ -72,23 +72,39 @@ export default function ManufacturingOrderDetail() {
   const loadOrderDetails = async () => {
     try {
       setLoading(true);
-      const [orderData, workOrdersData] = await Promise.all([
-        ManufacturingOrder.get(id),
-        WorkOrder.list()
-      ]);
+      const orderData = await ManufacturingOrder.get(id);
+
+      // Only fetch work orders if the order has work orders
+      let workOrdersData = [];
+      if (
+        orderData &&
+        orderData.workOrders &&
+        orderData.workOrders.length > 0
+      ) {
+        try {
+          workOrdersData = await WorkOrder.list();
+        } catch (error) {
+          console.error("Error fetching work orders:", error);
+          workOrdersData = [];
+        }
+      }
 
       if (orderData) {
         setOrder(orderData);
         setFormData({
-          order_number: orderData.order_number || '',
-          product_name: orderData.product_name || '',
+          order_number: orderData.orderNumber || "",
+          product_name: orderData.finishedProduct || "",
           quantity: orderData.quantity || 1,
-          priority: orderData.priority || 'medium',
-          scheduled_start: orderData.scheduled_start ? new Date(orderData.scheduled_start).toISOString().slice(0, 16) : '',
-          scheduled_end: orderData.scheduled_end ? new Date(orderData.scheduled_end).toISOString().slice(0, 16) : '',
-          assignee_name: orderData.assignee_name || '',
-          notes: orderData.notes || '',
-          status: orderData.status || 'planned'
+          priority: orderData.priority || "medium",
+          scheduled_start: orderData.scheduleDate
+            ? new Date(orderData.scheduleDate).toISOString().slice(0, 16)
+            : "",
+          scheduled_end: orderData.scheduled_end
+            ? new Date(orderData.scheduled_end).toISOString().slice(0, 16)
+            : "",
+          assignee_name: orderData.assignee?.name || "",
+          notes: orderData.notes || "",
+          status: orderData.status || "planned",
         });
 
         // Load BOM if available
@@ -98,21 +114,23 @@ export default function ManufacturingOrderDetail() {
         }
 
         // Filter work orders for this manufacturing order
-        const relatedWorkOrders = workOrdersData.filter(wo => wo.manufacturing_order_id === parseInt(id));
+        const relatedWorkOrders = workOrdersData.filter(
+          (wo) => wo.manufacturing_order_id === parseInt(id)
+        );
         setWorkOrders(relatedWorkOrders);
       }
     } catch (error) {
-      console.error('Error loading order details:', error);
-      toast.error('Failed to load order details');
+      console.error("Error loading order details:", error);
+      toast.error("Failed to load order details");
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field) => (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: e.target.value
+      [field]: e.target.value,
     }));
   };
 
@@ -120,16 +138,16 @@ export default function ManufacturingOrderDetail() {
     try {
       let result;
       switch (newStatus) {
-        case 'confirm':
+        case "confirm":
           result = await ManufacturingOrder.confirm(id);
           break;
-        case 'start':
+        case "start":
           result = await ManufacturingOrder.start(id);
           break;
-        case 'complete':
+        case "complete":
           result = await ManufacturingOrder.complete(id);
           break;
-        case 'cancel':
+        case "cancel":
           result = await ManufacturingOrder.cancel(id);
           break;
         default:
@@ -150,13 +168,13 @@ export default function ManufacturingOrderDetail() {
     try {
       const result = await ManufacturingOrder.update(id, formData);
       if (result) {
-        toast.success('Order updated successfully');
+        toast.success("Order updated successfully");
         setIsEditing(false);
         loadOrderDetails();
       }
     } catch (error) {
-      console.error('Error updating order:', error);
-      toast.error('Failed to update order');
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order");
     }
   };
 
@@ -165,10 +183,12 @@ export default function ManufacturingOrderDetail() {
   };
 
   const formatDuration = (minutes) => {
-    if (!minutes) return '00:00';
+    if (!minutes) return "00:00";
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, "0")}:${mins
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   if (loading) {
@@ -188,7 +208,10 @@ export default function ManufacturingOrderDetail() {
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600">Order not found</p>
-          <Button onClick={() => navigate('/manufacturing-orders')} className="mt-4">
+          <Button
+            onClick={() => navigate("/manufacturing-orders")}
+            className="mt-4"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Orders
           </Button>
@@ -208,7 +231,7 @@ export default function ManufacturingOrderDetail() {
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => navigate('/manufacturing-orders')}
+              onClick={() => navigate("/manufacturing-orders")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -216,7 +239,7 @@ export default function ManufacturingOrderDetail() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {order.order_number || 'Manufacturing Order'}
+                {order.orderNumber || "Manufacturing Order"}
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <Badge className={statusInfo.color}>
@@ -224,7 +247,7 @@ export default function ManufacturingOrderDetail() {
                   {statusInfo.label}
                 </Badge>
                 <span className="text-sm text-gray-500">
-                  Created {new Date(order.created_date).toLocaleDateString()}
+                  Created {new Date(order.createdAt).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -236,28 +259,38 @@ export default function ManufacturingOrderDetail() {
                 <Button
                   variant="outline"
                   onClick={() => setIsEditing(true)}
-                  disabled={order.status === 'completed' || order.status === 'cancelled'}
+                  disabled={
+                    order.status === "completed" || order.status === "cancelled"
+                  }
                 >
                   <Save className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
-                {statusInfo.actions.map(action => (
+                {statusInfo.actions.map((action) => (
                   <Button
                     key={action}
                     onClick={() => handleStatusChange(action)}
                     className={
-                      action === 'cancel' 
-                        ? 'bg-red-600 hover:bg-red-700 text-white'
-                        : action === 'complete'
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      action === "cancel"
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : action === "complete"
+                        ? "bg-green-600 hover:bg-green-700 text-white"
+                        : "bg-blue-600 hover:bg-blue-700 text-white"
                     }
                   >
-                    {action === 'confirm' && <CheckCircle className="w-4 h-4 mr-2" />}
-                    {action === 'start' && <PlayCircle className="w-4 h-4 mr-2" />}
-                    {action === 'complete' && <CheckCircle className="w-4 h-4 mr-2" />}
-                    {action === 'cancel' && <XCircle className="w-4 h-4 mr-2" />}
-                    {action === 'print' && <Package className="w-4 h-4 mr-2" />}
+                    {action === "confirm" && (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    {action === "start" && (
+                      <PlayCircle className="w-4 h-4 mr-2" />
+                    )}
+                    {action === "complete" && (
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                    )}
+                    {action === "cancel" && (
+                      <XCircle className="w-4 h-4 mr-2" />
+                    )}
+                    {action === "print" && <Package className="w-4 h-4 mr-2" />}
                     {action.charAt(0).toUpperCase() + action.slice(1)}
                   </Button>
                 ))}
@@ -295,7 +328,7 @@ export default function ManufacturingOrderDetail() {
                     <Input
                       id="order_number"
                       value={formData.order_number}
-                      onChange={handleInputChange('order_number')}
+                      onChange={handleInputChange("order_number")}
                       disabled={!isEditing}
                     />
                   </div>
@@ -304,7 +337,7 @@ export default function ManufacturingOrderDetail() {
                     <Input
                       id="product_name"
                       value={formData.product_name}
-                      onChange={handleInputChange('product_name')}
+                      onChange={handleInputChange("product_name")}
                       disabled={!isEditing}
                     />
                   </div>
@@ -314,7 +347,7 @@ export default function ManufacturingOrderDetail() {
                       id="quantity"
                       type="number"
                       value={formData.quantity}
-                      onChange={handleInputChange('quantity')}
+                      onChange={handleInputChange("quantity")}
                       disabled={!isEditing}
                     />
                   </div>
@@ -323,7 +356,7 @@ export default function ManufacturingOrderDetail() {
                     <select
                       id="priority"
                       value={formData.priority}
-                      onChange={handleInputChange('priority')}
+                      onChange={handleInputChange("priority")}
                       disabled={!isEditing}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
                     >
@@ -339,7 +372,7 @@ export default function ManufacturingOrderDetail() {
                       id="scheduled_start"
                       type="datetime-local"
                       value={formData.scheduled_start}
-                      onChange={handleInputChange('scheduled_start')}
+                      onChange={handleInputChange("scheduled_start")}
                       disabled={!isEditing}
                     />
                   </div>
@@ -349,7 +382,7 @@ export default function ManufacturingOrderDetail() {
                       id="scheduled_end"
                       type="datetime-local"
                       value={formData.scheduled_end}
-                      onChange={handleInputChange('scheduled_end')}
+                      onChange={handleInputChange("scheduled_end")}
                       disabled={!isEditing}
                     />
                   </div>
@@ -358,7 +391,7 @@ export default function ManufacturingOrderDetail() {
                     <Input
                       id="assignee_name"
                       value={formData.assignee_name}
-                      onChange={handleInputChange('assignee_name')}
+                      onChange={handleInputChange("assignee_name")}
                       disabled={!isEditing}
                     />
                   </div>
@@ -368,7 +401,7 @@ export default function ManufacturingOrderDetail() {
                   <Textarea
                     id="notes"
                     value={formData.notes}
-                    onChange={handleInputChange('notes')}
+                    onChange={handleInputChange("notes")}
                     disabled={!isEditing}
                     rows={3}
                   />
@@ -390,19 +423,35 @@ export default function ManufacturingOrderDetail() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Product Name</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Required Qty</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Consumed Qty</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Unit</th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Product Name
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Required Qty
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Consumed Qty
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Unit
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {bom.components.map((component, index) => (
                           <tr key={index} className="border-b border-gray-100">
-                            <td className="py-2 px-3 text-gray-900">{component.product_name}</td>
-                            <td className="py-2 px-3 text-gray-700">{component.required_qty}</td>
-                            <td className="py-2 px-3 text-gray-700">{component.consumed_qty || 0}</td>
-                            <td className="py-2 px-3 text-gray-700">{component.unit}</td>
+                            <td className="py-2 px-3 text-gray-900">
+                              {component.product_name}
+                            </td>
+                            <td className="py-2 px-3 text-gray-700">
+                              {component.required_qty}
+                            </td>
+                            <td className="py-2 px-3 text-gray-700">
+                              {component.consumed_qty || 0}
+                            </td>
+                            <td className="py-2 px-3 text-gray-700">
+                              {component.unit}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -426,33 +475,57 @@ export default function ManufacturingOrderDetail() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Work Order No</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Operation</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Work Center</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Status</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Expected Duration</th>
-                          <th className="text-left py-2 px-3 font-semibold text-gray-700">Real Duration</th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Work Order No
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Operation
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Work Center
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Status
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Expected Duration
+                          </th>
+                          <th className="text-left py-2 px-3 font-semibold text-gray-700">
+                            Real Duration
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {workOrders.map((wo) => (
                           <tr key={wo.id} className="border-b border-gray-100">
-                            <td className="py-2 px-3 text-gray-900 font-medium">{wo.work_order_number}</td>
-                            <td className="py-2 px-3 text-gray-700">{wo.operation_name}</td>
-                            <td className="py-2 px-3 text-gray-700">{wo.work_center_name}</td>
+                            <td className="py-2 px-3 text-gray-900 font-medium">
+                              {wo.work_order_number}
+                            </td>
+                            <td className="py-2 px-3 text-gray-700">
+                              {wo.operation_name}
+                            </td>
+                            <td className="py-2 px-3 text-gray-700">
+                              {wo.work_center_name}
+                            </td>
                             <td className="py-2 px-3">
-                              <Badge className={
-                                wo.status === 'completed' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : wo.status === 'in_progress'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }>
-                                {wo.status?.replace('_', ' ')}
+                              <Badge
+                                className={
+                                  wo.status === "completed"
+                                    ? "bg-green-100 text-green-800"
+                                    : wo.status === "in_progress"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }
+                              >
+                                {wo.status?.replace("_", " ")}
                               </Badge>
                             </td>
-                            <td className="py-2 px-3 text-gray-700">{formatDuration(wo.estimated_duration)}</td>
-                            <td className="py-2 px-3 text-gray-700">{formatDuration(wo.actual_duration)}</td>
+                            <td className="py-2 px-3 text-gray-700">
+                              {formatDuration(wo.estimated_duration)}
+                            </td>
+                            <td className="py-2 px-3 text-gray-700">
+                              {formatDuration(wo.actual_duration)}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -473,14 +546,22 @@ export default function ManufacturingOrderDetail() {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total Cost</span>
-                  <span className="font-semibold">${order.total_cost || 0}</span>
+                  <span className="font-semibold">
+                    ${order.total_cost || 0}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Progress</span>
                   <span className="font-semibold">
-                    {workOrders.length > 0 
-                      ? Math.round((workOrders.filter(wo => wo.status === 'completed').length / workOrders.length) * 100)
-                      : 0}%
+                    {workOrders.length > 0
+                      ? Math.round(
+                          (workOrders.filter((wo) => wo.status === "completed")
+                            .length /
+                            workOrders.length) *
+                            100
+                        )
+                      : 0}
+                    %
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -489,7 +570,9 @@ export default function ManufacturingOrderDetail() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Materials</span>
-                  <span className="font-semibold">{bom?.components?.length || 0}</span>
+                  <span className="font-semibold">
+                    {bom?.components?.length || 0}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -506,7 +589,7 @@ export default function ManufacturingOrderDetail() {
                     <div>
                       <p className="text-sm font-medium">Order Created</p>
                       <p className="text-xs text-gray-500">
-                        {new Date(order.created_date).toLocaleString()}
+                        {new Date(order.createdAt).toLocaleString()}
                       </p>
                     </div>
                   </div>

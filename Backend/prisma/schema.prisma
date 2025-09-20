@@ -20,7 +20,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  manufacturingOrders ManufacturingOrder[]
+  assignedManufacturingOrders ManufacturingOrder[] @relation("ManufacturingOrderAssignee")
   workOrders         WorkOrder[]
   createdBOMs        BOM[]
 
@@ -45,10 +45,8 @@ model Product {
 
   // Relations
   boms                BOM[]
-  manufacturingOrders ManufacturingOrder[]
   bomComponents       BOMComponent[]
   stockMovements      StockMovement[]
-  requiredMaterials   RequiredMaterial[]
 
   @@map("products")
 }
@@ -116,7 +114,6 @@ model WorkCenter {
 
   // Relations
   operations BOMOperation[]
-  workOrders WorkOrder[]
 
   @@map("work_centers")
 }
@@ -124,14 +121,15 @@ model WorkCenter {
 model ManufacturingOrder {
   id              String               @id @default(cuid())
   orderNumber     String               @unique
-  productId       String
+  finishedProduct String               // Product name/description
   quantity        Int
-  status          ManufacturingStatus  @default(PLANNED)
+  units           String               @default("PCS")
+  status          ManufacturingStatus  @default(DRAFT)
   priority        Priority             @default(MEDIUM)
-  scheduledDate   DateTime
+  scheduleDate    DateTime
   startedAt       DateTime?
   completedAt     DateTime?
-  assignedToId    String?
+  assigneeId      String?              // Renamed from assignedToId
   bomId           String?
   estimatedCost   Float?
   actualCost      Float?
@@ -140,45 +138,45 @@ model ManufacturingOrder {
   updatedAt       DateTime             @updatedAt
 
   // Relations
-  product      Product     @relation(fields: [productId], references: [id])
-  assignedTo   User?       @relation(fields: [assignedToId], references: [id])
-  bom          BOM?        @relation(fields: [bomId], references: [id])
-  workOrders   WorkOrder[]
-  requiredMaterials RequiredMaterial[]
+  assignee        User?                @relation("ManufacturingOrderAssignee", fields: [assigneeId], references: [id])
+  bom             BOM?                 @relation(fields: [bomId], references: [id])
+  components      Component[]
+  workOrders      WorkOrder[]
 
   @@map("manufacturing_orders")
 }
 
-model RequiredMaterial {
+model Component {
   id                  String  @id @default(cuid())
   manufacturingOrderId String
-  productId           String
-  requiredQuantity    Float
-  consumedQuantity    Float   @default(0)
-  unit                String
+  componentName       String
+  availability        Float
+  toConsume           Float
+  consumed            Float   @default(0)
+  units               String  @default("PCS")
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   // Relations
   manufacturingOrder  ManufacturingOrder @relation(fields: [manufacturingOrderId], references: [id], onDelete: Cascade)
-  product             Product            @relation(fields: [productId], references: [id])
 
-  @@map("required_materials")
+  @@map("components")
 }
 
 model WorkOrder {
   id                     String            @id @default(cuid())
   manufacturingOrderId   String
   operationName          String
-  sequence               Int
-  status                 WorkOrderStatus   @default(PENDING)
-  workCenterId           String
+  workCenterName         String
+  plannedDuration        Int               // in minutes
+  realDuration           Int?              // in minutes
+  status                 WorkOrderStatus   @default(TO_DO)
   assignedToId           String?
   estimatedTimeMinutes   Int
   actualTimeMinutes      Int?
   startTime              DateTime?
   endTime                DateTime?
-  realDuration           Int?              // Duration in minutes (endTime - startTime - pausedDuration)
+  // realDuration           Int?              // Duration in minutes (endTime - startTime - pausedDuration)  
   pausedDuration         Int?              @default(0) // Total paused duration in minutes
   pausedAt               DateTime?
   completedAt            DateTime?
@@ -188,7 +186,6 @@ model WorkOrder {
 
   // Relations
   manufacturingOrder ManufacturingOrder @relation(fields: [manufacturingOrderId], references: [id], onDelete: Cascade)
-  workCenter         WorkCenter         @relation(fields: [workCenterId], references: [id])
   assignedTo         User?              @relation(fields: [assignedToId], references: [id])
 
   @@map("work_orders")
@@ -236,12 +233,12 @@ enum WorkCenterStatus {
 }
 
 enum ManufacturingStatus {
-  PLANNED
+  DRAFT
   CONFIRMED
   IN_PROGRESS
-  QUALITY_HOLD
-  COMPLETED
-  CANCELED
+  TO_CLOSE
+  DONE
+  CANCELLED
 }
 
 enum Priority {
@@ -252,11 +249,10 @@ enum Priority {
 }
 
 enum WorkOrderStatus {
-  PENDING
+  TO_DO
   IN_PROGRESS
-  PAUSED
-  COMPLETED
-  SKIPPED
+  DONE
+  CANCELLED
 }
 
 enum MovementType {
