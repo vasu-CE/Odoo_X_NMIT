@@ -24,12 +24,21 @@ export const Sidebar = ({ className = '', children, ...props }) => {
   const { isOpen } = useSidebar();
   
   return (
-    <div
-      className={`${isOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${className}`}
-      {...props}
-    >
-      {children}
-    </div>
+    <>
+      {/* Mobile overlay when sidebar is open */}
+      <div 
+        className={`${isOpen ? 'opacity-50 pointer-events-auto' : 'opacity-0 pointer-events-none'} fixed inset-0 bg-black transition-opacity duration-300 ease-in-out z-40 lg:hidden`}
+        onClick={() => useSidebar().setIsOpen(false)}
+      />
+      
+      {/* Sidebar */}
+      <div
+        className={`${isOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-[var(--sidebar-width)] bg-white shadow-lg transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${className}`}
+        {...props}
+      >
+        {children}
+      </div>
+    </>
   );
 };
 

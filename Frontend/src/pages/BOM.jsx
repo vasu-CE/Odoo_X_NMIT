@@ -419,8 +419,8 @@ export default function BOMPage() {
               </div>
             ) : viewMode === "list" ? (
               /* List View - Table */
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full min-w-[640px]">
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Finished Product</th>
@@ -447,6 +447,7 @@ export default function BOMPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => setSelectedBOM(bom)}
+                              className="h-9 w-9 p-0"
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -454,6 +455,7 @@ export default function BOMPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleEditBOM(bom)}
+                              className="h-9 w-9 p-0"
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -461,7 +463,7 @@ export default function BOMPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleDeleteBOM(bom.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="h-9 w-9 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

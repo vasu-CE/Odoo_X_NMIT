@@ -3,40 +3,88 @@
   height: 100vh;
   margin: 0;
   padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrolling on mobile */
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Mobile-first responsive design */
+.container {
+  width: 100%;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+  margin: 0 auto;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Touch-friendly styles */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Responsive card layouts */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
 }
 
 .card {
-  padding: 2em;
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.read-the-docs {
-  color: #888;
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive tables */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Responsive images */
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive form layouts */
+@media (max-width: 767px) {
+  .form-stack > * + * {
+    margin-top: var(--space-3);
+  }
+  
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-row > * + * {
+    margin-top: var(--space-3);
+    margin-left: 0 !important;
+  }
+}
+
+/* Responsive typography */
+.text-responsive {
+  font-size: var(--font-size-base);
+}
+
+/* Utility classes for responsive layouts */
+.hide-on-mobile {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .hide-on-mobile {
+    display: initial !important;
+  }
+  
+  .hide-on-desktop {
+    display: none !important;
+  }
 }

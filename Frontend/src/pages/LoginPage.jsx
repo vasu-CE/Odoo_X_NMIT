@@ -105,37 +105,38 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+        <div className="absolute top-0 -left-4 w-48 h-48 md:w-72 md:h-72 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-0 -right-4 w-48 h-48 md:w-72 md:h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-48 h-48 md:w-72 md:h-72 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       <div className="w-full max-w-md">
         {/* Back to Landing */}
-        <div className="mb-6 flex justify-start">
+        <div className="mb-4 md:mb-6 flex justify-start relative z-10">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            <span className="hidden xs:inline">Back to Home</span>
+            <span className="xs:hidden">Back</span>
           </Button>
         </div>
 
         {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg overflow-hidden">
+        <div className="text-center mb-6 md:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl mb-3 md:mb-4 shadow-lg overflow-hidden">
             <img
               src="/logo.png"
               alt="ManufacturingOS Logo"
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">
             ManufacturingOS
           </h1>
-          <p className="text-gray-600">Production Management System</p>
+          <p className="text-sm md:text-base text-gray-600">Production Management System</p>
         </div>
 
         {/* Login Card */}

@@ -116,7 +116,7 @@ export default function LandingPage() {
                 href="#features"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Features
+                
               </a>
               <div className="flex items-center gap-3">
                 <Button
@@ -156,7 +156,7 @@ export default function LandingPage() {
               <div className="px-4 py-6 space-y-4">
                 <a
                   href="#features"
-                  className="block text-gray-600 hover:text-gray-900 transition-colors"
+                  className="block text-gray-600  hover:text-gray-900 transition-colors text-center"
                 >
                   Features
                 </a>
@@ -182,19 +182,19 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-0">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-0 -left-4 w-48 h-48 md:w-72 md:h-72 bg-gradient-to-r from-blue-300 to-cyan-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-48 h-48 md:w-72 md:h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-48 h-48 md:w-72 md:h-72 bg-gradient-to-r from-yellow-300 to-orange-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
         </div>
 
         {/* Grid Pattern Overlay */}
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {/* Badge */}
             {/* <div className="flex justify-center">
               <Badge className="bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border-blue-200 px-4 py-2 text-sm font-medium">
