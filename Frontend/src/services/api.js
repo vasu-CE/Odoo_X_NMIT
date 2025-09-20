@@ -1,9 +1,21 @@
 // API service for connecting frontend to backend
+import axios from 'axios';
+
 const API_BASE_URL = "http://localhost:3001/api";
 
 class ApiService {
   constructor() {
     this.token = localStorage.getItem("authToken");
+    this.axiosInstance = axios.create({
+      baseURL: API_BASE_URL,
+      timeout: 10000,
+      withCredentials: true, // This enables cookies to be sent with requests
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    this.setupInterceptors();
   }
 
   // Set authentication token
@@ -16,31 +28,64 @@ class ApiService {
     }
   }
 
-  // Get authentication headers
-  getAuthHeaders() {
-    return {
-      "Content-Type": "application/json",
-      ...(this.token && { Authorization: `Bearer ${this.token}` }),
-    };
+  // Setup axios interceptors
+  setupInterceptors() {
+    // Request interceptor - automatically add Authorization header if token exists
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        if (this.token) {
+          config.headers.Authorization = `Bearer ${this.token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Response interceptor - handle common errors and token refresh
+    this.axiosInstance.interceptors.response.use(
+      (response) => {
+        return response.data; // Axios wraps the response, we want just the data
+      },
+      async (error) => {
+        const originalRequest = error.config;
+
+        // Handle 401 errors (unauthorized)
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          
+          // Clear token and redirect to login
+          this.setToken(null);
+          
+          // You can add redirect logic here if needed
+          // window.location.href = '/login';
+        }
+
+        // Handle network errors
+        if (!error.response) {
+          console.error('Network error:', error.message);
+          throw new Error('Network error. Please check your connection.');
+        }
+
+        // Handle other HTTP errors
+        const errorMessage = error.response.data?.error || 
+                           error.response.data?.message || 
+                           `HTTP error! status: ${error.response.status}`;
+        
+        throw new Error(errorMessage);
+      }
+    );
   }
 
   // Generic API request method
   async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const config = {
-      headers: this.getAuthHeaders(),
-      ...options,
-    };
-
     try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
-      }
-
-      return data;
+      const response = await this.axiosInstance.request({
+        url: endpoint,
+        ...options,
+      });
+      return response;
     } catch (error) {
       console.error("API request failed:", error);
       throw error;
@@ -58,7 +103,7 @@ class ApiService {
 
     const response = await this.request("/auth/login", {
       method: "POST",
-      body: JSON.stringify(payload),
+      data: payload, // Axios uses 'data' instead of 'body'
     });
 
     if (response.success && response.data.token) {
@@ -71,7 +116,7 @@ class ApiService {
   async register(userData) {
     const response = await this.request("/auth/register", {
       method: "POST",
-      body: JSON.stringify(userData),
+      data: userData, // Axios uses 'data' instead of 'body'
     });
 
     if (response.success && response.data.token) {
@@ -82,15 +127,56 @@ class ApiService {
   }
 
   async logout() {
-    const response = await this.request("/auth/logout", {
-      method: "POST",
-    });
-    this.setToken(null);
-    return response;
+    try {
+      const response = await this.request("/auth/logout", {
+        method: "POST",
+      });
+      this.setToken(null);
+      return response;
+    } catch (error) {
+      // Even if logout fails on server, clear local token
+      this.setToken(null);
+      throw error;
+    }
   }
 
   async getCurrentUser() {
     return this.request("/auth/me");
+  }
+
+  async refreshToken() {
+    try {
+      const response = await this.request("/auth/refresh", {
+        method: "POST",
+      });
+      
+      if (response.success && response.data.token) {
+        this.setToken(response.data.token);
+      }
+      
+      return response;
+    } catch (error) {
+      // If refresh fails, clear the token
+      this.setToken(null);
+      throw error;
+    }
+  }
+
+  // Check if user is authenticated (works with both localStorage and cookies)
+  async checkAuthStatus() {
+    try {
+      // If we have a token in localStorage, use it
+      if (this.token) {
+        const response = await this.getCurrentUser();
+        return response.success;
+      }
+      
+      // If no localStorage token, try to get user info (this will use cookies)
+      const response = await this.getCurrentUser();
+      return response.success;
+    } catch (error) {
+      return false;
+    }
   }
 
   // Manufacturing Orders
@@ -108,7 +194,7 @@ class ApiService {
   async createManufacturingOrder(data) {
     return this.request("/manufacturing-orders", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -116,21 +202,21 @@ class ApiService {
   async createManufacturingOrderWithWorkOrders(data) {
     return this.request("/manufacturing-orders", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async updateManufacturingOrder(id, data) {
     return this.request(`/manufacturing-orders/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async updateManufacturingOrderStatus(id, status, notes = "") {
     return this.request(`/manufacturing-orders/${id}/status`, {
       method: "PATCH",
-      body: JSON.stringify({ status, notes }),
+      data: { status, notes },
     });
   }
 
@@ -170,7 +256,7 @@ class ApiService {
       `/manufacturing-orders/${manufacturingOrderId}/components`,
       {
         method: "POST",
-        body: JSON.stringify(componentData),
+        data: componentData,
       }
     );
   }
@@ -184,7 +270,7 @@ class ApiService {
       `/manufacturing-orders/${manufacturingOrderId}/components/${componentId}`,
       {
         method: "PUT",
-        body: JSON.stringify(componentData),
+        data: componentData,
       }
     );
   }
@@ -207,7 +293,7 @@ class ApiService {
       `/manufacturing-orders/${manufacturingOrderId}/work-orders`,
       {
         method: "POST",
-        body: JSON.stringify(workOrderData),
+        data: workOrderData,
       }
     );
   }
@@ -221,7 +307,7 @@ class ApiService {
       `/manufacturing-orders/${manufacturingOrderId}/work-orders/${workOrderId}`,
       {
         method: "PUT",
-        body: JSON.stringify(workOrderData),
+        data: workOrderData,
       }
     );
   }
@@ -257,14 +343,14 @@ class ApiService {
   async createWorkOrder(data) {
     return this.request("/work-orders", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async updateWorkOrder(id, data) {
     return this.request(`/work-orders/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -289,7 +375,7 @@ class ApiService {
   async completeWorkOrder(id, data = {}) {
     return this.request(`/work-orders/${id}/complete`, {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -337,14 +423,14 @@ class ApiService {
   async createProduct(data) {
     return this.request("/products", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async updateProduct(id, data) {
     return this.request(`/products/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -364,7 +450,7 @@ class ApiService {
   async adjustProductStock(id, data) {
     return this.request(`/products/${id}/stock-adjustment`, {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -381,14 +467,14 @@ class ApiService {
   async createWorkCenter(data) {
     return this.request("/work-centers", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async updateWorkCenter(id, data) {
     return this.request(`/work-centers/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -425,14 +511,14 @@ class ApiService {
   async createBOM(data) {
     return this.request("/boms", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async updateBOM(id, data) {
     return this.request(`/boms/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -463,7 +549,7 @@ class ApiService {
   async createStockMovement(data) {
     return this.request("/stock-movements", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -556,14 +642,14 @@ class ApiService {
   async createUser(data) {
     return this.request("/users", {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async updateUser(id, data) {
     return this.request(`/users/${id}`, {
       method: "PUT",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -580,14 +666,14 @@ class ApiService {
   async updateProfile(data) {
     return this.request("/users/profile", {
       method: "PUT",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
   async changePassword(id, data) {
     return this.request(`/users/${id}/change-password`, {
       method: "POST",
-      body: JSON.stringify(data),
+      data: data,
     });
   }
 
@@ -619,21 +705,21 @@ class ApiService {
   async createStockLedgerProduct(data) {
     return this.request('/stock-ledger/products', {
       method: 'POST',
-      body: JSON.stringify(data)
+      data: data
     });
   }
 
   async updateStockLedgerProduct(id, data) {
     return this.request(`/stock-ledger/products/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(data)
+      data: data
     });
   }
 
   async createStockMovement(data) {
     return this.request('/stock-ledger/movements', {
       method: 'POST',
-      body: JSON.stringify(data)
+      data: data
     });
   }
 
@@ -645,21 +731,21 @@ class ApiService {
   async autoUpdateStock(data) {
     return this.request('/stock-ledger/auto-update', {
       method: 'POST',
-      body: JSON.stringify(data)
+      data: data
     });
   }
 
   async forgotPassword(email) {
     return this.request('/auth/forgot-password', {
       method: 'POST',
-      body: JSON.stringify({ email })
+      data: { email } // Axios automatically stringifies JSON
     });
   }
 
   async resetPassword(token, password) {
     return this.request('/auth/reset-password', {
       method: 'POST',
-      body: JSON.stringify({ token, password })
+      data: { token, password } // Axios automatically stringifies JSON
     });
   }
 }

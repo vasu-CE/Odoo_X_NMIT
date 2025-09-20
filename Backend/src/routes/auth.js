@@ -130,6 +130,11 @@ router.post('/login', [
     const token = generateToken(user.id);
 
     const { password: _, ...userData } = user;
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 
+    });
 
     res.json({
       success: true,
@@ -167,6 +172,12 @@ router.post('/refresh', authenticate, async (req, res) => {
   try {
     const token = generateToken(req.user.id);
     
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+    
     res.json({
       success: true,
       data: {
@@ -182,6 +193,12 @@ router.post('/refresh', authenticate, async (req, res) => {
 });
 
 router.post('/logout', authenticate, (req, res) => {
+  res.clearCookie('authToken',
+    {
+      httpOnly: true,
+      sameSite: 'strict',
+    }
+  );
   res.json({
     success: true,
     message: 'Logout successful'
