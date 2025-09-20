@@ -319,14 +319,15 @@ async function main() {
   const manufacturingOrders = await Promise.all([
     prisma.manufacturingOrder.create({
       data: {
-        orderNumber: "MO-001",
-        productId: "prod-1",
+        orderNumber: "MO-000001",
+        finishedProduct: "Widget A - Premium Model",
         quantity: 100,
+        units: "PCS",
         status: "IN_PROGRESS",
         priority: "HIGH",
-        scheduledDate: new Date("2024-01-15T08:00:00Z"),
+        scheduleDate: new Date("2024-01-15T08:00:00Z"),
         startedAt: new Date("2024-01-15T08:30:00Z"),
-        assignedToId: users[2].id,
+        assigneeId: users[2].id,
         bomId: bom1.id,
         estimatedCost: 1500.0,
         notes: "Priority order for customer ABC",
@@ -334,13 +335,14 @@ async function main() {
     }),
     prisma.manufacturingOrder.create({
       data: {
-        orderNumber: "MO-002",
-        productId: "prod-2",
+        orderNumber: "MO-000002",
+        finishedProduct: "Widget B - Standard Model",
         quantity: 50,
-        status: "PLANNED",
+        units: "PCS",
+        status: "DRAFT",
         priority: "MEDIUM",
-        scheduledDate: new Date("2024-01-22T08:00:00Z"),
-        assignedToId: users[2].id,
+        scheduleDate: new Date("2024-01-22T08:00:00Z"),
+        assigneeId: users[2].id,
         bomId: bom2.id,
         estimatedCost: 800.0,
         notes: "Standard production order",
@@ -348,50 +350,134 @@ async function main() {
     }),
     prisma.manufacturingOrder.create({
       data: {
-        orderNumber: "MO-003",
-        productId: "prod-1",
+        orderNumber: "MO-000003",
+        finishedProduct: "Widget A - Premium Model",
         quantity: 200,
-        status: "COMPLETED",
+        units: "PCS",
+        status: "DONE",
         priority: "LOW",
-        scheduledDate: new Date("2024-01-10T08:00:00Z"),
+        scheduleDate: new Date("2024-01-10T08:00:00Z"),
         startedAt: new Date("2024-01-10T08:00:00Z"),
         completedAt: new Date("2024-01-12T16:30:00Z"),
-        assignedToId: users[2].id,
+        assigneeId: users[2].id,
         bomId: bom1.id,
         estimatedCost: 2000.0,
         actualCost: 1950.0,
         notes: "Completed ahead of schedule",
       },
     }),
+    prisma.manufacturingOrder.create({
+      data: {
+        orderNumber: "MO-000004",
+        finishedProduct: "Custom Widget C",
+        quantity: 25,
+        units: "PCS",
+        status: "CONFIRMED",
+        priority: "URGENT",
+        scheduleDate: new Date("2024-01-25T08:00:00Z"),
+        assigneeId: users[1].id,
+        estimatedCost: 500.0,
+        notes: "Custom order for special client",
+      },
+    }),
   ]);
 
   console.log("✅ Manufacturing orders created");
 
+  // Create components for manufacturing orders
+  await Promise.all([
+    // Components for MO-000001 (Widget A - 100 units)
+    prisma.component.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[0].id,
+        componentName: "Raw Material 1",
+        availability: 500.0,
+        toConsume: 200.0, // 2 KG per unit * 100 units
+        consumed: 50.0,
+        units: "KG",
+      },
+    }),
+    prisma.component.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[0].id,
+        componentName: "Raw Material 2",
+        availability: 200.0,
+        toConsume: 100.0, // 1 PCS per unit * 100 units
+        consumed: 25.0,
+        units: "PCS",
+      },
+    }),
+    // Components for MO-000002 (Widget B - 50 units)
+    prisma.component.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[1].id,
+        componentName: "Raw Material 1",
+        availability: 500.0,
+        toConsume: 50.0, // 1 KG per unit * 50 units
+        consumed: 0.0,
+        units: "KG",
+      },
+    }),
+    // Components for MO-000003 (Widget A - 200 units)
+    prisma.component.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[2].id,
+        componentName: "Raw Material 1",
+        availability: 500.0,
+        toConsume: 400.0, // 2 KG per unit * 200 units
+        consumed: 400.0,
+        units: "KG",
+      },
+    }),
+    prisma.component.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[2].id,
+        componentName: "Raw Material 2",
+        availability: 200.0,
+        toConsume: 200.0, // 1 PCS per unit * 200 units
+        consumed: 200.0,
+        units: "PCS",
+      },
+    }),
+    // Components for MO-000004 (Custom Widget C - 25 units)
+    prisma.component.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[3].id,
+        componentName: "Component A",
+        availability: 100.0,
+        toConsume: 25.0,
+        consumed: 0.0,
+        units: "PCS",
+      },
+    }),
+  ]);
+
+  console.log("✅ Components created");
+
   // Create work orders
   await Promise.all([
+    // Work orders for MO-000001 (In Progress)
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[0].id,
         operationName: "Assembly",
-        sequence: 1,
+        workCenterName: "Assembly Line 1",
+        plannedDuration: 30, // 30 minutes per unit
+        realDuration: 15, // 15 minutes completed
         status: "IN_PROGRESS",
-        workCenterId: "wc-1",
         assignedToId: users[2].id,
-        estimatedTimeMinutes: 3000, // 50 hours for 100 units
-        actualTimeMinutes: 1500,
         startedAt: new Date("2024-01-15T08:30:00Z"),
-        comments: "Assembly in progress",
+        comments: "Assembly in progress - 50% complete",
       },
     }),
     prisma.workOrder.create({
       data: {
         manufacturingOrderId: manufacturingOrders[0].id,
         operationName: "Quality Check",
-        sequence: 2,
-        status: "PENDING",
-        workCenterId: "wc-2",
+        workCenterName: "Quality Control Station",
+        plannedDuration: 10, // 10 minutes per unit
+        status: "TO_DO",
         assignedToId: users[2].id,
-        estimatedTimeMinutes: 1000, // 16.7 hours for 100 units
         comments: "Waiting for assembly completion",
       },
     }),
@@ -399,24 +485,46 @@ async function main() {
       data: {
         manufacturingOrderId: manufacturingOrders[0].id,
         operationName: "Packaging",
-        sequence: 3,
-        status: "PENDING",
-        workCenterId: "wc-3",
+        workCenterName: "Packaging Station",
+        plannedDuration: 5, // 5 minutes per unit
+        status: "TO_DO",
         assignedToId: users[2].id,
-        estimatedTimeMinutes: 500, // 8.3 hours for 100 units
         comments: "Final packaging step",
+      },
+    }),
+    // Work orders for MO-000002 (Draft)
+    prisma.workOrder.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[1].id,
+        operationName: "Assembly",
+        workCenterName: "Assembly Line 1",
+        plannedDuration: 20, // 20 minutes per unit
+        status: "TO_DO",
+        assignedToId: users[2].id,
+        comments: "Ready to start",
       },
     }),
     prisma.workOrder.create({
       data: {
+        manufacturingOrderId: manufacturingOrders[1].id,
+        operationName: "Packaging",
+        workCenterName: "Packaging Station",
+        plannedDuration: 5, // 5 minutes per unit
+        status: "TO_DO",
+        assignedToId: users[2].id,
+        comments: "Final packaging step",
+      },
+    }),
+    // Work orders for MO-000003 (Done)
+    prisma.workOrder.create({
+      data: {
         manufacturingOrderId: manufacturingOrders[2].id,
         operationName: "Assembly",
-        sequence: 1,
-        status: "COMPLETED",
-        workCenterId: "wc-1",
+        workCenterName: "Assembly Line 1",
+        plannedDuration: 30, // 30 minutes per unit
+        realDuration: 28, // 28 minutes actual
+        status: "DONE",
         assignedToId: users[2].id,
-        estimatedTimeMinutes: 6000, // 100 hours for 200 units
-        actualTimeMinutes: 5800,
         startedAt: new Date("2024-01-10T08:00:00Z"),
         completedAt: new Date("2024-01-11T18:00:00Z"),
         comments: "Assembly completed successfully",
@@ -426,12 +534,11 @@ async function main() {
       data: {
         manufacturingOrderId: manufacturingOrders[2].id,
         operationName: "Quality Check",
-        sequence: 2,
-        status: "COMPLETED",
-        workCenterId: "wc-2",
+        workCenterName: "Quality Control Station",
+        plannedDuration: 10, // 10 minutes per unit
+        realDuration: 9, // 9 minutes actual
+        status: "DONE",
         assignedToId: users[2].id,
-        estimatedTimeMinutes: 2000, // 33.3 hours for 200 units
-        actualTimeMinutes: 1900,
         startedAt: new Date("2024-01-11T18:00:00Z"),
         completedAt: new Date("2024-01-12T10:00:00Z"),
         comments: "Quality check passed",
@@ -441,15 +548,37 @@ async function main() {
       data: {
         manufacturingOrderId: manufacturingOrders[2].id,
         operationName: "Packaging",
-        sequence: 3,
-        status: "COMPLETED",
-        workCenterId: "wc-3",
+        workCenterName: "Packaging Station",
+        plannedDuration: 5, // 5 minutes per unit
+        realDuration: 4, // 4 minutes actual
+        status: "DONE",
         assignedToId: users[2].id,
-        estimatedTimeMinutes: 1000, // 16.7 hours for 200 units
-        actualTimeMinutes: 950,
         startedAt: new Date("2024-01-12T10:00:00Z"),
         completedAt: new Date("2024-01-12T16:30:00Z"),
         comments: "Packaging completed",
+      },
+    }),
+    // Work orders for MO-000004 (Confirmed)
+    prisma.workOrder.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[3].id,
+        operationName: "Custom Assembly",
+        workCenterName: "Assembly Line 1",
+        plannedDuration: 45, // 45 minutes per unit
+        status: "TO_DO",
+        assignedToId: users[1].id,
+        comments: "Custom assembly process",
+      },
+    }),
+    prisma.workOrder.create({
+      data: {
+        manufacturingOrderId: manufacturingOrders[3].id,
+        operationName: "Special Testing",
+        workCenterName: "Quality Control Station",
+        plannedDuration: 15, // 15 minutes per unit
+        status: "TO_DO",
+        assignedToId: users[1].id,
+        comments: "Special testing for custom widget",
       },
     }),
   ]);
@@ -527,7 +656,8 @@ async function main() {
   console.log(`- Products: ${products.length}`);
   console.log(`- BOMs: 2`);
   console.log(`- Manufacturing Orders: ${manufacturingOrders.length}`);
-  console.log(`- Work Orders: 6`);
+  console.log(`- Components: 6`);
+  console.log(`- Work Orders: 10`);
   console.log(`- Stock Movements: 5`);
 
   console.log("\n🔑 Login Credentials:");
