@@ -1,206 +1,417 @@
-import React, { useState } from 'react';
-import { toast } from 'sonner';
-import AuthForm from '../components/AuthForm';
-import InputField from '../components/InputField';
-import Button from '../components/Button';
-import { 
-  validateEmail, 
-  validatePassword, 
-  validateLoginId 
-} from '../utils/validation';
-import { 
-  findUserByLoginId, 
-  findUserByEmail, 
-  addUser 
-} from '../utils/database';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { toast } from "sonner";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  Factory,
+  ArrowRight,
+  AlertCircle,
+} from "lucide-react";
 
-const SignupPage = ({ onNavigate }) => {
+export default function SignupPage() {
   const [formData, setFormData] = useState({
-    loginId: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    name: "",
+    loginId: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
-  const [showPasswords, setShowPasswords] = useState({
-    password: false,
-    confirmPassword: false
-  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (field) => (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-  };
-
-  const togglePasswordVisibility = (field) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
-  };
+  const { signup } = useAuth();
+  const navigate = useNavigate();
 
   const validateForm = () => {
-    const { loginId, email, password, confirmPassword } = formData;
+    const newErrors = {};
 
-    // Check required fields
-    if (!loginId || !email || !password || !confirmPassword) {
-      toast.error('Please fill in all fields');
-      return false;
+    if (!formData.name.trim()) {
+      newErrors.name = "Full name is required";
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters";
     }
 
-    // Validate Login ID
-    if (!validateLoginId(loginId)) {
-      toast.error('Invalid Login ID', {
-        description: 'Login ID must be between 6-12 characters',
-      });
-      return false;
+    if (!formData.loginId) {
+      newErrors.loginId = "Login ID is required";
+    } else if (formData.loginId.length < 3) {
+      newErrors.loginId = "Login ID must be at least 3 characters";
     }
 
-    // Check if Login ID is unique
-    if (findUserByLoginId(loginId)) {
-      toast.error('Login ID already exists', {
-        description: 'Please choose a different login ID',
-      });
-      return false;
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email is invalid";
     }
 
-    // Validate Email
-    if (!validateEmail(email)) {
-      toast.error('Invalid Email', {
-        description: 'Please enter a valid email address',
-      });
-      return false;
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+      newErrors.password =
+        "Password must contain uppercase, lowercase, and number";
     }
 
-    // Check if Email is unique
-    if (findUserByEmail(email)) {
-      toast.error('Email already exists', {
-        description: 'This email is already registered',
-      });
-      return false;
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
-    // Validate Password
-    if (!validatePassword(password)) {
-      toast.error('Invalid Password', {
-        description: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
-      });
-      return false;
-    }
-
-    // Check password confirmation
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match', {
-        description: 'Please make sure both passwords are identical',
-      });
-      return false;
-    }
-
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
 
     setIsLoading(true);
 
-    // Simulate API call delay
-    setTimeout(() => {
-      const newUser = {
+    try {
+      const result = await signup({
+        name: formData.name.trim(),
         loginId: formData.loginId,
         email: formData.email,
-        password: formData.password
-      };
-      
-      addUser(newUser);
-      toast.success('Account created successfully!', {
-        description: 'Please login with your new credentials',
+        password: formData.password,
       });
+
+      if (result.success) {
+        toast.success("Account created successfully!", {
+          description: "Welcome to ManufacturingOS! Redirecting...",
+        });
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      } else {
+        toast.error("Signup failed", {
+          description:
+            result.error || "Please try again with different credentials.",
+        });
+      }
+    } catch (error) {
+      toast.error("Signup failed", {
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
       setIsLoading(false);
-      
-      // Navigate to login page after successful signup
-      setTimeout(() => {
-        onNavigate('login');
-      }, 1500);
-    }, 500);
+    }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !isLoading) {
-      handleSubmit();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
     }
   };
 
   return (
-    <AuthForm title="Sign up Page">
-      <div>
-        <InputField
-          label="Enter Login Id"
-          value={formData.loginId}
-          onChange={handleInputChange('loginId')}
-          placeholder="6-12 characters"
-          onKeyPress={handleKeyPress}
-        />
-        
-        <InputField
-          label="Enter Email Id"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange('email')}
-          placeholder="Enter your email"
-          onKeyPress={handleKeyPress}
-        />
-        
-        <InputField
-          label="Enter Password"
-          value={formData.password}
-          onChange={handleInputChange('password')}
-          placeholder="Enter your password"
-          showPasswordToggle={true}
-          showPassword={showPasswords.password}
-          onTogglePassword={() => togglePasswordVisibility('password')}
-          onKeyPress={handleKeyPress}
-        />
-        
-        <InputField
-          label="Re-Enter Password"
-          value={formData.confirmPassword}
-          onChange={handleInputChange('confirmPassword')}
-          placeholder="Re-enter your password"
-          showPasswordToggle={true}
-          showPassword={showPasswords.confirmPassword}
-          onTogglePassword={() => togglePasswordVisibility('confirmPassword')}
-          onKeyPress={handleKeyPress}
-        />
-        
-        <div className="mb-6">
-          <Button 
-            onClick={handleSubmit}
-            variant="primary"
-            disabled={isLoading}
-            className="w-full"
-          >
-            {isLoading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo and Title */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
+            <Factory className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            ManufacturingOS
+          </h1>
+          <p className="text-gray-600">Production Management System</p>
         </div>
-        
-        <div className="text-center">
-          <p className="text-gray-600 text-sm">
-            Already have an account?{' '}
-            <button
-              type="button"
-              onClick={() => onNavigate('login')}
-              className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
-            >
-              Login
-            </button>
-          </p>
+
+        {/* Signup Card */}
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="space-y-1 pb-6">
+            <CardTitle className="text-2xl font-semibold text-center text-gray-900">
+              Create Account
+            </CardTitle>
+            <p className="text-center text-gray-600">
+              Sign up to get started with ManufacturingOS
+            </p>
+          </CardHeader>
+
+          <CardContent className="space-y-6">
+            {/* Signup Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="name"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Full Name
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter your full name"
+                    className={`pl-10 h-11 ${
+                      errors.name
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.name && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="loginId"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Login ID
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="loginId"
+                    name="loginId"
+                    type="text"
+                    value={formData.loginId}
+                    onChange={handleInputChange}
+                    placeholder="Choose a login ID"
+                    className={`pl-10 h-11 ${
+                      errors.loginId
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.loginId && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.loginId}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Email Address
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email"
+                    className={`pl-10 h-11 ${
+                      errors.email
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Create a password"
+                    className={`pl-10 pr-10 h-11 ${
+                      errors.password
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.password}
+                  </p>
+                )}
+                <div className="text-xs text-gray-500">
+                  Password must contain uppercase, lowercase, and number
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Confirm Password
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Confirm your password"
+                    className={`pl-10 pr-10 h-11 ${
+                      errors.confirmPassword
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-200"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-200"
+                    }`}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isLoading}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  id="terms"
+                  type="checkbox"
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  required
+                />
+                <Label htmlFor="terms" className="text-sm text-gray-600">
+                  I agree to the{" "}
+                  <Link
+                    to="/terms"
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/privacy"
+                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                </Label>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Creating Account...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    Create Account
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                )}
+              </Button>
+            </form>
+
+            {/* Sign In Link */}
+            <div className="text-center pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                >
+                  Sign in here
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8 text-xs text-gray-500">
+          <p>&copy; 2024 ManufacturingOS. All rights reserved.</p>
         </div>
       </div>
-    </AuthForm>
+    </div>
   );
-};
-
-export default SignupPage;
+}

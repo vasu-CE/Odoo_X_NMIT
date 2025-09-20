@@ -1,6 +1,13 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { Toaster } from "sonner";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./Layout.jsx";
 import Dashboard from "./pages/dashboard";
 import ManufacturingOrders from "./pages/ManufacturingOrders";
@@ -15,54 +22,93 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import "./App.css";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('login');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const handleNavigate = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    setCurrentPage('dashboard');
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentPage('login');
-  };
-
-  // Show authentication pages if not logged in
-  if (!isAuthenticated) {
-    return (
-      <div>
-        <Toaster position="top-right" richColors />
-        {currentPage === 'login' && <LoginPage onNavigate={handleNavigate} onLogin={handleLogin} />}
-        {currentPage === 'signup' && <SignupPage onNavigate={handleNavigate} />}
-        {currentPage === 'forgot-password' && <ForgotPasswordPage onNavigate={handleNavigate} />}
-      </div>
-    );
-  }
-
-  // Show main app if authenticated
   return (
-    <Router>
-      <Toaster position="top-right" richColors />
-      <Layout onLogout={handleLogout}>
+    <AuthProvider>
+      <Router>
+        <Toaster position="top-right" richColors />
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/manufacturing-orders"
-            element={<ManufacturingOrders />}
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ManufacturingOrders />
+                </Layout>
+              </ProtectedRoute>
+            }
           />
-          <Route path="/work-orders" element={<WorkOrders />} />
-          <Route path="/bom" element={<BOMPage />} />
-          <Route path="/work-centers" element={<WorkCenters />} />
-          <Route path="/stock-management" element={<StockManagement />} />
-          <Route path="/reports" element={<Reports />} />
+          <Route
+            path="/work-orders"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <WorkOrders />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bom"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <BOMPage />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/work-centers"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <WorkCenters />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stock-management"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StockManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Reports />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch all route - redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Layout>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 

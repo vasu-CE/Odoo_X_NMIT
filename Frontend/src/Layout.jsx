@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
+import { useAuth } from "./contexts/AuthContext";
 import {
   LayoutDashboard,
   Package2,
@@ -14,6 +15,7 @@ import {
   Menu,
   Bell,
   Search,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -87,6 +89,7 @@ const navigationItems = [
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   return (
     <SidebarProvider>
@@ -219,19 +222,32 @@ export default function Layout({ children }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 text-sm truncate">
-                  Production Manager
+                  {user?.loginId || user?.name || "Production Manager"}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  Manage production workflows
+                  {user?.role === "admin"
+                    ? "Administrator"
+                    : "Production Manager"}
                 </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-gray-200/60"
-              >
-                <Settings className="w-4 h-4 text-gray-500" />
-              </Button>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-gray-200/60"
+                >
+                  <Settings className="w-4 h-4 text-gray-500" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  className="hover:bg-red-100/60 text-red-600 hover:text-red-700"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </SidebarFooter>
         </Sidebar>
