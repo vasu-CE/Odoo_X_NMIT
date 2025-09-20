@@ -499,10 +499,6 @@ export default function BOMPage() {
                 <p className="text-gray-500 mb-6">
                   {searchTerm ? "Try adjusting your search" : "Create your first bill of materials to get started"}
                 </p>
-                <Button onClick={handleNewBOM} className="bg-blue-600 hover:bg-blue-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create BOM
-                </Button>
               </div>
             )}
           </div>
