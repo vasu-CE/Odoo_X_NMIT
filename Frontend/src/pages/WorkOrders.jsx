@@ -68,8 +68,6 @@ export default function WorkOrders() {
   const [viewMode, setViewMode] = useState("list"); // "list" or "grid"
   const [elapsedTimes, setElapsedTimes] = useState({}); // Track elapsed times for in-progress orders
 
-  const isShopFloorOperator = user?.role === 'SHOP_FLOOR_OPERATOR';
-
   useEffect(() => {
     if (user) {
       loadData();
@@ -121,35 +119,18 @@ export default function WorkOrders() {
     try {
       setLoading(true);
       
-      if (isShopFloorOperator) {
-        // For shop floor operators, get their assigned work orders
-        try {
-          const response = await apiService.getShopFloorWorkOrders();
-          console.log('Shop floor work orders:', response.data.workOrders);
-          if (response.success) {
-            setWorkOrders(response.data.workOrders);
-          } else {
-            console.error('API Error:', response.error);
-            setWorkOrders([]);
-          }
-        } catch (error) {
-          console.error('Network Error:', error);
+      // For all users, get only work orders assigned to them
+      try {
+        const response = await apiService.getWorkOrdersByAssignedUser(user.id);
+        if (response.success) {
+          setWorkOrders(response.data.workOrders);
+        } else {
+          console.error('API Error:', response.error);
           setWorkOrders([]);
         }
-      } else {
-        // For other roles, get all work orders
-        try {
-          const response = await apiService.getWorkOrders();
-          if (response.success) {
-            setWorkOrders(response.data.workOrders);
-          } else {
-            console.error('API Error:', response.error);
-            setWorkOrders([]);
-          }
-        } catch (error) {
-          console.error('Network Error:', error);
-          setWorkOrders([]);
-        }
+      } catch (error) {
+        console.error('Network Error:', error);
+        setWorkOrders([]);
       }
 
       // Load manufacturing orders and work centers for reference
@@ -360,11 +341,9 @@ export default function WorkOrders() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    {isShopFloorOperator && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    )}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -432,9 +411,8 @@ export default function WorkOrders() {
                               {statusInfo.label}
                             </Badge>
                           </td>
-                          {isShopFloorOperator && (
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex gap-2">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex gap-2">
                                 {workOrder.status === 'PENDING' && (
                                   <Button
                                     size="sm"
@@ -489,15 +467,14 @@ export default function WorkOrders() {
                                     <XCircle className="w-3 h-3 mr-1" />
                                   </Button>
                                 )}
-                              </div>
-                            </td>
-                          )}
+                            </div>
+                          </td>
                         </tr>
                       );
                     })
                   ) : (
                     <tr>
-                      <td colSpan={isShopFloorOperator ? "7" : "6"} className="px-6 py-12 text-center">
+                      <td colSpan="7" className="px-6 py-12 text-center">
                         <div className="text-gray-500">
                           <p className="text-lg font-medium mb-2">
                             No work orders found
@@ -505,9 +482,7 @@ export default function WorkOrders() {
                           <p className="text-sm">
                             {searchTerm
                               ? "Try adjusting your search criteria"
-                              : isShopFloorOperator 
-                                ? "No work orders assigned to you"
-                                : "No work orders available"}
+                              : "No work orders assigned to you"}
                           </p>
                         </div>
                       </td>
@@ -568,9 +543,8 @@ export default function WorkOrders() {
                     </div>
                   </div>
 
-                  {isShopFloorOperator && (
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <div className="flex gap-2">
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex gap-2">
                         {workOrder.status === 'PENDING' && (
                           <Button
                             size="sm"
@@ -631,9 +605,8 @@ export default function WorkOrders() {
                             Cancel
                           </Button>
                         )}
-                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}

@@ -37,8 +37,8 @@ router.get('/', authenticate, [
     // Build where clause
     const where = {};
     if (status) where.status = status;
-    if (workCenterId) where.workCenterId = workCenterId;
-    if (assignedToId) where.assignedToId = assignedToId;
+    if (workCenterId) where.workCenterId = parseInt(workCenterId);
+    if (assignedToId) where.assignedToId = parseInt(assignedToId);
     if (search) {
       where.OR = [
         { operationName: { contains: search, mode: 'insensitive' } },
@@ -367,7 +367,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     // Verify assigned user exists if provided
     if (assignedToId) {
       const assignedUser = await prisma.user.findUnique({
-        where: { id: assignedToId }
+        where: { id: parseInt(assignedToId) }
       });
 
       if (!assignedUser) {
@@ -383,8 +383,8 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
         manufacturingOrderId,
         operationName,
         workCenterName,
-        workCenterId,
-        assignedToId,
+        workCenterId: workCenterId ? parseInt(workCenterId) : null,
+        assignedToId: assignedToId ? parseInt(assignedToId) : null,
         estimatedTimeMinutes,
         plannedDuration: estimatedTimeMinutes,
         comments
@@ -465,6 +465,14 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
     delete updateData.pausedAt;
     delete updateData.completedAt;
     delete updateData.createdAt;
+
+    // Convert string IDs to integers
+    if (updateData.workCenterId) {
+      updateData.workCenterId = parseInt(updateData.workCenterId);
+    }
+    if (updateData.assignedToId) {
+      updateData.assignedToId = parseInt(updateData.assignedToId);
+    }
 
     const workOrder = await prisma.workOrder.update({
       where: { id: workOrderId },
