@@ -250,7 +250,7 @@ export default function WorkOrdersAnalysis() {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2 text-gray-700">
                           <Clock className="w-4 h-4 text-gray-500" />
-                          {formatDuration(workOrder.actualTimeMinutes)}
+                          {formatDuration(workOrder.realDuration)}
                         </div>
                       </td>
                       <td className="py-3 px-4">
