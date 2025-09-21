@@ -15,6 +15,8 @@ import {
   Bell,
   Search,
 } from "lucide-react";
+import DynamicSidebarStats from "./components/DynamicSidebarStats";
+import { useDashboardStats } from "./hooks/useDashboardStats";
 import {
   Sidebar,
   SidebarContent,
@@ -87,6 +89,7 @@ const navigationItems = [
 
 export default function Layout({ children, onLogout }) {
   const location = useLocation();
+  const stats = useDashboardStats();
 
   return (
     <SidebarProvider>
@@ -168,7 +171,7 @@ export default function Layout({ children, onLogout }) {
                               variant="secondary"
                               className="ml-auto bg-orange-100 text-orange-700 text-xs"
                             >
-                              3
+                              {stats.loading ? "..." : stats.totalWorkOrders}
                             </Badge>
                           )}
                         </Link>
@@ -184,30 +187,7 @@ export default function Layout({ children, onLogout }) {
                 Quick Stats
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <div className="px-3 py-2 space-y-3">
-                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        Active Orders
-                      </span>
-                      <span className="font-bold text-blue-600">12</span>
-                    </div>
-                    <div className="w-full bg-gray-200/60 rounded-full h-1.5 mt-2">
-                      <div className="bg-blue-500 h-1.5 rounded-full w-3/4"></div>
-                    </div>
-                  </div>
-                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        Work Centers
-                      </span>
-                      <span className="font-bold text-green-600">85%</span>
-                    </div>
-                    <div className="w-full bg-gray-200/60 rounded-full h-1.5 mt-2">
-                      <div className="bg-green-500 h-1.5 rounded-full w-4/5"></div>
-                    </div>
-                  </div>
-                </div>
+                <DynamicSidebarStats />
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>

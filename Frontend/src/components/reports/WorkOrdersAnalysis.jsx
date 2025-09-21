@@ -19,8 +19,12 @@ import {
   PauseCircle,
   XCircle,
   Table,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import apiService from "../../services/api";
+import { generatePDF, generateWorkOrdersPDF } from "../../utils/pdfGenerator";
+import { generateWorkOrdersExcel } from "../../utils/excelGenerator";
 
 export default function WorkOrdersAnalysis() {
   const [workOrders, setWorkOrders] = useState([]);
@@ -29,6 +33,7 @@ export default function WorkOrdersAnalysis() {
   const [operationFilter, setOperationFilter] = useState("all");
   const [workCenterFilter, setWorkCenterFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     loadWorkOrders();
@@ -38,7 +43,7 @@ export default function WorkOrdersAnalysis() {
     try {
       setLoading(true);
       const response = await apiService.getWorkOrders();
-      
+
       if (response.success && response.data.workOrders) {
         setWorkOrders(response.data.workOrders);
       } else {
@@ -89,31 +94,189 @@ export default function WorkOrdersAnalysis() {
     if (!minutes) return "00:00";
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, "0")}:${mins
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  const handlePrintPDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+
+      // Try the html2canvas method first
+      const result = await generatePDF(
+        "work-orders-report",
+        `work-orders-analysis-${new Date().toISOString().split("T")[0]}.pdf`
+      );
+
+      if (result.success) {
+        console.log("PDF generated successfully");
+      } else {
+        console.warn(
+          "HTML2Canvas failed, falling back to custom PDF generation:",
+          result.message
+        );
+
+        // Fallback to custom PDF generation
+        const filters = {
+          searchTerm,
+          operationFilter,
+          workCenterFilter,
+          statusFilter,
+        };
+
+        const fallbackResult = await generateWorkOrdersPDF(
+          filteredWorkOrders,
+          filters,
+          `work-orders-analysis-${new Date().toISOString().split("T")[0]}.pdf`
+        );
+
+        if (fallbackResult.success) {
+          console.log("Fallback PDF generated successfully");
+        } else {
+          console.error("Both PDF generation methods failed");
+          alert("Failed to generate PDF. Please try again.");
+        }
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+
+      // Try fallback method
+      try {
+        const filters = {
+          searchTerm,
+          operationFilter,
+          workCenterFilter,
+          statusFilter,
+        };
+
+        const fallbackResult = await generateWorkOrdersPDF(
+          filteredWorkOrders,
+          filters,
+          `work-orders-analysis-${new Date().toISOString().split("T")[0]}.pdf`
+        );
+
+        if (fallbackResult.success) {
+          console.log("Fallback PDF generated successfully");
+        } else {
+          alert("An error occurred while generating the PDF.");
+        }
+      } catch (fallbackError) {
+        console.error("Fallback PDF generation also failed:", fallbackError);
+        alert("An error occurred while generating the PDF.");
+      }
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleExportExcel = () => {
+    try {
+      setIsGeneratingPDF(true);
+
+      const filters = {
+        searchTerm,
+        operationFilter,
+        workCenterFilter,
+        statusFilter,
+      };
+
+      const result = generateWorkOrdersExcel(
+        filteredWorkOrders,
+        filters,
+        `work-orders-analysis-${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+
+      if (result.success) {
+        console.log("Excel file generated successfully");
+      } else {
+        console.error("Excel generation failed:", result.message);
+        alert("Failed to generate Excel file. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error generating Excel file:", error);
+      alert("An error occurred while generating the Excel file.");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
   };
 
   // Filter work orders based on search and filters
   const filteredWorkOrders = workOrders.filter((workOrder) => {
-    const matchesSearch = 
-      workOrder.operationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      workOrder.workCenterName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      workOrder.manufacturingOrder?.product?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesOperation = operationFilter === "all" || workOrder.operationName === operationFilter;
-    const matchesWorkCenter = workCenterFilter === "all" || workOrder.workCenterName === workCenterFilter;
-    const matchesStatus = statusFilter === "all" || workOrder.status === statusFilter;
+    const matchesSearch =
+      workOrder.operationName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      workOrder.workCenterName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      workOrder.manufacturingOrder?.product?.name
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
-    return matchesSearch && matchesOperation && matchesWorkCenter && matchesStatus;
+    const matchesOperation =
+      operationFilter === "all" || workOrder.operationName === operationFilter;
+    const matchesWorkCenter =
+      workCenterFilter === "all" ||
+      workOrder.workCenterName === workCenterFilter;
+    const matchesStatus =
+      statusFilter === "all" || workOrder.status === statusFilter;
+
+    return (
+      matchesSearch && matchesOperation && matchesWorkCenter && matchesStatus
+    );
   });
 
   // Calculate totals
-  const totalExpectedDuration = filteredWorkOrders.reduce((sum, wo) => sum + (wo.estimatedTimeMinutes || 0), 0);
-  const totalRealDuration = filteredWorkOrders.reduce((sum, wo) => sum + (wo.actualTimeMinutes || 0), 0);
+  const totalExpectedDuration = filteredWorkOrders.reduce(
+    (sum, wo) => sum + (wo.estimatedTimeMinutes || 0),
+    0
+  );
+  const totalRealDuration = filteredWorkOrders.reduce(
+    (sum, wo) => sum + (wo.realDuration || 0),
+    0
+  );
 
   // Get unique values for filters
-  const uniqueOperations = [...new Set(workOrders.map(wo => wo.operationName).filter(Boolean))];
-  const uniqueWorkCenters = [...new Set(workOrders.map(wo => wo.workCenterName).filter(Boolean))];
-  const uniqueStatuses = [...new Set(workOrders.map(wo => wo.status).filter(Boolean))];
+  const uniqueOperations = [
+    ...new Set(workOrders.map((wo) => wo.operationName).filter(Boolean)),
+  ];
+  const uniqueWorkCenters = [
+    ...new Set(workOrders.map((wo) => wo.workCenterName).filter(Boolean)),
+  ];
+  const uniqueStatuses = [
+    ...new Set(workOrders.map((wo) => wo.status).filter(Boolean)),
+  ];
+
+  // Calculate dynamic stats
+  const stats = {
+    total: filteredWorkOrders.length,
+    pending: filteredWorkOrders.filter((wo) => wo.status === "PENDING").length,
+    inProgress: filteredWorkOrders.filter((wo) => wo.status === "IN_PROGRESS")
+      .length,
+    completed: filteredWorkOrders.filter((wo) => wo.status === "COMPLETED")
+      .length,
+    cancelled: filteredWorkOrders.filter((wo) => wo.status === "CANCELLED")
+      .length,
+    totalExpectedDuration: filteredWorkOrders.reduce(
+      (sum, wo) => sum + (wo.estimatedTimeMinutes || 0),
+      0
+    ),
+    totalRealDuration: filteredWorkOrders.reduce(
+      (sum, wo) => sum + (wo.realDuration || 0),
+      0
+    ),
+    avgEfficiency:
+      filteredWorkOrders.length > 0
+        ? filteredWorkOrders.reduce((sum, wo) => {
+            const efficiency =
+              wo.estimatedTimeMinutes && wo.realDuration
+                ? Math.round((wo.estimatedTimeMinutes / wo.realDuration) * 100)
+                : 0;
+            return sum + efficiency;
+          }, 0) / filteredWorkOrders.length
+        : 0,
+  };
 
   return (
     <div className="space-y-6">
@@ -128,7 +291,152 @@ export default function WorkOrdersAnalysis() {
             Analyze work order performance and duration tracking
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={handlePrintPDF}
+            disabled={isGeneratingPDF || loading}
+            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            {isGeneratingPDF ? "Generating..." : "Print as PDF"}
+          </Button>
+          <Button
+            onClick={handleExportExcel}
+            disabled={isGeneratingPDF || loading}
+            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            {isGeneratingPDF ? "Generating..." : "Export to Excel"}
+          </Button>
+        </div>
       </div>
+
+      {/* Quick Stats */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Orders
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.total}
+                </p>
+              </div>
+              <div className="p-2 bg-blue-100 rounded-full">
+                <Table className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {stats.completed}
+                </p>
+              </div>
+              <div className="p-2 bg-green-100 rounded-full">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {stats.inProgress}
+                </p>
+              </div>
+              <div className="p-2 bg-blue-100 rounded-full">
+                <PlayCircle className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Avg Efficiency
+                </p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {stats.avgEfficiency.toFixed(1)}%
+                </p>
+              </div>
+              <div className="p-2 bg-purple-100 rounded-full">
+                <Clock className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div> */}
+
+      {/* Status Breakdown */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending</p>
+                <p className="text-xl font-bold text-yellow-600">
+                  {stats.pending}
+                </p>
+              </div>
+              <div className="p-2 bg-yellow-100 rounded-full">
+                <Clock className="w-5 h-5 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Cancelled</p>
+                <p className="text-xl font-bold text-red-600">
+                  {stats.cancelled}
+                </p>
+              </div>
+              <div className="p-2 bg-red-100 rounded-full">
+                <XCircle className="w-5 h-5 text-red-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Duration
+                </p>
+                <p className="text-lg font-bold text-gray-900">
+                  {formatDuration(stats.totalRealDuration)}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Expected: {formatDuration(stats.totalExpectedDuration)}
+                </p>
+              </div>
+              <div className="p-2 bg-gray-100 rounded-full">
+                <Clock className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div> */}
 
       {/* Search and Filters */}
       <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg pt-6">
@@ -182,7 +490,7 @@ export default function WorkOrdersAnalysis() {
               <option value="all">All Statuses</option>
               {uniqueStatuses.map((status) => (
                 <option key={status} value={status}>
-                  {status.replace('_', ' ')}
+                  {status.replace("_", " ")}
                 </option>
               ))}
             </select>
@@ -191,73 +499,101 @@ export default function WorkOrdersAnalysis() {
       </Card>
 
       {/* Work Orders Analysis Table */}
-      <Card className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2">
+      <Card
+        id="work-orders-report"
+        className="bg-white/80 backdrop-blur-sm border border-gray-200/60 shadow-lg print:bg-white print:shadow-none print:border-gray-300"
+      >
+        <CardHeader className="pb-4 print:pb-2">
+          <CardTitle className="flex items-center gap-2 print:text-lg">
             <Table className="w-5 h-5" />
             Work Orders Analysis
           </CardTitle>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="print:p-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto print:overflow-visible">
+              <table className="w-full print:text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Operation</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Work Center</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Product</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Quantity</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Expected Duration</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Real Duration</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                  <tr className="border-b border-gray-200 print:border-gray-400">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 print:py-2 print:px-2 print:text-xs">
+                      Operation
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 print:py-2 print:px-2 print:text-xs">
+                      Work Center
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 print:py-2 print:px-2 print:text-xs">
+                      Product
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 print:py-2 print:px-2 print:text-xs">
+                      Quantity
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 print:py-2 print:px-2 print:text-xs">
+                      Expected Duration
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 print:py-2 print:px-2 print:text-xs">
+                      Real Duration
+                    </th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 print:py-2 print:px-2 print:text-xs">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredWorkOrders.map((workOrder) => (
-                    <tr key={workOrder.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-gray-900">{workOrder.operationName}</div>
+                    <tr
+                      key={workOrder.id}
+                      className="border-b border-gray-100 hover:bg-gray-50/50 print:border-gray-300 print:hover:bg-transparent"
+                    >
+                      <td className="py-3 px-4 print:py-2 print:px-2">
+                        <div className="font-medium text-gray-900 print:text-xs">
+                          {workOrder.operationName}
+                        </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Factory className="w-4 h-4 text-gray-500" />
+                      <td className="py-3 px-4 print:py-2 print:px-2">
+                        <div className="flex items-center gap-2 text-gray-700 print:text-xs">
+                          <Factory className="w-4 h-4 text-gray-500 print:hidden" />
                           {workOrder.workCenterName}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Package className="w-4 h-4 text-gray-500" />
+                      <td className="py-3 px-4 print:py-2 print:px-2">
+                        <div className="flex items-center gap-2 text-gray-700 print:text-xs">
+                          <Package className="w-4 h-4 text-gray-500 print:hidden" />
                           {workOrder.manufacturingOrder?.product?.name || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="text-gray-700">
+                      <td className="py-3 px-4 print:py-2 print:px-2">
+                        <div className="text-gray-700 print:text-xs">
                           {workOrder.manufacturingOrder?.quantity || "N/A"}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Clock className="w-4 h-4 text-gray-500" />
+                      <td className="py-3 px-4 print:py-2 print:px-2">
+                        <div className="flex items-center gap-2 text-gray-700 print:text-xs">
+                          <Clock className="w-4 h-4 text-gray-500 print:hidden" />
                           {formatDuration(workOrder.estimatedTimeMinutes)}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Clock className="w-4 h-4 text-gray-500" />
+                      <td className="py-3 px-4 print:py-2 print:px-2">
+                        <div className="flex items-center gap-2 text-gray-700 print:text-xs">
+                          <Clock className="w-4 h-4 text-gray-500 print:hidden" />
                           {formatDuration(workOrder.realDuration)}
                         </div>
                       </td>
-                      <td className="py-3 px-4">
-                        <Badge className={getStatusColor(workOrder.status)}>
-                          <div className="flex items-center gap-1">
-                            {getStatusIcon(workOrder.status)}
-                            {workOrder.status.replace('_', ' ')}
+                      <td className="py-3 px-4 print:py-2 print:px-2">
+                        <Badge
+                          className={`${getStatusColor(
+                            workOrder.status
+                          )} print:bg-transparent print:border print:border-gray-300 print:text-gray-700`}
+                        >
+                          <div className="flex items-center gap-1 print:text-xs">
+                            <span className="print:hidden">
+                              {getStatusIcon(workOrder.status)}
+                            </span>
+                            {workOrder.status.replace("_", " ")}
                           </div>
                         </Badge>
                       </td>
@@ -265,18 +601,21 @@ export default function WorkOrdersAnalysis() {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="border-t-2 border-gray-300 bg-gray-50">
-                    <td colSpan="4" className="py-3 px-4 font-semibold text-gray-900">
+                  <tr className="border-t-2 border-gray-300 bg-gray-50 print:border-gray-400 print:bg-gray-100">
+                    <td
+                      colSpan="4"
+                      className="py-3 px-4 font-semibold text-gray-900 print:py-2 print:px-2 print:text-xs"
+                    >
                       Total
                     </td>
-                    <td className="py-3 px-4 font-semibold text-gray-900">
-                      {formatDuration(totalExpectedDuration)}
+                    <td className="py-3 px-4 font-semibold text-gray-900 print:py-2 print:px-2 print:text-xs">
+                      {formatDuration(totalExpectedDuration)} min
                     </td>
-                    <td className="py-3 px-4 font-semibold text-gray-900">
-                      {formatDuration(totalRealDuration)}
+                    <td className="py-3 px-4 font-semibold text-gray-900 print:py-2 print:px-2 print:text-xs">
+                      {formatDuration(totalRealDuration)} min
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="text-sm text-gray-600">
+                    <td className="py-3 px-4 print:py-2 print:px-2">
+                      <div className="text-sm text-gray-600 print:text-xs">
                         {filteredWorkOrders.length} orders
                       </div>
                     </td>
@@ -287,9 +626,14 @@ export default function WorkOrdersAnalysis() {
               {filteredWorkOrders.length === 0 && !loading && (
                 <div className="text-center py-12">
                   <Factory className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No work orders found</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No work orders found
+                  </h3>
                   <p className="text-gray-500">
-                    {searchTerm || operationFilter !== "all" || workCenterFilter !== "all" || statusFilter !== "all"
+                    {searchTerm ||
+                    operationFilter !== "all" ||
+                    workCenterFilter !== "all" ||
+                    statusFilter !== "all"
                       ? "Try adjusting your search or filters"
                       : "No work orders have been created yet"}
                   </p>
