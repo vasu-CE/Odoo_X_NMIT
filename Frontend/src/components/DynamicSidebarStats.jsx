@@ -74,28 +74,7 @@ export default function DynamicSidebarStats() {
       </div>
 
       {/* Manufacturing Orders */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Package2 className="w-4 h-4 text-green-500" />
-            <span className="text-sm text-gray-600">Manufacturing</span>
-          </div>
-          <span className="font-bold text-green-600">
-            {stats.manufacturingOrders}
-          </span>
-        </div>
-        <div className="w-full bg-gray-200/60 rounded-full h-1.5 mt-2">
-          <div
-            className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
-            style={{
-              width: `${Math.min(
-                (stats.manufacturingOrders / 20) * 100,
-                100
-              )}%`,
-            }}
-          ></div>
-        </div>
-      </div>
+  
 
       {/* Work Orders Status Breakdown */}
       <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">

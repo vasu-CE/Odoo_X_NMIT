@@ -32,6 +32,8 @@ import {
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
 import { Input } from "./components/ui/input";
+import DynamicSidebarStats from "./components/DynamicSidebarStats";
+import { useDashboardStats } from "./hooks/useDashboardStats";
 
 const navigationItems = [
   {
@@ -81,6 +83,7 @@ const navigationItems = [
 export default function Layout({ children }) {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const stats = useDashboardStats();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   const profileDropdownRef = useRef(null);
@@ -90,10 +93,10 @@ export default function Layout({ children }) {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 768);
     };
-    
-    window.addEventListener('resize', handleResize);
+
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -140,7 +143,9 @@ export default function Layout({ children }) {
                   <h2 className="font-bold text-gray-900 text-sm md:text-lg">
                     ManufacturingOS
                   </h2>
-                  <p className="text-xs text-gray-500 hidden md:block">Production Management</p>
+                  <p className="text-xs text-gray-500 hidden md:block">
+                    Production Management
+                  </p>
                 </div>
               </div>
               <SidebarTrigger className="md:hidden hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200" />
@@ -166,7 +171,10 @@ export default function Layout({ children }) {
               <SidebarGroupContent>
                 <SidebarMenu className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible py-1 md:py-0">
                   {navigationItems.map((item) => (
-                    <SidebarMenuItem key={item.title} className="flex-shrink-0 md:flex-shrink">
+                    <SidebarMenuItem
+                      key={item.title}
+                      className="flex-shrink-0 md:flex-shrink"
+                    >
                       <SidebarMenuButton
                         asChild
                         className={`group hover:shadow-lg transition-all duration-200 rounded-xl mb-0 md:mb-1 transform hover:scale-105 ${
@@ -197,6 +205,14 @@ export default function Layout({ children }) {
                           <span className="font-medium text-xs md:text-sm mt-1 md:mt-0">
                             {item.title}
                           </span>
+                          {item.title === "Work Orders" && (
+                            <Badge
+                              variant="secondary"
+                              className="ml-auto bg-orange-100 text-orange-700 text-xs mt-1 md:mt-0"
+                            >
+                              {stats.loading ? "..." : stats.totalWorkOrders}
+                            </Badge>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -210,30 +226,7 @@ export default function Layout({ children }) {
                 Quick Stats
               </SidebarGroupLabel>
               <SidebarGroupContent>
-                <div className="px-3 py-2 space-y-3">
-                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        Active Orders
-                      </span>
-                      <span className="font-bold text-blue-600">12</span>
-                    </div>
-                    <div className="w-full bg-gray-200/60 rounded-full h-1.5 mt-2">
-                      <div className="bg-blue-500 h-1.5 rounded-full w-3/4"></div>
-                    </div>
-                  </div>
-                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        Work Centers
-                      </span>
-                      <span className="font-bold text-green-600">85%</span>
-                    </div>
-                    <div className="w-full bg-gray-200/60 rounded-full h-1.5 mt-2">
-                      <div className="bg-green-500 h-1.5 rounded-full w-4/5"></div>
-                    </div>
-                  </div>
-                </div>
+                <DynamicSidebarStats />
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>

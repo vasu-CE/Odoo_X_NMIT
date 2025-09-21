@@ -35,7 +35,7 @@ export const useDashboardStats = () => {
         // Fetch work centers
         const workCentersResponse = await apiService.getWorkCenters();
         const workCenters = workCentersResponse.success
-          ? workOrdersResponse.data.workCenters
+          ? workCentersResponse.data.workCenters
           : [];
 
         // Fetch products
@@ -45,34 +45,34 @@ export const useDashboardStats = () => {
           : [];
 
         // Calculate stats
-        const activeOrders = workOrders.filter(
+        const activeOrders = (workOrders || []).filter(
           (wo) => wo.status === "IN_PROGRESS"
         ).length;
-        const completedWorkOrders = workOrders.filter(
+        const completedWorkOrders = (workOrders || []).filter(
           (wo) => wo.status === "COMPLETED"
         ).length;
-        const pendingWorkOrders = workOrders.filter(
+        const pendingWorkOrders = (workOrders || []).filter(
           (wo) => wo.status === "PENDING"
         ).length;
-        const inProgressWorkOrders = workOrders.filter(
+        const inProgressWorkOrders = (workOrders || []).filter(
           (wo) => wo.status === "IN_PROGRESS"
         ).length;
 
         // Calculate work center utilization (simplified)
         const workCentersUtilization =
-          workCenters.length > 0
+          workCenters && workCenters.length > 0
             ? Math.round((activeOrders / (workCenters.length * 2)) * 100)
             : 0;
 
         setStats({
           activeOrders,
           workCentersUtilization: Math.min(workCentersUtilization, 100),
-          totalWorkOrders: workOrders.length,
+          totalWorkOrders: (workOrders || []).length,
           completedWorkOrders,
           pendingWorkOrders,
           inProgressWorkOrders,
-          manufacturingOrders: manufacturingOrders.length,
-          products: products.length,
+          manufacturingOrders: (manufacturingOrders || []).length,
+          products: (products || []).length,
           loading: false,
         });
       } catch (error) {
