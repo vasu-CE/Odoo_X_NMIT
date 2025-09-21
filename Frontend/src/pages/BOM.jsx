@@ -15,6 +15,13 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
   ClipboardList,
   Plus,
   Search,
@@ -54,6 +61,41 @@ export default function BOMPage() {
     reference: "",
     components: []
   });
+  // Load BOMs from API
+  const loadBOMs = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getBOMs();
+      console.log('BOM API response:', response);
+      if (response.success) {
+        console.log('BOMs loaded:', response.data.boms);
+        setBoms(response.data.boms || []);
+      } else {
+        console.error("Failed to load BOMs:", response.error);
+        // Fallback to sample data if API fails
+        setBoms(sampleBOMs);
+      }
+    } catch (error) {
+      console.error("Error loading BOMs:", error);
+      // Fallback to sample data if API fails
+      setBoms(sampleBOMs);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load products
+  const loadProducts = async () => {
+    try {
+      const response = await apiService.getProducts();
+      if (response.success) {
+        setProducts(response.data.products || []);
+      }
+    } catch (error) {
+      console.error("Error loading products:", error);
+    }
+  };
+
   const [activeTab, setActiveTab] = useState("components");
   const [workOrders, setWorkOrders] = useState([]);
 
@@ -207,12 +249,45 @@ export default function BOMPage() {
   };
 
   const handleEditBOM = (bom) => {
-    setFormData({
-      finished_product: bom.finished_product,
-      quantity: bom.quantity.toString(),
-      reference: bom.reference,
-      components: bom.components || []
+    console.log('Edit BOM clicked:', bom);
+    console.log('BOM components for edit:', bom.components);
+    console.log('BOM operations for edit:', bom.operations);
+    
+    // Map API component structure to form structure
+    const mappedComponents = (bom.components || []).map(comp => {
+      // Find the product name by productId
+      const product = products.find(p => p.id === comp.productId);
+      console.log('Mapping component:', comp, 'Found product:', product);
+      return {
+        product_name: product ? product.name : 'Unknown Product',
+        quantity: comp.quantity || 1,
+        unit: comp.unit || 'pcs'
+      };
     });
+    
+    // Map operations to work orders for editing
+    const mappedWorkOrders = (bom.operations || []).map(op => ({
+      id: op.id || Math.random(),
+      operation: op.operationName || op.name || 'Unknown Operation',
+      work_center: op.workCenterName || op.workCenter || 'Unknown Work Center',
+      expected_duration: op.timeMinutes || op.duration || 0
+    }));
+    
+    console.log('Mapped components:', mappedComponents);
+    console.log('Mapped work orders:', mappedWorkOrders);
+    console.log('Setting work orders state to:', mappedWorkOrders);
+    
+    const formDataToSet = {
+      finished_product: bom.finished_product || '',
+      quantity: bom.quantity ? bom.quantity.toString() : '1',
+      reference: bom.reference || '',
+      components: mappedComponents
+    };
+    
+    console.log('Form data being set:', formDataToSet);
+    setFormData(formDataToSet);
+    setWorkOrders(mappedWorkOrders); // Set work orders for editing
+    console.log('Work orders state set, current workOrders:', workOrders);
     setEditingBOM(bom);
     setShowEditForm(true);
     setShowNewForm(false);
@@ -455,7 +530,12 @@ export default function BOMPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setSelectedBOM(bom)}
+                              onClick={() => {
+                                console.log('View BOM clicked:', bom);
+                                console.log('BOM components:', bom.components);
+                                console.log('BOM operations:', bom.operations);
+                                setSelectedBOM(bom);
+                              }}
                               className="h-9 w-9 p-0"
                             >
                               <Eye className="w-4 h-4" />
@@ -537,7 +617,12 @@ export default function BOMPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => setSelectedBOM(bom)}
+                          onClick={() => {
+                            console.log('View BOM clicked (grid):', bom);
+                            console.log('BOM components (grid):', bom.components);
+                            console.log('BOM operations (grid):', bom.operations);
+                            setSelectedBOM(bom);
+                          }}
                           className="flex-1"
                         >
                           <Eye className="w-4 h-4 mr-1" />
@@ -760,6 +845,7 @@ export default function BOMPage() {
                           </tr>
                         </thead>
                         <tbody>
+                          {console.log('Rendering work orders in edit form:', workOrders)}
                           {workOrders.map((workOrder, index) => (
                             <tr key={workOrder.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                               <td className="py-3 px-4">
@@ -1022,15 +1108,57 @@ export default function BOMPage() {
                         className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
                       >
                         <div>
-                          <p className="font-medium text-gray-900">{component.product_name}</p>
+                          <p className="font-medium text-gray-900">
+                            {component.product?.name || component.product_name || component.name || 'Unknown Product'}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-600">
-                            {component.quantity} {component.unit}
+                            {component.quantity} {component.unit || 'units'}
                           </p>
                         </div>
                       </div>
                     ))}
+                    {(!selectedBOM.components || selectedBOM.components.length === 0) && (
+                      <div className="text-center py-4 text-gray-500">
+                        <p>No components found</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Operations/Work Orders Section */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-2">Operations:</h3>
+                  <div className="space-y-2">
+                    {(selectedBOM.operations || selectedBOM.workOrders || [])?.map((operation, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200"
+                      >
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">
+                            {operation.operationName || operation.name || 'Unknown Operation'}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Work Center: {operation.workCenterName || operation.workCenter?.name || operation.workCenter || 'N/A'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600">
+                            {operation.timeMinutes || operation.duration || 0} min
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {operation.workCenterId ? `ID: ${operation.workCenterId}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {(!selectedBOM.operations && !selectedBOM.workOrders) && (
+                      <div className="text-center py-4 text-gray-500">
+                        <p>No operations found</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

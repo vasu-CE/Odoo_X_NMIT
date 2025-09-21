@@ -119,11 +119,6 @@ export default function Layout({ children }) {
     // Filter navigation items based on user role
     const getFilteredNavigationItems = () => {
         if (!user?.role) return [];
-        console.log("User role:", user.role);
-        console.log(
-            "Filtered items:",
-            navigationItems.filter((item) => item.roles.includes(user.role))
-        );
         return navigationItems.filter((item) => item.roles.includes(user.role));
     };
 
