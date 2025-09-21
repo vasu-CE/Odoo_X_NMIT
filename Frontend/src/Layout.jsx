@@ -116,16 +116,11 @@ export default function Layout({ children }) {
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   const profileDropdownRef = useRef(null);
 
-  // Filter navigation items based on user role
-  const getFilteredNavigationItems = () => {
-    if (!user?.role) return [];
-    console.log("User role:", user.role);
-    console.log(
-      "Filtered items:",
-      navigationItems.filter((item) => item.roles.includes(user.role))
-    );
-    return navigationItems.filter((item) => item.roles.includes(user.role));
-  };
+    // Filter navigation items based on user role
+    const getFilteredNavigationItems = () => {
+        if (!user?.role) return [];
+        return navigationItems.filter((item) => item.roles.includes(user.role));
+    };
 
   // Handle responsive layout
   useEffect(() => {
