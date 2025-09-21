@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BOM, Product } from "../entities/all";
 import apiService from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Card,
   CardContent,
@@ -33,6 +34,7 @@ import {
 import AsyncDropdown from "../components/AsyncDropdown";
 
 export default function BOMPage() {
+  const { user } = useAuth();
   const [boms, setBoms] = useState([]);
   const [products, setProducts] = useState([]);
   const [workCenters, setWorkCenters] = useState([]);
@@ -43,6 +45,9 @@ export default function BOMPage() {
   const [showNewForm, setShowNewForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingBOM, setEditingBOM] = useState(null);
+
+  // Check if user can create BOMs (Admin and Manufacturing Manager only)
+  const canCreateBOMs = user?.role === 'ADMIN' || user?.role === 'MANUFACTURING_MANAGER';
   const [formData, setFormData] = useState({
     finished_product: "",
     quantity: "1",
@@ -374,13 +379,16 @@ export default function BOMPage() {
           {/* Header with Search */}
           <div className="p-6 border-b border-gray-200/60">
             <div className="flex items-center justify-between mb-4">
-              <Button 
-                onClick={handleNewBOM}
-                className="bg-blue-600 hover:bg-blue-700 text-white/90 shadow-md"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New
-              </Button>
+              {/* New BOM Button - Only for Admin and Manufacturing Manager */}
+              {canCreateBOMs && (
+                <Button 
+                  onClick={handleNewBOM}
+                  className="bg-blue-600 hover:bg-blue-700 text-white/90 shadow-md"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New
+                </Button>
+              )}
               <h2 className="text-2xl font-bold text-gray-900">Bills of Materials</h2>
               <div className="flex items-center gap-2">
                 <Button

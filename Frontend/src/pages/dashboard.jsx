@@ -157,6 +157,9 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState("list"); // list or kanban
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // Check if user can create manufacturing orders (Admin and Manufacturing Manager only)
+  const canCreateOrders = user?.role === 'ADMIN' || user?.role === 'MANUFACTURING_MANAGER';
   const [createFormData, setCreateFormData] = useState({
     product_id: "",
     quantity: 1,
@@ -386,16 +389,19 @@ export default function Dashboard() {
 
 
             {/* New Button */}
-            <Button
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105 text-xs sm:text-sm whitespace-nowrap"
-              onClick={() =>
-                (window.location.href = "/manufacturing-orders/new")
-              }
-            >
-              <Plus className="w-4 h-4 mr-1 sm:mr-2" />
-              <span className="hidden xs:inline">New Manufacturing Order</span>
-              <span className="xs:hidden">New Order</span>
-            </Button>
+            {/* New Manufacturing Order Button - Only for Admin and Manufacturing Manager */}
+            {canCreateOrders && (
+              <Button
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105 text-xs sm:text-sm whitespace-nowrap"
+                onClick={() =>
+                  (window.location.href = "/manufacturing-orders/new")
+                }
+              >
+                <Plus className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden xs:inline">New Manufacturing Order</span>
+                <span className="xs:hidden">New Order</span>
+              </Button>
+            )}
           </div>
 
           {/* Right side - Search and View Controls */}

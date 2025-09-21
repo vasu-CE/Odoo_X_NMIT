@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Card,
   CardContent,
@@ -30,6 +31,7 @@ import WorkCenterForm from "../components/manufacturing/WorkCenterForm";
 import apiService from "../services/api";
 
 export default function WorkCentersPage() {
+  const { user } = useAuth();
   const [workCenters, setWorkCenters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -184,13 +186,15 @@ export default function WorkCentersPage() {
           {/* Header with Search */}
           <div className="p-6 border-b border-gray-200/60">
             <div className="flex items-center justify-between mb-4">
-              <Button 
-                onClick={handleCreateWorkCenter}
-                className="bg-blue-600 hover:bg-blue-700 shadow-md"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Work Center
-              </Button>
+              {(user?.role === 'ADMIN' || user?.role === 'MANUFACTURING_MANAGER') && (
+                <Button 
+                  onClick={handleCreateWorkCenter}
+                  className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Work Center
+                </Button>
+              )}
               <h2 className="text-2xl font-bold text-gray-900">Work Centers</h2>
               <div className="flex items-center gap-2">
                 <Button

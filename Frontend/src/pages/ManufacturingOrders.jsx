@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ManufacturingOrder, Product, BOM } from "../entities/all";
+import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -49,11 +50,16 @@ const statusFilters = {
 };
 
 export default function ManufacturingOrders() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilterGroup, setActiveFilterGroup] = useState("all");
   const [activeStatusFilter, setActiveStatusFilter] = useState("draft");
+
+  // Check if user can create manufacturing orders (Admin and Manufacturing Manager only)
+  console.log(user);
+  const canCreateOrders = user?.role === 'ADMIN' || user?.role === 'MANUFACTURING_MANAGER';
   const [viewMode, setViewMode] = useState("list"); // list or kanban
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -283,14 +289,16 @@ export default function ManufacturingOrders() {
               <span className="text-lg font-semibold text-gray-900">ManufacturingOS</span>
             </div>
 
-            {/* New Button */}
-            <Button 
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => window.location.href = '/manufacturing-orders/new'}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Manufacturing Order
-            </Button>
+            {/* New Button - Only for Admin and Manufacturing Manager */}
+            {canCreateOrders && (
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => window.location.href = '/manufacturing-orders/new'}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Manufacturing Order
+              </Button>
+            )}
           </div>
 
           {/* Right side - Search and View Controls */}
