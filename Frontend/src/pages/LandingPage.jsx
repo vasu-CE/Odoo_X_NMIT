@@ -101,13 +101,11 @@ export default function LandingPage() {
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                 <img
                   src="/logo.png"
-                  alt="ManufacturingOS Logo"
+                  alt="ChainFlow Logo"
                   className="w-full h-full object-contain"
                 />
               </div>
-              <span className="text-xl font-bold text-gray-900">
-                ManufacturingOS
-              </span>
+              <span className="text-xl font-bold text-gray-900">ChainFlow</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -115,9 +113,7 @@ export default function LandingPage() {
               <a
                 href="#features"
                 className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                
-              </a>
+              ></a>
               <div className="flex items-center gap-3">
                 <Button
                   variant="outline"
@@ -195,7 +191,6 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="space-y-6 md:space-y-8">
-
             {/* Main Headline */}
             <div className="space-y-4 mt-10">
               <SplitText
@@ -329,7 +324,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -340,11 +334,11 @@ export default function LandingPage() {
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden">
                   <img
                     src="/logo.png"
-                    alt="ManufacturingOS Logo"
+                    alt="ChainFlow Logo"
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <span className="text-xl font-bold">ManufacturingOS</span>
+                <span className="text-xl font-bold">ChainFlow</span>
               </div>
               <p className="text-gray-400 leading-relaxed">
                 The next-generation manufacturing ERP platform designed for
@@ -437,7 +431,7 @@ export default function LandingPage() {
 
           <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 ManufacturingOS. All rights reserved.
+              © 2024 ChainFlow. All rights reserved.
             </p>
             <div className="flex items-center gap-6 mt-4 md:mt-0">
               <a

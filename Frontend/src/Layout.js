@@ -108,9 +108,7 @@ export default function Layout({ children, onLogout }) {
                 <Factory className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="font-bold text-gray-900 text-lg">
-                  ManufacturingOS
-                </h2>
+                <h2 className="font-bold text-gray-900 text-lg">ChainFlow</h2>
                 <p className="text-xs text-gray-500">Production Management</p>
               </div>
             </div>
@@ -233,9 +231,7 @@ export default function Layout({ children, onLogout }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-gray-100/80 p-2 rounded-lg transition-colors duration-200" />
-                <h1 className="text-xl font-bold text-gray-900">
-                  ManufacturingOS
-                </h1>
+                <h1 className="text-xl font-bold text-gray-900">ChainFlow</h1>
               </div>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="w-5 h-5 text-gray-600" />

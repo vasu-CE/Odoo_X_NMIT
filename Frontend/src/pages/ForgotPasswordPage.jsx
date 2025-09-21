@@ -123,7 +123,7 @@ export default function ForgotPasswordPage() {
 
           {/* Footer */}
           <div className="text-center mt-8 text-xs text-gray-500">
-            <p>&copy; 2024 ManufacturingOS. All rights reserved.</p>
+            <p>&copy; 2024 ChainFlow. All rights reserved.</p>
           </div>
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function ForgotPasswordPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-xs text-gray-500">
-          <p>&copy; 2024 ManufacturingOS. All rights reserved.</p>
+          <p>&copy; 2024 ChainFlow. All rights reserved.</p>
         </div>
 
         <style jsx>{`

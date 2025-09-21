@@ -34,19 +34,69 @@ import {
 // Status filter configuration matching the mockup
 const statusFilters = {
   all: [
-    { id: "draft", label: "Draft", count: 2, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "confirmed", label: "Confirmed", count: 7, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "in_progress", label: "In-Progress", count: 1, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "to_close", label: "To Close", count: 5, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "not_assigned", label: "Not Assigned", count: 11, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "late", label: "Late", count: 11, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
+    {
+      id: "draft",
+      label: "Draft",
+      count: 2,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "confirmed",
+      label: "Confirmed",
+      count: 7,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "in_progress",
+      label: "In-Progress",
+      count: 1,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "to_close",
+      label: "To Close",
+      count: 5,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "not_assigned",
+      label: "Not Assigned",
+      count: 11,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "late",
+      label: "Late",
+      count: 11,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
   ],
   my: [
-    { id: "confirmed", label: "Confirmed", count: 7, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "in_progress", label: "In-Progress", count: 1, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "to_close", label: "To Close", count: 5, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-    { id: "late", label: "Late", count: 8, color: "bg-gray-100 text-gray-800 hover:bg-gray-200" },
-  ]
+    {
+      id: "confirmed",
+      label: "Confirmed",
+      count: 7,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "in_progress",
+      label: "In-Progress",
+      count: 1,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "to_close",
+      label: "To Close",
+      count: 5,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+    {
+      id: "late",
+      label: "Late",
+      count: 8,
+      color: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+    },
+  ],
 };
 
 export default function ManufacturingOrders() {
@@ -59,7 +109,8 @@ export default function ManufacturingOrders() {
 
   // Check if user can create manufacturing orders (Admin and Manufacturing Manager only)
   console.log(user);
-  const canCreateOrders = user?.role === 'ADMIN' || user?.role === 'MANUFACTURING_MANAGER';
+  const canCreateOrders =
+    user?.role === "ADMIN" || user?.role === "MANUFACTURING_MANAGER";
   const [viewMode, setViewMode] = useState("list"); // list or kanban
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -69,7 +120,7 @@ export default function ManufacturingOrders() {
     scheduled_start: "",
     assigned_to_id: "",
     priority: "MEDIUM",
-    notes: ""
+    notes: "",
   });
 
   // Mock data for demonstration - matching the mockup
@@ -80,19 +131,19 @@ export default function ManufacturingOrders() {
       startDate: "Tomorrow",
       finishedProduct: "Dinning Table",
       componentStatus: "Not Available",
-      quantity: 5.00,
+      quantity: 5.0,
       unit: "Units",
       state: "Confirmed",
       isLate: false,
       isAssigned: true,
     },
     {
-      id: "2", 
+      id: "2",
       reference: "MO-000002",
       startDate: "Yesterday",
       finishedProduct: "Drawer",
       componentStatus: "Available",
-      quantity: 2.00,
+      quantity: 2.0,
       unit: "Units",
       state: "In-Progress",
       isLate: true,
@@ -100,11 +151,11 @@ export default function ManufacturingOrders() {
     },
     {
       id: "3",
-      reference: "MO-000003", 
+      reference: "MO-000003",
       startDate: "Today",
       finishedProduct: "Chair",
       componentStatus: "Available",
-      quantity: 10.00,
+      quantity: 10.0,
       unit: "Units",
       state: "Draft",
       isLate: false,
@@ -115,8 +166,8 @@ export default function ManufacturingOrders() {
       reference: "MO-000004",
       startDate: "Last Week",
       finishedProduct: "Cabinet",
-      componentStatus: "Not Available", 
-      quantity: 3.00,
+      componentStatus: "Not Available",
+      quantity: 3.0,
       unit: "Units",
       state: "Confirmed",
       isLate: true,
@@ -128,12 +179,12 @@ export default function ManufacturingOrders() {
       startDate: "Next Week",
       finishedProduct: "Shelf",
       componentStatus: "Available",
-      quantity: 8.00,
-      unit: "Units", 
+      quantity: 8.0,
+      unit: "Units",
       state: "To Close",
       isLate: false,
       isAssigned: true,
-    }
+    },
   ];
 
   useEffect(() => {
@@ -144,29 +195,30 @@ export default function ManufacturingOrders() {
     try {
       // Load real data from API
       const ordersData = await ManufacturingOrder.list("-created_date");
-      
+
       // Transform API data to match our UI structure
-      const transformedOrders = ordersData.map(order => ({
+      const transformedOrders = ordersData.map((order) => ({
         id: order.id,
         reference: order.order_number || `MO-${order.id.slice(-6)}`,
-        startDate: order.scheduled_start ? 
-          new Date(order.scheduled_start).toLocaleDateString() : 
-          "Not scheduled",
+        startDate: order.scheduled_start
+          ? new Date(order.scheduled_start).toLocaleDateString()
+          : "Not scheduled",
         finishedProduct: order.product_name || "Unknown Product",
         componentStatus: order.component_status || "Unknown",
         quantity: order.quantity || 0,
         unit: order.unit || "Units",
         state: order.status?.replace("_", " ") || "Unknown",
-        isLate: order.scheduled_start ? 
-          new Date(order.scheduled_start) < new Date() && order.status === "CONFIRMED" : 
-          false,
+        isLate: order.scheduled_start
+          ? new Date(order.scheduled_start) < new Date() &&
+            order.status === "CONFIRMED"
+          : false,
         isAssigned: !!order.assigned_to_id,
         actualStartDate: order.actual_start,
         actualEndDate: order.actual_end,
         priority: order.priority,
-        notes: order.notes
+        notes: order.notes,
       }));
-      
+
       setOrders(transformedOrders);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -181,19 +233,23 @@ export default function ManufacturingOrders() {
   const calculateFilterCounts = () => {
     const counts = {
       all: {
-        draft: orders.filter(o => o.state === "Draft").length,
-        confirmed: orders.filter(o => o.state === "Confirmed").length,
-        in_progress: orders.filter(o => o.state === "In-Progress").length,
-        to_close: orders.filter(o => o.state === "To Close").length,
-        not_assigned: orders.filter(o => !o.isAssigned).length,
-        late: orders.filter(o => o.isLate).length,
+        draft: orders.filter((o) => o.state === "Draft").length,
+        confirmed: orders.filter((o) => o.state === "Confirmed").length,
+        in_progress: orders.filter((o) => o.state === "In-Progress").length,
+        to_close: orders.filter((o) => o.state === "To Close").length,
+        not_assigned: orders.filter((o) => !o.isAssigned).length,
+        late: orders.filter((o) => o.isLate).length,
       },
       my: {
-        confirmed: orders.filter(o => o.state === "Confirmed" && o.isAssigned).length,
-        in_progress: orders.filter(o => o.state === "In-Progress" && o.isAssigned).length,
-        to_close: orders.filter(o => o.state === "To Close" && o.isAssigned).length,
-        late: orders.filter(o => o.isLate && o.isAssigned).length,
-      }
+        confirmed: orders.filter((o) => o.state === "Confirmed" && o.isAssigned)
+          .length,
+        in_progress: orders.filter(
+          (o) => o.state === "In-Progress" && o.isAssigned
+        ).length,
+        to_close: orders.filter((o) => o.state === "To Close" && o.isAssigned)
+          .length,
+        late: orders.filter((o) => o.isLate && o.isAssigned).length,
+      },
     };
     return counts;
   };
@@ -201,20 +257,23 @@ export default function ManufacturingOrders() {
   const filterCounts = calculateFilterCounts();
 
   // Filter orders based on search and active filters
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = !searchTerm || 
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch =
+      !searchTerm ||
       order.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.finishedProduct?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.state?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = activeStatusFilter === "all" || order.state.toLowerCase().replace(" ", "_") === activeStatusFilter;
-    
+
+    const matchesStatus =
+      activeStatusFilter === "all" ||
+      order.state.toLowerCase().replace(" ", "_") === activeStatusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedOrders(filteredOrders.map(order => order.id));
+      setSelectedOrders(filteredOrders.map((order) => order.id));
     } else {
       setSelectedOrders([]);
     }
@@ -222,9 +281,9 @@ export default function ManufacturingOrders() {
 
   const handleSelectOrder = (orderId, checked) => {
     if (checked) {
-      setSelectedOrders(prev => [...prev, orderId]);
+      setSelectedOrders((prev) => [...prev, orderId]);
     } else {
-      setSelectedOrders(prev => prev.filter(id => id !== orderId));
+      setSelectedOrders((prev) => prev.filter((id) => id !== orderId));
     }
   };
 
@@ -249,9 +308,9 @@ export default function ManufacturingOrders() {
     try {
       const orderData = {
         ...createFormData,
-        status: "PLANNED"
+        status: "PLANNED",
       };
-      
+
       await ManufacturingOrder.create(orderData);
       await loadData(); // Reload data
       setShowCreateDialog(false);
@@ -261,7 +320,7 @@ export default function ManufacturingOrders() {
         scheduled_start: "",
         assigned_to_id: "",
         priority: "MEDIUM",
-        notes: ""
+        notes: "",
       });
     } catch (error) {
       console.error("Error creating order:", error);
@@ -280,20 +339,28 @@ export default function ManufacturingOrders() {
             <Button variant="ghost" size="icon" className="lg:hidden">
               <Menu className="w-5 h-5" />
             </Button>
-            
+
             {/* App Logo and Name */}
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <img src="/logo.png" alt="ManufacturingOS Logo" className="w-full h-full object-contain" />
+                <img
+                  src="/logo.png"
+                  alt="ChainFlow Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="text-lg font-semibold text-gray-900">ManufacturingOS</span>
+              <span className="text-lg font-semibold text-gray-900">
+                ChainFlow
+              </span>
             </div>
 
             {/* New Button - Only for Admin and Manufacturing Manager */}
             {canCreateOrders && (
-              <Button 
+              <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={() => window.location.href = '/manufacturing-orders/new'}
+                onClick={() =>
+                  (window.location.href = "/manufacturing-orders/new")
+                }
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Manufacturing Order
@@ -333,7 +400,6 @@ export default function ManufacturingOrders() {
                 <Grid3X3 className="w-4 h-4" />
               </Button>
             </div>
-
           </div>
         </div>
       </div>
@@ -360,18 +426,22 @@ export default function ManufacturingOrders() {
               My
             </Button>
           </div>
-          
+
           {/* Status Filter Buttons */}
           <div className="flex flex-wrap gap-2">
             {statusFilters[activeFilterGroup].map((filter) => (
               <Button
                 key={filter.id}
-                variant={activeStatusFilter === filter.id ? "default" : "outline"}
+                variant={
+                  activeStatusFilter === filter.id ? "default" : "outline"
+                }
                 size="sm"
                 onClick={() => setActiveStatusFilter(filter.id)}
                 className="flex flex-col items-center py-2 px-3 h-auto"
               >
-                <span className="text-lg font-semibold">{filterCounts[activeFilterGroup][filter.id] || 0}</span>
+                <span className="text-lg font-semibold">
+                  {filterCounts[activeFilterGroup][filter.id] || 0}
+                </span>
                 <span className="text-xs">{filter.label}</span>
               </Button>
             ))}
@@ -379,9 +449,19 @@ export default function ManufacturingOrders() {
 
           {/* Filter Descriptions */}
           <div className="text-xs text-gray-500 space-y-1">
-            <p>• Filter Manufacturing orders when user clicks on any of the state button, highlight the clicked button and add filter on search according to the button click</p>
-            <p>• Late Filter show manufacturing order whose start date has already passed and are still in confirmed state.</p>
-            <p>• Not Assigned filter shows manufacturing order which don't have any assignee.</p>
+            <p>
+              • Filter Manufacturing orders when user clicks on any of the state
+              button, highlight the clicked button and add filter on search
+              according to the button click
+            </p>
+            <p>
+              • Late Filter show manufacturing order whose start date has
+              already passed and are still in confirmed state.
+            </p>
+            <p>
+              • Not Assigned filter shows manufacturing order which don't have
+              any assignee.
+            </p>
           </div>
         </div>
       </div>
@@ -394,7 +474,10 @@ export default function ManufacturingOrders() {
             <div className="grid grid-cols-8 gap-4 px-4 py-3 text-sm font-medium text-gray-700">
               <div className="flex items-center">
                 <Checkbox
-                  checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
+                  checked={
+                    selectedOrders.length === filteredOrders.length &&
+                    filteredOrders.length > 0
+                  }
                   onCheckedChange={handleSelectAll}
                 />
               </div>
@@ -413,7 +496,10 @@ export default function ManufacturingOrders() {
             {loading ? (
               // Loading skeleton
               Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="grid grid-cols-8 gap-4 px-4 py-4 animate-pulse">
+                <div
+                  key={index}
+                  className="grid grid-cols-8 gap-4 px-4 py-4 animate-pulse"
+                >
                   <div className="h-4 bg-gray-200 rounded"></div>
                   <div className="h-4 bg-gray-200 rounded"></div>
                   <div className="h-4 bg-gray-200 rounded"></div>
@@ -426,26 +512,45 @@ export default function ManufacturingOrders() {
               ))
             ) : filteredOrders.length > 0 ? (
               filteredOrders.map((order) => (
-                <div key={order.id} className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-gray-50">
+                <div
+                  key={order.id}
+                  className="grid grid-cols-8 gap-4 px-4 py-4 hover:bg-gray-50"
+                >
                   <div className="flex items-center">
                     <Checkbox
                       checked={selectedOrders.includes(order.id)}
-                      onCheckedChange={(checked) => handleSelectOrder(order.id, checked)}
+                      onCheckedChange={(checked) =>
+                        handleSelectOrder(order.id, checked)
+                      }
                     />
                   </div>
-                  <div className="font-mono text-sm text-gray-900 hidden sm:block">{order.reference}</div>
-                  <div className="text-sm text-gray-700 hidden md:block">{order.startDate}</div>
-                  <div className="text-sm text-gray-700 hidden lg:block">{order.finishedProduct}</div>
+                  <div className="font-mono text-sm text-gray-900 hidden sm:block">
+                    {order.reference}
+                  </div>
+                  <div className="text-sm text-gray-700 hidden md:block">
+                    {order.startDate}
+                  </div>
+                  <div className="text-sm text-gray-700 hidden lg:block">
+                    {order.finishedProduct}
+                  </div>
                   <div className="text-sm hidden lg:block">
-                    <Badge 
-                      variant={order.componentStatus === "Available" ? "default" : "destructive"}
+                    <Badge
+                      variant={
+                        order.componentStatus === "Available"
+                          ? "default"
+                          : "destructive"
+                      }
                       className="text-xs"
                     >
                       {order.componentStatus}
                     </Badge>
                   </div>
-                  <div className="text-sm text-gray-700 hidden md:block">{order.quantity}</div>
-                  <div className="text-sm text-gray-700 hidden sm:block">{order.unit}</div>
+                  <div className="text-sm text-gray-700 hidden md:block">
+                    {order.quantity}
+                  </div>
+                  <div className="text-sm text-gray-700 hidden sm:block">
+                    {order.unit}
+                  </div>
                   <div className="flex items-center justify-between">
                     <Badge className={`text-xs ${getStatusColor(order.state)}`}>
                       {order.state}
@@ -468,22 +573,31 @@ export default function ManufacturingOrders() {
         {/* Mobile Card View */}
         <div className="lg:hidden mt-4 space-y-3">
           {filteredOrders.map((order) => (
-            <div key={`mobile-${order.id}`} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+            <div
+              key={`mobile-${order.id}`}
+              className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm"
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <Checkbox
                     checked={selectedOrders.includes(order.id)}
-                    onCheckedChange={(checked) => handleSelectOrder(order.id, checked)}
+                    onCheckedChange={(checked) =>
+                      handleSelectOrder(order.id, checked)
+                    }
                   />
-                <div>
-                    <div className="font-mono text-sm font-semibold text-gray-900">{order.reference}</div>
-                    <div className="text-xs text-gray-500">{order.finishedProduct}</div>
+                  <div>
+                    <div className="font-mono text-sm font-semibold text-gray-900">
+                      {order.reference}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {order.finishedProduct}
+                    </div>
                   </div>
                 </div>
                 <Button variant="ghost" size="icon" className="h-6 w-6">
                   <MoreVertical className="w-4 h-4" />
                 </Button>
-                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
@@ -492,13 +606,19 @@ export default function ManufacturingOrders() {
                 </div>
                 <div>
                   <span className="text-gray-500">Quantity:</span>
-                  <div className="font-medium">{order.quantity} {order.unit}</div>
+                  <div className="font-medium">
+                    {order.quantity} {order.unit}
+                  </div>
                 </div>
                 <div>
                   <span className="text-gray-500">Component Status:</span>
                   <div>
-                    <Badge 
-                      variant={order.componentStatus === "Available" ? "default" : "destructive"}
+                    <Badge
+                      variant={
+                        order.componentStatus === "Available"
+                          ? "default"
+                          : "destructive"
+                      }
                       className="text-xs"
                     >
                       {order.componentStatus}
@@ -525,7 +645,9 @@ export default function ManufacturingOrders() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Create Manufacturing Order</h2>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Create Manufacturing Order
+                </h2>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -533,7 +655,7 @@ export default function ManufacturingOrders() {
                 >
                   <XCircle className="w-4 h-4" />
                 </Button>
-                </div>
+              </div>
 
               <div className="space-y-4">
                 <div>
@@ -542,7 +664,12 @@ export default function ManufacturingOrders() {
                   </label>
                   <select
                     value={createFormData.product_id}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, product_id: e.target.value }))}
+                    onChange={(e) =>
+                      setCreateFormData((prev) => ({
+                        ...prev,
+                        product_id: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a product</option>
@@ -561,10 +688,15 @@ export default function ManufacturingOrders() {
                     type="number"
                     min="1"
                     value={createFormData.quantity}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                    onChange={(e) =>
+                      setCreateFormData((prev) => ({
+                        ...prev,
+                        quantity: parseInt(e.target.value) || 1,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-              </div>
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -573,7 +705,12 @@ export default function ManufacturingOrders() {
                   <input
                     type="date"
                     value={createFormData.scheduled_start}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, scheduled_start: e.target.value }))}
+                    onChange={(e) =>
+                      setCreateFormData((prev) => ({
+                        ...prev,
+                        scheduled_start: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -584,7 +721,12 @@ export default function ManufacturingOrders() {
                   </label>
                   <select
                     value={createFormData.priority}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, priority: e.target.value }))}
+                    onChange={(e) =>
+                      setCreateFormData((prev) => ({
+                        ...prev,
+                        priority: e.target.value,
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="LOW">Low</option>
@@ -592,15 +734,20 @@ export default function ManufacturingOrders() {
                     <option value="HIGH">High</option>
                     <option value="URGENT">Urgent</option>
                   </select>
-          </div>
+                </div>
 
-              <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Notes
                   </label>
                   <textarea
                     value={createFormData.notes}
-                    onChange={(e) => setCreateFormData(prev => ({ ...prev, notes: e.target.value }))}
+                    onChange={(e) =>
+                      setCreateFormData((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Optional notes..."

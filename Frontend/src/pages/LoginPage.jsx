@@ -67,7 +67,7 @@ export default function LoginPage() {
 
       if (result.success) {
         toast.success("Login successful! Redirecting...", {
-          description: "Welcome back to ManufacturingOS",
+          description: "Welcome back to ChainFlow",
         });
         navigate("/");
       } else {
@@ -129,12 +129,12 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full mb-2 md:mb-3 overflow-hidden">
             <img
               src="/logo.png"
-              alt="ManufacturingOS Logo"
+              alt="ChainFlow Logo"
               className="w-30 h-30 object-cover"
             />
           </div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-            ManufacturingOS
+            ChainFlow
           </h1>
         </div>
 
@@ -280,7 +280,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-4 text-xs text-gray-500">
-          <p>&copy; 2024 ManufacturingOS. All rights reserved.</p>
+          <p>&copy; 2024 ChainFlow. All rights reserved.</p>
         </div>
 
         <style jsx>{`

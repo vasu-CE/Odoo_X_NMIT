@@ -121,7 +121,7 @@ export default function SignupPage() {
 
       if (result.success) {
         toast.success("Account created successfully!", {
-          description: "Welcome to ManufacturingOS! Redirecting...",
+          description: "Welcome to ChainFlow! Redirecting...",
         });
         navigate("/");
       } else {
@@ -170,7 +170,6 @@ export default function SignupPage() {
           <Button
             variant="ghost"
             onClick={() => navigate("/landing")}
-            
             className="text-gray-600 hover:text-gray-900 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -183,24 +182,25 @@ export default function SignupPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full mb-2 md:mb-3 overflow-hidden">
             <img
               src="/logo.png"
-              alt="ManufacturingOS Logo"
+              alt="ChainFlow Logo"
               className="w-30 h-30 object-cover"
             />
           </div>
           <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
-            ManufacturingOS
+            ChainFlow
           </h1>
-          <p className="text-sm md:text-base text-gray-600">Production Management System</p>
+          <p className="text-sm md:text-base text-gray-600">
+            Production Management System
+          </p>
         </div>
 
         {/* Signup Card */}
         <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-md relative z-10">
-        <CardHeader className="space-y-1 pb-4">
+          <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-lg font-semibold text-center text-gray-900">
               Create Account
             </CardTitle>
           </CardHeader>
-
 
           <CardContent className="space-y-6">
             {/* Signup Form */}
@@ -467,7 +467,7 @@ export default function SignupPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-xs text-gray-500">
-          <p>&copy; 2024 ManufacturingOS. All rights reserved.</p>
+          <p>&copy; 2024 ChainFlow. All rights reserved.</p>
         </div>
 
         <style jsx>{`

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Factory } from 'lucide-react';
+import React from "react";
+import { Factory } from "lucide-react";
 
 const AuthForm = ({ title, children, className = "" }) => {
   return (
@@ -20,15 +20,19 @@ const AuthForm = ({ title, children, className = "" }) => {
                 <Factory className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">ManufacturingOS</h1>
+                <h1 className="text-2xl font-bold text-gray-900">ChainFlow</h1>
                 <p className="text-sm text-gray-500">Production Management</p>
               </div>
             </div>
           </div>
-          
+
           {/* Auth Form Card */}
-          <div className={`bg-white/80 backdrop-blur-md border border-gray-200/60 rounded-2xl p-8 shadow-xl ${className}`}>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">{title}</h2>
+          <div
+            className={`bg-white/80 backdrop-blur-md border border-gray-200/60 rounded-2xl p-8 shadow-xl ${className}`}
+          >
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              {title}
+            </h2>
             {children}
           </div>
         </div>

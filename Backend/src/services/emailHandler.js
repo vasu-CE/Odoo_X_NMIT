@@ -6,8 +6,13 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.USER,
         pass: process.env.APP_PASSWORD,
+        
     },
+    
 });
+// console.log("USER:", process.env.USER);
+// console.log("APP_PASSWORD:", process.env.APP_PASSWORD ? "****" : "MISSING");
+
 
 export const sendResetLinkEmail = async (userEmail, resetLink) => {
     const mailOptions = {
