@@ -55,7 +55,7 @@ export default function DynamicSidebarStats() {
       </div>
 
       {/* Work Centers Utilization */}
-      <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
+      {/* <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-gray-200/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Factory className="w-4 h-4 text-cyan-500" />
@@ -71,7 +71,7 @@ export default function DynamicSidebarStats() {
             style={{ width: `${stats.workCentersUtilization}%` }}
           ></div>
         </div>
-      </div>
+      </div> */}
 
       {/* Manufacturing Orders */}
   
