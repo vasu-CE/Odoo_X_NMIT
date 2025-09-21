@@ -402,10 +402,19 @@ export default function StockManagement() {
   };
 
   const handleNewProductChange = (field, value) => {
-    setNewProductData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setNewProductData(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Calculate outgoing automatically based on onHand and freeToUse
+      if (field === 'onHand' || field === 'freeToUse') {
+        updated.outgoing = Math.max(0, updated.onHand - updated.freeToUse);
+      }
+      
+      return updated;
+    });
   };
 
 
@@ -792,15 +801,11 @@ export default function StockManagement() {
                   </label>
                   <Input
                     type="number"
-                    value={selectedProduct?.outgoing || 0}
-                    onChange={(e) =>
-                      setSelectedProduct({
-                        ...selectedProduct,
-                        outgoing: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full"
+                    value={Math.max(0, (selectedProduct?.current_stock || 0) - (selectedProduct?.reorder_level || 0))}
+                    readOnly
+                    className="w-full bg-gray-50"
                   />
+                  <p className="text-xs text-gray-500 mt-1">Calculated: On Hand - Reorder Level</p>
                 </div>
 
                 <div>
@@ -813,7 +818,7 @@ export default function StockManagement() {
                     onChange={(e) =>
                       setSelectedProduct({
                         ...selectedProduct,
-                        incoming: parseInt(e.target.value),
+                        incoming: parseInt(e.target.value) || 0,
                       })
                     }
                     className="w-full"
@@ -934,10 +939,11 @@ export default function StockManagement() {
                     <Input
                       type="number"
                       value={newProductData.outgoing}
-                      onChange={(e) => handleNewProductChange('outgoing', parseInt(e.target.value) || 0)}
-                      className="w-full"
+                      readOnly
+                      className="w-full bg-gray-50"
                       placeholder="0"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Calculated: On Hand - Free to Use</p>
                   </div>
 
                   <div>
