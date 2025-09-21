@@ -353,6 +353,11 @@ router.post(
       // Generate order number
       const orderNumber = await generateOrderNumber();
 
+      // Convert string IDs to integers
+      const assigneeIdInt = assigneeId ? parseInt(assigneeId) : null;
+      const bomIdInt = bomId ? parseInt(bomId) : null;
+      const productIdInt = productId ? parseInt(productId) : null;
+
       // Create manufacturing order with BOM auto-population
       const order = await prisma.$transaction(async (tx) => {
         // Create the manufacturing order
@@ -360,14 +365,14 @@ router.post(
           data: {
             orderNumber,
             finishedProduct,
-            productId,
+            productId: productIdInt,
             quantity,
             units,
             priority,
             scheduleDate: new Date(scheduleDate),
-            assigneeId,
+            assigneeId: assigneeIdInt,
             createdById: req.user.id, // Set the creator as the authenticated user
-            bomId,
+            bomId: bomIdInt,
             notes,
           },
           include: {
@@ -389,10 +394,10 @@ router.post(
         });
 
         // If BOM is provided, auto-populate work orders and required materials
-        if (bomId) {
+        if (bomIdInt) {
           // Get BOM with components and operations
           const bom = await tx.bOM.findUnique({
-            where: { id: bomId },
+            where: { id: bomIdInt },
             include: {
               components: {
                 include: {
@@ -490,7 +495,7 @@ router.post(
           
           // Add custom work orders to the response
           newOrder.workOrders = [...(newOrder.workOrders || []), ...customWorkOrders];
-        } else if (!bomId) {
+        } else if (!bomIdInt) {
           // If no BOM and no assignedWorkOrders, create a default work order
           const defaultWorkOrder = await tx.workOrder.create({
             data: {
@@ -621,6 +626,11 @@ router.put(
       // Convert scheduleDate to Date if provided
       if (updateData.scheduleDate) {
         updateData.scheduleDate = new Date(updateData.scheduleDate);
+      }
+
+      // Convert string IDs to integers
+      if (updateData.assigneeId) {
+        updateData.assigneeId = parseInt(updateData.assigneeId);
       }
 
       const order = await prisma.manufacturingOrder.update({
