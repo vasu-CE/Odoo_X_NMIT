@@ -96,7 +96,7 @@ router.get('/', authenticate, [
       }
     });
   } catch (error) {
-('Get work orders error:', error);
+    console.log('Get work orders error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work orders'
@@ -164,7 +164,7 @@ router.get('/shop-floor', authenticate, authorize('SHOP_FLOOR_OPERATOR' , 'MANUF
       }
     });
   } catch (error) {
-('Get shop floor work orders error:', error);
+    console.log('Get shop floor work orders error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work orders'
@@ -231,7 +231,7 @@ router.get('/my-assignments', authenticate, async (req, res) => {
       }
     });
   } catch (error) {
-('Get my assignments error:', error);
+    console.log('Get my assignments error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch assigned work orders'
@@ -298,7 +298,7 @@ router.get('/:id', authenticate, async (req, res) => {
       data: workOrder
     });
   } catch (error) {
-('Get work order error:', error);
+    console.log('Get work order error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch work order'
@@ -423,7 +423,7 @@ router.post('/', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: workOrder
     });
   } catch (error) {
-('Create work order error:', error);
+    console.log('Create work order error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create work order'
@@ -503,7 +503,7 @@ router.put('/:id', authenticate, authorize('MANUFACTURING_MANAGER', 'ADMIN'), [
       data: workOrder
     });
   } catch (error) {
-('Update work order error:', error);
+    console.log('Update work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -550,7 +550,7 @@ router.post('/:id/start', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
       data: workOrder
     });
   } catch (error) {
-('Start work order error:', error);
+    console.log('Start work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -592,7 +592,6 @@ router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
     }
 
     const now = new Date();
-    const pausedAt = currentWorkOrder.pausedAt || currentWorkOrder.startTime;
     const currentPausedDuration = currentWorkOrder.pausedDuration || 0;
     
     // Calculate additional paused time if resuming from a previous pause
@@ -627,7 +626,7 @@ router.post('/:id/pause', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
       data: workOrder
     });
   } catch (error) {
-('Pause work order error:', error);
+    console.log('Pause work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -649,6 +648,34 @@ router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUF
     const { id } = req.params;
     const workOrderId = Number(id);
 
+    // Get current work order to calculate additional paused time
+    const currentWorkOrder = await prisma.workOrder.findUnique({
+      where: { id: workOrderId }
+    });
+
+    if (!currentWorkOrder) {
+      return res.status(404).json({
+        success: false,
+        error: 'Work order not found'
+      });
+    }
+
+    if (currentWorkOrder.status !== 'PAUSED') {
+      return res.status(400).json({
+        success: false,
+        error: 'Work order must be paused to resume'
+      });
+    }
+
+    const now = new Date();
+    const currentPausedDuration = currentWorkOrder.pausedDuration || 0;
+    
+    // Calculate additional paused time since last pause
+    let additionalPausedTime = 0;
+    if (currentWorkOrder.pausedAt) {
+      additionalPausedTime = Math.floor((now - currentWorkOrder.pausedAt) / (1000 * 60)); // minutes
+    }
+
     const workOrder = await prisma.workOrder.update({
       where: { 
         id: workOrderId,
@@ -656,7 +683,8 @@ router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUF
       },
       data: { 
         status: 'IN_PROGRESS',
-        pausedAt: null
+        pausedAt: null,
+        pausedDuration: currentPausedDuration + additionalPausedTime
       },
       include: {
         manufacturingOrder: {
@@ -674,7 +702,7 @@ router.post('/:id/resume', authenticate, authorize('SHOP_FLOOR_OPERATOR', 'MANUF
       data: workOrder
     });
   } catch (error) {
-('Resume work order error:', error);
+    console.log('Resume work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -723,7 +751,7 @@ router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
     let realDuration = 0;
     if (startTime) {
       const totalDuration = Math.floor((now - startTime) / (1000 * 60)); // minutes
-      realDuration = totalDuration - pausedDuration;
+      realDuration = Math.max(0, totalDuration - pausedDuration);
     }
 
     const workOrder = await prisma.workOrder.update({
@@ -753,7 +781,7 @@ router.patch('/:id/done', authenticate, authorize('SHOP_FLOOR_OPERATOR'), async 
       data: workOrder
     });
   } catch (error) {
-('Complete work order error:', error);
+    console.log('Complete work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,
@@ -800,7 +828,7 @@ router.patch('/:id/cancel', authenticate, authorize('SHOP_FLOOR_OPERATOR'), asyn
       data: workOrder
     });
   } catch (error) {
-('Cancel work order error:', error);
+    console.log('Cancel work order error:', error);
     if (error.code === 'P2025') {
       return res.status(404).json({
         success: false,

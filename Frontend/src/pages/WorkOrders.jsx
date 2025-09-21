@@ -20,6 +20,7 @@ import {
   Play,
   Pause,
   Check,
+  XCircle,
 } from "lucide-react";
 
 const statusConfig = {
@@ -75,31 +76,45 @@ export default function WorkOrders() {
     }
   }, [user]);
 
-  // Update elapsed times every second for in-progress work orders
+  // Update elapsed times every second for in-progress work orders only
   useEffect(() => {
     const interval = setInterval(() => {
       setElapsedTimes(prev => {
         const updated = { ...prev };
         workOrders.forEach(wo => {
-          // Only update timer for IN_PROGRESS work orders
           if (wo.status === 'IN_PROGRESS' && wo.startTime) {
+            // For in-progress work orders, calculate elapsed time excluding paused duration
             const startTime = new Date(wo.startTime);
             const now = new Date();
-            const totalElapsed = Math.floor((now - startTime) / 1000); // seconds
-            const pausedDuration = wo.pausedDuration || 0; // paused duration in minutes, convert to seconds
-            const pausedDurationSeconds = pausedDuration * 60;
-            const elapsed = totalElapsed - pausedDurationSeconds;
-            updated[wo.id] = Math.max(0, elapsed); // Ensure non-negative
-          } else if (wo.status === 'PAUSED') {
-            // For paused work orders, keep the last calculated time (don't update)
-            // The getRealDuration function will handle the display
+            const totalElapsed = Math.floor((now - startTime) / 1000);
+            const pausedSoFar = (wo.pausedDuration || 0) * 60; // Convert minutes to seconds
+            updated[wo.id] = Math.max(0, totalElapsed - pausedSoFar);
           }
+          // For paused work orders, we don't update the timer - it stays static
         });
         return updated;
       });
     }, 1000);
 
     return () => clearInterval(interval);
+  }, [workOrders]);
+
+  // Calculate static elapsed time for paused work orders when they change status
+  useEffect(() => {
+    setElapsedTimes(prev => {
+      const updated = { ...prev };
+      workOrders.forEach(wo => {
+        if (wo.status === 'PAUSED' && wo.startTime && wo.pausedAt) {
+          // For paused work orders, calculate elapsed time up to the pause point (static)
+          const startTime = new Date(wo.startTime);
+          const pausedAt = new Date(wo.pausedAt);
+          const totalElapsed = Math.floor((pausedAt - startTime) / 1000);
+          const pausedSoFar = (wo.pausedDuration || 0) * 60; // Convert minutes to seconds
+          updated[wo.id] = Math.max(0, totalElapsed - pausedSoFar);
+        }
+      });
+      return updated;
+    });
   }, [workOrders]);
 
   const loadData = async () => {
@@ -110,6 +125,7 @@ export default function WorkOrders() {
         // For shop floor operators, get their assigned work orders
         try {
           const response = await apiService.getShopFloorWorkOrders();
+          console.log('Shop floor work orders:', response.data.workOrders);
           if (response.success) {
             setWorkOrders(response.data.workOrders);
           } else {
@@ -180,8 +196,8 @@ export default function WorkOrders() {
       const response = await apiService.pauseWorkOrder(workOrderId);
       if (response.success) {
         // Update local state instead of refreshing all data
-        setWorkOrders(prev => prev.map(wo => 
-          wo.id === workOrderId 
+        setWorkOrders(prev => prev.map(wo =>
+          wo.id === workOrderId
             ? { ...wo, status: 'PAUSED', pausedAt: new Date().toISOString() }
             : wo
         ));
@@ -212,11 +228,20 @@ export default function WorkOrders() {
       const response = await apiService.resumeWorkOrder(workOrderId);
       if (response.success) {
         // Update local state instead of refreshing all data
-        setWorkOrders(prev => prev.map(wo => 
-          wo.id === workOrderId 
-            ? { ...wo, status: 'IN_PROGRESS', pausedAt: null }
-            : wo
-        ));
+        setWorkOrders(prev => prev.map(wo => {
+          if (wo.id === workOrderId) {
+            const pausedAt = new Date(wo.pausedAt);
+            const now = new Date();
+            const thisPauseMinutes = Math.floor((now - pausedAt) / (1000 * 60)); // minutes
+            return {
+              ...wo,
+              status: 'IN_PROGRESS',
+              pausedAt: null,
+              pausedDuration: (wo.pausedDuration || 0) + thisPauseMinutes,
+            };
+          }
+          return wo;
+        }));
       }
     } catch (error) {
       console.error("Error resuming work order:", error);
@@ -250,18 +275,11 @@ export default function WorkOrders() {
     if (workOrder.status === 'COMPLETED' && workOrder.realDuration) {
       return `${workOrder.realDuration} min`;
     }
-    if (workOrder.status === 'IN_PROGRESS' && elapsedTimes[workOrder.id]) {
+    if (workOrder.status === 'IN_PROGRESS' && elapsedTimes[workOrder.id] !== undefined) {
       return formatDuration(elapsedTimes[workOrder.id]);
     }
-    if (workOrder.status === 'PAUSED' && workOrder.startTime) {
-      // Calculate elapsed time up to pause point (excluding paused duration)
-      const startTime = new Date(workOrder.startTime);
-      const pausedAt = workOrder.pausedAt ? new Date(workOrder.pausedAt) : new Date();
-      const totalElapsed = Math.floor((pausedAt - startTime) / 1000); // seconds
-      const pausedDuration = workOrder.pausedDuration || 0; // paused duration in minutes
-      const pausedDurationSeconds = pausedDuration * 60;
-      const elapsed = Math.max(0, totalElapsed - pausedDurationSeconds);
-      return formatDuration(elapsed);
+    if (workOrder.status === 'PAUSED' && elapsedTimes[workOrder.id] !== undefined) {
+      return formatDuration(elapsedTimes[workOrder.id]);
     }
     return workOrder.realDuration ? `${workOrder.realDuration} min` : '-';
   };
@@ -424,7 +442,6 @@ export default function WorkOrders() {
                                     className="bg-green-600 hover:bg-green-700 text-white"
                                   >
                                     <Play className="w-3 h-3 mr-1" />
-                                    Start
                                   </Button>
                                 )}
                                 {workOrder.status === 'IN_PROGRESS' && (
@@ -435,7 +452,6 @@ export default function WorkOrders() {
                                       className="bg-yellow-600 hover:bg-yellow-700 text-white"
                                     >
                                       <Pause className="w-3 h-3 mr-1" />
-                                      Pause
                                     </Button>
                                     <Button
                                       size="sm"
@@ -443,7 +459,6 @@ export default function WorkOrders() {
                                       className="bg-blue-600 hover:bg-blue-700 text-white"
                                     >
                                       <Check className="w-3 h-3 mr-1" />
-                                      Done
                                     </Button>
                                   </>
                                 )}
@@ -455,7 +470,6 @@ export default function WorkOrders() {
                                       className="bg-green-600 hover:bg-green-700 text-white"
                                     >
                                       <Play className="w-3 h-3 mr-1" />
-                                      Resume
                                     </Button>
                                     <Button
                                       size="sm"
@@ -463,7 +477,6 @@ export default function WorkOrders() {
                                       className="bg-blue-600 hover:bg-blue-700 text-white"
                                     >
                                       <Check className="w-3 h-3 mr-1" />
-                                      Done
                                     </Button>
                                   </>
                                 )}
@@ -473,8 +486,7 @@ export default function WorkOrders() {
                                     onClick={() => handleCancelWorkOrder(workOrder.id)}
                                     className="bg-red-600 hover:bg-red-700 text-white"
                                   >
-                                    <AlertTriangle className="w-3 h-3 mr-1" />
-                                    Cancel
+                                    <XCircle className="w-3 h-3 mr-1" />
                                   </Button>
                                 )}
                               </div>
