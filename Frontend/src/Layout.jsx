@@ -42,6 +42,7 @@ const navigationItems = [
     icon: LayoutDashboard,
     color: "text-blue-600",
     bgColor: "bg-blue-50",
+    roles: ["ADMIN", "MANUFACTURING_MANAGER", "SHOP_FLOOR_OPERATOR", "INVENTORY_MANAGER", "BUSINESS_OWNER"]
   },
   {
     title: "Work Orders",
@@ -49,6 +50,7 @@ const navigationItems = [
     icon: Zap,
     color: "text-orange-600",
     bgColor: "bg-orange-50",
+    roles: ["ADMIN", "MANUFACTURING_MANAGER", "SHOP_FLOOR_OPERATOR", "BUSINESS_OWNER"]
   },
   {
     title: "Bill of Materials",
@@ -56,6 +58,7 @@ const navigationItems = [
     icon: ClipboardList,
     color: "text-purple-600",
     bgColor: "bg-purple-50",
+    roles: ["ADMIN", "MANUFACTURING_MANAGER", "INVENTORY_MANAGER", "BUSINESS_OWNER","SHOP_FLOOR_OPERATOR"]
   },
   {
     title: "Work Centers",
@@ -63,6 +66,7 @@ const navigationItems = [
     icon: Factory,
     color: "text-cyan-600",
     bgColor: "bg-cyan-50",
+    roles: ["ADMIN", "MANUFACTURING_MANAGER", "SHOP_FLOOR_OPERATOR", "BUSINESS_OWNER"]
   },
   {
     title: "Stock Management",
@@ -70,6 +74,7 @@ const navigationItems = [
     icon: Archive,
     color: "text-indigo-600",
     bgColor: "bg-indigo-50",
+    roles: ["ADMIN", "INVENTORY_MANAGER", "BUSINESS_OWNER"]
   },
   {
     title: "Reports",
@@ -77,6 +82,7 @@ const navigationItems = [
     icon: BarChart3,
     color: "text-rose-600",
     bgColor: "bg-rose-50",
+    roles: ["ADMIN", "INVENTORY_MANAGER", "BUSINESS_OWNER"]
   },
 ];
 
@@ -87,6 +93,12 @@ export default function Layout({ children }) {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobileView, setIsMobileView] = useState(window.innerWidth < 768);
   const profileDropdownRef = useRef(null);
+
+  // Filter navigation items based on user role
+  const getFilteredNavigationItems = () => {
+    if (!user?.role) return [];
+    return navigationItems.filter(item => item.roles.includes(user.role));
+  };
 
   // Handle responsive layout
   useEffect(() => {
@@ -128,7 +140,7 @@ export default function Layout({ children }) {
         </div>
 
         {/* Responsive Sidebar */}
-        <Sidebar className="border-r border-gray-200/60 backdrop-blur-sm bg-white/80 relative z-30 md:static fixed top-0 left-0 h-auto md:h-full w-full md:w-auto shadow-lg md:shadow-none">
+        <Sidebar className="border-r border-gray-200/60 backdrop-blur-sm bg-white/80 z-30 md:static fixed top-0 left-0 h-auto md:h-full w-full md:w-auto shadow-lg md:shadow-none">
           <SidebarHeader className="border-b border-gray-200 p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

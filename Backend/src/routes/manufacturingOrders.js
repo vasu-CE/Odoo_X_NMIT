@@ -435,6 +435,7 @@ router.post(
                   operationName: operation.name,
                   workCenterName: operation.workCenter.name,
                   workCenterId: operation.workCenter.id,
+                  assignedToId: assigneeIdInt, // Assign to the same user as the MO
                   plannedDuration: operation.timeMinutes,
                   estimatedTimeMinutes: operation.timeMinutes,
                   status: "PENDING",
@@ -505,7 +506,7 @@ router.post(
               workCenterId: null,
               plannedDuration: 60, // 1 hour default
               estimatedTimeMinutes: 60,
-              assignedToId: null,
+              assignedToId: assigneeIdInt, // Assign to the same user as the MO
               status: "PENDING",
               comments: "Default work order created automatically",
             },
