@@ -21,6 +21,7 @@ model User {
 
   // Relations
   assignedManufacturingOrders ManufacturingOrder[] @relation("ManufacturingOrderAssignee")
+  createdManufacturingOrders ManufacturingOrder[] @relation("ManufacturingOrderCreator")
   workOrders         WorkOrder[]
   createdBOMs        BOM[]
 
@@ -136,6 +137,7 @@ model ManufacturingOrder {
   startedAt       DateTime?
   completedAt     DateTime?
   assigneeId      Int?                 // Renamed from assignedToId
+  createdById     Int                  // Who created this MO
   bomId           Int?
   estimatedCost   Float?
   actualCost      Float?
@@ -145,6 +147,7 @@ model ManufacturingOrder {
 
   // Relations
   assignee        User?                @relation("ManufacturingOrderAssignee", fields: [assigneeId], references: [id])
+  createdBy       User                 @relation("ManufacturingOrderCreator", fields: [createdById], references: [id])
   product         Product?             @relation(fields: [productId], references: [id])
   bom             BOM?                 @relation(fields: [bomId], references: [id])
   components      Component[]

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import apiService from "../services/api";
+import { useAuth } from "../contexts/AuthContext";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
@@ -70,6 +70,13 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
           "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
+        id: "done",
+        label: "Done",
+        count: filterCounts.all.done || 0,
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
         id: "not_assigned",
         label: "Not Assigned",
         count: filterCounts.all.not_assigned || 0,
@@ -89,6 +96,13 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
         id: "all",
         label: "All My Orders",
         count: filterCounts.my.total || 0,
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
+        id: "draft",
+        label: "Draft",
+        count: filterCounts.my.draft || 0,
         color:
           "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
@@ -114,6 +128,13 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
           "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
       },
       {
+        id: "done",
+        label: "Done",
+        count: filterCounts.my.done || 0,
+        color:
+          "bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 transition-all duration-200 cursor-pointer",
+      },
+      {
         id: "late",
         label: "Late",
         count: filterCounts.my.late || 0,
@@ -127,6 +148,7 @@ const getStatusFilters = (filterCounts, activeFilterGroup) => {
 };
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -143,70 +165,6 @@ export default function Dashboard() {
     priority: "MEDIUM",
     notes: "",
   });
-
-  // Mock data for demonstration - matching the mockup
-  const mockOrders = [
-    {
-      id: "1",
-      reference: "MO-000001",
-      startDate: "Tomorrow",
-      finishedProduct: "Dinning Table",
-      componentStatus: "Not Available",
-      quantity: 5.0,
-      unit: "Units",
-      state: "Confirmed",
-      isLate: false,
-      isAssigned: true,
-    },
-    {
-      id: "2",
-      reference: "MO-000002",
-      startDate: "Yesterday",
-      finishedProduct: "Drawer",
-      componentStatus: "Available",
-      quantity: 2.0,
-      unit: "Units",
-      state: "In-Progress",
-      isLate: true,
-      isAssigned: true,
-    },
-    {
-      id: "3",
-      reference: "MO-000003",
-      startDate: "Today",
-      finishedProduct: "Chair",
-      componentStatus: "Available",
-      quantity: 10.0,
-      unit: "Units",
-      state: "Draft",
-      isLate: false,
-      isAssigned: false,
-    },
-    {
-      id: "4",
-      reference: "MO-000004",
-      startDate: "Last Week",
-      finishedProduct: "Cabinet",
-      componentStatus: "Not Available",
-      quantity: 3.0,
-      unit: "Units",
-      state: "Confirmed",
-      isLate: true,
-      isAssigned: false,
-    },
-    {
-      id: "5",
-      reference: "MO-000005",
-      startDate: "Next Week",
-      finishedProduct: "Shelf",
-      componentStatus: "Available",
-      quantity: 8.0,
-      unit: "Units",
-      state: "To Close",
-      isLate: false,
-      isAssigned: true,
-    },
-  ];
 
   useEffect(() => {
     loadData();
@@ -225,27 +183,43 @@ export default function Dashboard() {
       const ordersData = response.data?.orders || [];
 
       // Transform API data to match our UI structure
-      const transformedOrders = ordersData.map((order) => ({
-        id: order.id,
-        reference: order.orderNumber || `MO-${order.id.slice(-6)}`,
-        startDate: order.scheduleDate
-          ? new Date(order.scheduleDate).toLocaleDateString()
-          : "Not scheduled",
-        finishedProduct: order.finishedProduct || "Unknown Product",
-        componentStatus: order.component_status || "Unknown",
-        quantity: order.quantity || 0,
-        unit: order.units || "Units",
-        state: order.status?.replace("_", " ") || "Unknown",
-        isLate: order.scheduleDate
-          ? new Date(order.scheduleDate) < new Date() &&
-            order.status === "CONFIRMED"
-          : false,
-        isAssigned: !!order.assigneeId,
-        actualStartDate: order.startedAt,
-        actualEndDate: order.completedAt,
-        priority: order.priority,
-        notes: order.notes,
-      }));
+      const transformedOrders = ordersData.map((order) => {
+        // Map status to display format
+        const statusMap = {
+          'DRAFT': 'Draft',
+          'CONFIRMED': 'Confirmed', 
+          'IN_PROGRESS': 'In-Progress',
+          'DONE': 'Done',
+          'CANCELLED': 'Cancelled'
+        };
+        
+        const displayStatus = statusMap[order.status] || order.status?.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()) || "Unknown";
+        
+        return {
+          id: order.id,
+          reference: order.orderNumber || `MO-${order.id.slice(-6)}`,
+          startDate: order.scheduleDate
+            ? new Date(order.scheduleDate).toLocaleDateString()
+            : "Not scheduled",
+          finishedProduct: order.finishedProduct || "Unknown Product",
+          componentStatus: order.component_status || "Unknown",
+          quantity: order.quantity || 0,
+          unit: order.units || "Units",
+          state: displayStatus,
+          isLate: order.scheduleDate
+            ? new Date(order.scheduleDate) < new Date() &&
+              (order.status === "CONFIRMED" || order.status === "IN_PROGRESS")
+            : false,
+          isAssigned: !!order.assigneeId,
+          isCreatedByMe: order.createdBy?.id === user?.id, // Check if current user created this order
+          createdBy: order.createdBy,
+          assignee: order.assignee,
+          actualStartDate: order.startedAt,
+          actualEndDate: order.completedAt,
+          priority: order.priority,
+          notes: order.notes,
+        };
+      });
 
       setOrders(transformedOrders);
     } catch (error) {
@@ -258,26 +232,28 @@ export default function Dashboard() {
 
   // Calculate counts for filters
   const calculateFilterCounts = () => {
+    const allOrders = orders;
+    const myOrders = orders.filter((o) => o.isCreatedByMe); // Changed to show created orders
+    
     const counts = {
       all: {
-        total: orders.length,
-        draft: orders.filter((o) => o.state === "Draft").length,
-        confirmed: orders.filter((o) => o.state === "Confirmed").length,
-        in_progress: orders.filter((o) => o.state === "In-Progress").length,
-        to_close: orders.filter((o) => o.state === "To Close").length,
-        not_assigned: orders.filter((o) => !o.isAssigned).length,
-        late: orders.filter((o) => o.isLate).length,
+        total: allOrders.length,
+        draft: allOrders.filter((o) => o.state === "Draft").length,
+        confirmed: allOrders.filter((o) => o.state === "Confirmed").length,
+        in_progress: allOrders.filter((o) => o.state === "In-Progress").length,
+        to_close: allOrders.filter((o) => o.state === "To Close").length,
+        done: allOrders.filter((o) => o.state === "Done").length,
+        not_assigned: allOrders.filter((o) => !o.isAssigned).length,
+        late: allOrders.filter((o) => o.isLate).length,
       },
       my: {
-        total: orders.filter((o) => o.isAssigned).length,
-        confirmed: orders.filter((o) => o.state === "Confirmed" && o.isAssigned)
-          .length,
-        in_progress: orders.filter(
-          (o) => o.state === "In-Progress" && o.isAssigned
-        ).length,
-        to_close: orders.filter((o) => o.state === "To Close" && o.isAssigned)
-          .length,
-        late: orders.filter((o) => o.isLate && o.isAssigned).length,
+        total: myOrders.length,
+        draft: myOrders.filter((o) => o.state === "Draft").length,
+        confirmed: myOrders.filter((o) => o.state === "Confirmed").length,
+        in_progress: myOrders.filter((o) => o.state === "In-Progress").length,
+        to_close: myOrders.filter((o) => o.state === "To Close").length,
+        done: myOrders.filter((o) => o.state === "Done").length,
+        late: myOrders.filter((o) => o.isLate).length,
       },
     };
     return counts;
@@ -310,6 +286,9 @@ export default function Dashboard() {
         case "to_close":
           matchesStatus = order.state === "To Close";
           break;
+        case "done":
+          matchesStatus = order.state === "Done";
+          break;
         case "not_assigned":
           matchesStatus = !order.isAssigned;
           break;
@@ -321,8 +300,11 @@ export default function Dashboard() {
       }
     }
 
-    // Handle "my" filter group - only show assigned orders
-    const matchesFilterGroup = activeFilterGroup === "all" || order.isAssigned;
+    // Handle filter groups
+    let matchesFilterGroup = true;
+    if (activeFilterGroup === "my") {
+      matchesFilterGroup = order.isCreatedByMe; // Changed to show created orders
+    }
 
     return matchesSearch && matchesStatus && matchesFilterGroup;
   });
@@ -355,6 +337,8 @@ export default function Dashboard() {
         return "bg-blue-300 text-blue-900 border border-blue-500";
       case "Done":
         return "bg-green-100 text-green-800 border border-green-300";
+      case "Cancelled":
+        return "bg-red-100 text-red-800 border border-red-300";
       default:
         return "bg-blue-50 text-blue-700 border border-blue-200";
     }
@@ -537,6 +521,7 @@ export default function Dashboard() {
                 <div className="hidden md:block">Component Status</div>
                 <div className="hidden lg:block">Quantity</div>
                 <div className="hidden lg:block">Unit</div>
+                <div className="hidden xl:block">Created By</div>
                 <div className="block">State</div>
               </div>
             </div>
@@ -557,6 +542,7 @@ export default function Dashboard() {
                     <div className="h-4 bg-gray-200 rounded md:block"></div>
                     <div className="h-4 bg-gray-200 rounded lg:block"></div>
                     <div className="h-4 bg-gray-200 rounded lg:block"></div>
+                    <div className="h-4 bg-gray-200 rounded xl:block"></div>
                     <div className="h-4 bg-gray-200 rounded"></div>
                   </div>
                 ))
@@ -607,6 +593,11 @@ export default function Dashboard() {
                     </div>
                     <div className="hidden lg:flex items-center">
                       <span className="text-sm text-gray-500">{order.unit}</span>
+                    </div>
+                    <div className="hidden xl:flex items-center">
+                      <span className="text-sm text-gray-700 truncate">
+                        {order.createdBy?.name || "Unknown"}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <Badge

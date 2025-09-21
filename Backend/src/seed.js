@@ -333,6 +333,7 @@ async function main() {
       scheduleDate: new Date("2024-01-15T08:00:00.000Z"),
       startedAt: new Date("2024-01-15T08:30:00.000Z"),
       assigneeId: users[2].id,
+      createdById: users[1].id, 
       bomId: bom1.id,
       estimatedCost: 1500.0,
       notes: "Priority order for customer ABC",
@@ -350,6 +351,7 @@ async function main() {
       priority: "MEDIUM",
       scheduleDate: new Date("2024-01-22T08:00:00.000Z"),
       assigneeId: users[2].id,
+      createdById: users[1].id, // Created by Manufacturing Manager
       bomId: bom2.id,
       estimatedCost: 800.0,
       notes: "Standard production order",
@@ -369,6 +371,7 @@ async function main() {
       startedAt: new Date("2024-01-10T08:00:00.000Z"),
       completedAt: new Date("2024-01-12T16:30:00.000Z"),
       assigneeId: users[2].id,
+      createdById: users[0].id, // Created by Admin
       bomId: bom1.id,
       estimatedCost: 2000.0,
       actualCost: 1950.0,
@@ -387,6 +390,7 @@ async function main() {
       priority: "URGENT",
       scheduleDate: new Date("2024-01-25T10:00:00.000Z"),
       assigneeId: users[2].id,
+      createdById: users[3].id, // Created by Inventory Manager
       estimatedCost: 500.0,
       notes: "Custom order for special customer",
     },

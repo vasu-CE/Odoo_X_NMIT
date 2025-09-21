@@ -101,6 +101,13 @@ router.get(
                 email: true,
               },
             },
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
             product: {
               select: {
                 id: true,
@@ -194,6 +201,14 @@ router.get("/:id", authenticate, async (req, res) => {
       where: { id: orderId },
       include: {
         assignee: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        createdBy: {
           select: {
             id: true,
             name: true,
@@ -351,6 +366,7 @@ router.post(
             priority,
             scheduleDate: new Date(scheduleDate),
             assigneeId,
+            createdById: req.user.id, // Set the creator as the authenticated user
             bomId,
             notes,
           },
