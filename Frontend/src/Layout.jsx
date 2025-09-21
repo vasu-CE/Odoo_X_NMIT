@@ -197,14 +197,6 @@ export default function Layout({ children }) {
                           <span className="font-medium text-xs md:text-sm mt-1 md:mt-0">
                             {item.title}
                           </span>
-                          {item.title === "Work Orders" && (
-                            <Badge
-                              variant="secondary"
-                              className="ml-0 md:ml-auto mt-1 md:mt-0 bg-orange-100 text-orange-700 text-xs"
-                            >
-                              3
-                            </Badge>
-                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

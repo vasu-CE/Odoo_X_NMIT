@@ -35,7 +35,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Toaster position="top-right" richColors />
+        <Toaster position="bottom-right" richColors />
         <Routes>
           {/* Public Routes */}
           <Route path="/landing" element={<LandingPage />} />

@@ -505,16 +505,6 @@ export default function Dashboard() {
             {/* Table Header */}
             <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-blue-200/60">
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4 px-4 py-3 text-sm font-medium text-blue-700">
-                <div className="flex items-center">
-                  <Checkbox
-                    checked={
-                      selectedOrders.length === filteredOrders.length &&
-                      filteredOrders.length > 0
-                    }
-                    onCheckedChange={handleSelectAll}
-                    className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-300"
-                  />
-                </div>
                 <div className="block">Reference</div>
                 <div className="hidden sm:block">Start Date</div>
                 <div className="hidden md:block">Finished Product</div>
@@ -552,15 +542,6 @@ export default function Dashboard() {
                     key={order.id}
                     className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4 px-4 py-4 hover:bg-blue-50/50 transition-all duration-300 cursor-pointer border-l-4 border-transparent hover:border-blue-400 hover:shadow-md"
                   >
-                    <div className="flex items-center">
-                      <Checkbox
-                        checked={selectedOrders.includes(order.id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectOrder(order.id, checked)
-                        }
-                        className="cursor-pointer hover:ring-2 hover:ring-blue-200 transition-all duration-300"
-                      />
-                    </div>
                     <div className="flex items-center">
                       <span className="font-mono text-sm font-medium text-blue-700 truncate">
                         {order.reference}
